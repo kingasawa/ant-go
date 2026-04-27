@@ -1,0 +1,6 @@
+.env
+firebase-credentials.json
+.cert-cache.json
+node_modules/
+*.tar.gz
+

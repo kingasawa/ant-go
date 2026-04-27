@@ -1,0 +1,5 @@
+/.env.local
+/firebase-credentials.json
+/.idea/
+/.next/
+/node_modules/
