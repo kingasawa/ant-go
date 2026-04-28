@@ -165,8 +165,15 @@ function printHeader(lines) {
 }
 
 // ── Pack project (async để spinner có thể quay) ───────────────────────────────
-function packProject(projectRoot, tarFile) {
-  const excludes = [
+function packProject(projectRoot, tarFile, platform) {
+  const isAndroid = platform === 'android';
+  const excludes = isAndroid ? [
+    '--exclude=node_modules/.cache',
+    '--exclude=android/build',
+    '--exclude=android/.gradle',
+    '--exclude=.git',
+    '--exclude=.expo',
+  ] : [
     '--exclude=node_modules/.cache',
     '--exclude=ios/Pods',
     '--exclude=ios/build',
@@ -174,7 +181,10 @@ function packProject(projectRoot, tarFile) {
     '--exclude=.git',
     '--exclude=.expo',
   ];
-  const cmd = `tar -czf "${tarFile}" ${excludes.join(' ')} -C "${projectRoot}" ios node_modules package.json package-lock.json`;
+  const dirs = isAndroid
+    ? 'android node_modules package.json package-lock.json'
+    : 'ios node_modules package.json package-lock.json';
+  const cmd = `tar -czf "${tarFile}" ${excludes.join(' ')} -C "${projectRoot}" ${dirs}`;
   return new Promise((resolve, reject) => {
     const child = spawn('bash', ['-c', cmd], { stdio: 'pipe' });
     let stderr = '';
@@ -251,13 +261,6 @@ async function runBuild(options) {
     console.log('');
     process.exit(1);
   }
-  if (platform === 'android') {
-    console.log('');
-    console.log(chalk.yellow('⚠  Android chưa được hỗ trợ. Build server Android đang trong quá trình phát triển.'));
-    console.log('');
-    process.exit(0);
-  }
-
   const cfg    = loadConfig();
   const client = createClient(API_URL);
 
@@ -265,8 +268,9 @@ async function runBuild(options) {
     ? path.resolve(options.project)
     : cfg.projectRoot ? path.resolve(cfg.projectRoot) : process.cwd();
 
-  if (platform === 'ios' && !fs.existsSync(path.join(projectRoot, 'ios'))) {
-    logger.error(`Không tìm thấy thư mục ios/ trong: ${projectRoot}`);
+  const platformDir = platform === 'android' ? 'android' : 'ios';
+  if (!fs.existsSync(path.join(projectRoot, platformDir))) {
+    logger.error(`Không tìm thấy thư mục ${platformDir}/ trong: ${projectRoot}`);
     process.exit(1);
   }
 
@@ -314,7 +318,7 @@ async function runBuild(options) {
   const spinner = ora('Đang tạo build job...').start();
   let jobId, tarUrl, credsUrl;
   try {
-    const res = await createBuild(client, { projectId: projectInfo.projectId, autoSubmit });
+    const res = await createBuild(client, { projectId: projectInfo.projectId, platform, autoSubmit });
     jobId    = res.jobId;
     tarUrl   = res.tarUrl;
     credsUrl = res.credsUrl;
@@ -329,11 +333,12 @@ async function runBuild(options) {
   const tmpDir = path.join(os.tmpdir(), `ant-go-${jobId}`);
   fs.mkdirSync(tmpDir, { recursive: true });
 
-  // 4. Pack + upload ios.tar.gz
-  const tarFile = path.join(tmpDir, 'ios.tar.gz');
+  // 4. Pack + upload tar.gz
+  const tarName = platform === 'android' ? 'android.tar.gz' : 'ios.tar.gz';
+  const tarFile = path.join(tmpDir, tarName);
   const packSpinner = ora('Đang nén project...').start();
   try {
-    await packProject(projectRoot, tarFile);
+    await packProject(projectRoot, tarFile, platform);
     const sizeMB = (fs.statSync(tarFile).size / 1024 / 1024).toFixed(1);
     packSpinner.succeed(`Project đã nén: ${sizeMB} MB`);
   } catch (err) {
@@ -343,12 +348,12 @@ async function runBuild(options) {
     process.exit(1);
   }
 
-  const tarSpinner = ora('Đang upload ios.tar.gz...').start();
+  const tarSpinner = ora(`Đang upload ${tarName}...`).start();
   try {
     await uploadFile(tarUrl, tarFile, 'application/gzip', tarSpinner);
-    tarSpinner.succeed('Upload ios.tar.gz hoàn tất');
+    tarSpinner.succeed(`Upload ${tarName} hoàn tất`);
   } catch (err) {
-    tarSpinner.fail('Lỗi khi upload ios.tar.gz');
+    tarSpinner.fail(`Lỗi khi upload ${tarName}`);
     logger.error(err.message);
     process.exit(1);
   }

@@ -119,6 +119,7 @@ async function ensureProvisioningProfile(ctx: any, certId: string, bundleId: str
 // ── prepareBuild ──────────────────────────────────────────────────────────────
 export async function prepareBuild(
   projectId: string,
+  platform: "ios" | "android",
   options: { autoSubmit?: boolean } = {}
 ) {
   const db     = getAdminDb();
@@ -133,14 +134,16 @@ export async function prepareBuild(
 
   const jobId    = Date.now().toString();
   const basePath = `builds/${jobId}`;
+  const tarName  = platform === "android" ? "android.tar.gz" : "ios.tar.gz";
 
   await db.collection(BUILDS_COLLECTION).doc(jobId).set({
     projectId,
-    userId:      projectSnap.data()?.userId ?? null,
-    appName:     projectSnap.data()?.name   ?? null,
-    status:      "uploading",
-    step:        "uploading",
-    autoSubmit:  options.autoSubmit ?? false,
+    platform,
+    userId:     projectSnap.data()?.userId ?? null,
+    appName:    projectSnap.data()?.name   ?? null,
+    status:     "uploading",
+    step:       "uploading",
+    autoSubmit: options.autoSubmit ?? false,
     basePath,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -154,7 +157,7 @@ export async function prepareBuild(
     }).then(([url]) => url);
 
   const [tarUrl, credsUrl] = await Promise.all([
-    getUrl("ios.tar.gz",       "application/gzip"),
+    getUrl(tarName,            "application/gzip"),
     getUrl("credentials.json", "application/json"),
   ]);
 
@@ -186,14 +189,15 @@ export async function startBuild(jobId: string) {
     const jobSnap = await db.collection(BUILDS_COLLECTION).doc(jobId).get();
     if (!jobSnap.exists) throw new Error(`Build job ${jobId} không tồn tại`);
 
-    const { basePath } = jobSnap.data()!;
+    const { basePath, platform } = jobSnap.data()!;
+    const tarName = platform === "android" ? "android.tar.gz" : "ios.tar.gz";
 
     const [[tarExists], [credsExists]] = await Promise.all([
-      bucket.file(`${basePath}/ios.tar.gz`).exists(),
+      bucket.file(`${basePath}/${tarName}`).exists(),
       bucket.file(`${basePath}/credentials.json`).exists(),
     ]);
 
-    if (!tarExists)   throw new Error("ios.tar.gz chưa được upload");
+    if (!tarExists)   throw new Error(`${tarName} chưa được upload`);
     if (!credsExists) throw new Error("credentials.json chưa được upload");
 
     // Đánh dấu ready — Mac build server tự pick up
