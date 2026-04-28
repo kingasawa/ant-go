@@ -1,0 +1,14 @@
+# Kế thừa từ .gitignore
+#!include:.gitignore
+
+# Ghi đè: bao gồm .next vì App Engine dùng gcp-build để build
+# (nếu không có gcp-build thì bỏ dòng dưới và build local trước)
+# !.next
+
+# Loại trừ thêm
+cli/
+*.md
+!README.md
+.env*
+env.yaml
+

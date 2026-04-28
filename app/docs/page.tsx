@@ -73,13 +73,6 @@ export default function DocPage() {
             <span>⚙️</span> ant-go
             <span className="ml-1 text-xs font-normal text-gray-500 tracking-widest uppercase">docs</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            {navItems.map((n) => (
-              <a key={n.id} href={`#${n.id}`} className="text-sm text-gray-400 hover:text-white transition">
-                {n.label}
-              </a>
-            ))}
-          </nav>
           <Link
             href="/login"
             className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition"
