@@ -20,7 +20,7 @@ steps:
         EOF
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
-    args: ["app", "deploy", "app.yaml", "--quiet", "--project=$PROJECT_ID"]
+    args: ["gcloud", "app", "deploy", "app.yaml", "--quiet", "--project=$PROJECT_ID"]
 
 availableSecrets:
   secretManager:
