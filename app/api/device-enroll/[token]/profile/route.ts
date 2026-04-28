@@ -11,9 +11,9 @@ import { randomUUID } from "crypto";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
-  const { token } = params;
+  const { token } = await params;
 
   const db = getAdminDb();
   const doc = await db.collection("device_enrollments").doc(token).get();

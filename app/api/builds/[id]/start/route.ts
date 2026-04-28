@@ -9,10 +9,11 @@ import { startBuild } from "@/lib/build.service";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  startBuild(params.id).catch((err) =>
-    console.error(`[startBuild ${params.id}]`, err.message)
+  const { id } = await params;
+  startBuild(id).catch((err) =>
+    console.error(`[startBuild ${id}]`, err.message)
   );
   return NextResponse.json({ ok: true, message: "Build started" });
 }

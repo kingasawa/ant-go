@@ -91,7 +91,7 @@ export default function HomePage() {
     <main className="min-h-screen bg-gray-950 text-white">
       {/* Nav */}
       <nav className="flex items-center justify-between px-8 py-4 border-b border-gray-800">
-        <span className="text-xl font-bold text-indigo-400">🐜 Ant Go</span>
+        <span className="text-xl font-bold text-indigo-400">ant-go</span>
         <div className="flex items-center gap-3">
           <Link
             href="/docs"

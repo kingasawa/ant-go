@@ -10,10 +10,11 @@ const BUILDS_COLLECTION = process.env.BUILDS_COLLECTION || "builds";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const snap = await getAdminDb().collection(BUILDS_COLLECTION).doc(params.id).get();
+    const snap = await getAdminDb().collection(BUILDS_COLLECTION).doc(id).get();
     if (!snap.exists) {
       return NextResponse.json({ error: "Build not found" }, { status: 404 });
     }

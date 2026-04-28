@@ -11,10 +11,11 @@ const BUILDS_COLLECTION = process.env.BUILDS_COLLECTION || "builds";
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const ref = getAdminDb().collection(BUILDS_COLLECTION).doc(params.id);
+    const ref = getAdminDb().collection(BUILDS_COLLECTION).doc(id);
     const snap = await ref.get();
     if (!snap.exists) {
       return NextResponse.json({ error: "Build not found" }, { status: 404 });
@@ -38,7 +39,7 @@ export async function POST(
     });
     return NextResponse.json({ ok: true });
   } catch (err: any) {
-    console.error(`[POST /api/builds/${params.id}/rebuild]`, err.message);
+    console.error(`[POST /api/builds/${id}/rebuild]`, err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

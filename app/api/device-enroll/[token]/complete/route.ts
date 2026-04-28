@@ -33,9 +33,9 @@ function extractField(buf: Buffer, key: string): string | null {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
-  const { token } = params;
+  const { token } = await params;
 
   const db = getAdminDb();
   const docRef = db.collection("device_enrollments").doc(token);

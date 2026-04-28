@@ -13,16 +13,17 @@ const BUILDS_COLLECTION = process.env.BUILDS_COLLECTION || "builds";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const snap = await getAdminDb().collection(BUILDS_COLLECTION).doc(params.id).get();
+    const snap = await getAdminDb().collection(BUILDS_COLLECTION).doc(id).get();
     if (!snap.exists) {
       return NextResponse.json({ error: "Build job not found" }, { status: 404 });
     }
     const d = snap.data()!;
     return NextResponse.json({
-      jobId:        params.id,
+      jobId:        id,
       status:       d.status        ?? null,
       step:         d.step          ?? null,
       appName:      d.appName       ?? null,
@@ -35,18 +36,19 @@ export async function GET(
       updatedAt:    d.updatedAt?.toDate().toISOString() ?? null,
     });
   } catch (err: any) {
-    console.error(`[GET /api/builds/${params.id}]`, err.message);
+    console.error(`[GET /api/builds/${id}]`, err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const db  = getAdminDb();
-    const ref = db.collection(BUILDS_COLLECTION).doc(params.id);
+    const ref = db.collection(BUILDS_COLLECTION).doc(id);
 
     if (!(await ref.get()).exists) {
       return NextResponse.json({ error: "Build not found" }, { status: 404 });
@@ -66,7 +68,7 @@ export async function DELETE(
 
     return NextResponse.json({ ok: true });
   } catch (err: any) {
-    console.error(`[DELETE /api/builds/${params.id}]`, err.message);
+    console.error(`[DELETE /api/builds/${id}]`, err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
