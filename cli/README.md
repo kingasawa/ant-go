@@ -1,6 +1,6 @@
 # ant-go CLI
 
-CLI tool để trigger iOS builds thông qua Firebase build server — cùng logic với `build-scripts/trigger-build.js` nhưng được tổ chức lại thành một CLI có thể tái sử dụng.
+CLI tool để trigger iOS/Android builds thông qua Firebase build server — cùng logic với `build-scripts/trigger-build.js` nhưng được tổ chức lại thành một CLI có thể tái sử dụng.
 
 ## Cấu trúc
 

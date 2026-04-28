@@ -113,7 +113,7 @@ export default function DocPage() {
               ant-go CLI
             </h1>
             <p className="text-lg text-gray-400 max-w-xl">
-              Build iOS app lên App Store chỉ với một lệnh — không cần mở Xcode, không cần cấu hình CI/CD phức tạp.
+              Build app iOS và Android nahnh chóng chỉ với một lệnh — không cần cấu hình CI/CD phức tạp.
             </p>
           </div>
 
@@ -143,7 +143,7 @@ export default function DocPage() {
           {/* ── build ── */}
           <Section id="build" title="Build Command">
             <p className="text-gray-400 text-sm mb-4">
-              Lệnh chính — nén project, upload lên build server và gửi yêu cầu build iOS. Sau khi submit, theo dõi tiến trình tại web console.
+              Lệnh chính — nén project, upload lên build server và gửi yêu cầu build theo platform đã chọn. Sau khi submit, theo dõi tiến trình tại web console.
             </p>
 
             <Terminal title="Terminal — build iOS production">

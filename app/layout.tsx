@@ -4,8 +4,8 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "next-themes";
 
 export const metadata: Metadata = {
-  title: "EAS Clone — CI/CD for React Native iOS",
-  description: "Self-hosted Expo Application Services clone for iOS builds",
+  title: "ANT GO WORK — CI/CD for React Native apps",
+  description: "An Application Services for iOS and Android builds",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
