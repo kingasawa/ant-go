@@ -8,32 +8,26 @@ import { useRouter } from "next/navigation";
 
 const features = [
   {
-    icon: "💸",
-    title: "Rẻ hơn EAS nhiều lần",
+    title: "Giá thành rẻ",
     desc: "Không tính phí theo build minute. Trả phí gói cố định hàng tháng — build bao nhiêu tuỳ thích.",
   },
   {
-    icon: "⚡",
     title: "Không phải chờ queue",
     desc: "Build chạy trên Mac server riêng của chúng tôi. Không có hàng chờ chung với hàng nghìn user khác.",
   },
   {
-    icon: "🔍",
     title: "Real-time build log",
     desc: "Log stream trực tiếp lên dashboard trong khi build đang chạy. Xem từng bước Fastlane, Xcode, pod install theo thời gian thực.",
   },
   {
-    icon: "🔐",
     title: "Tự động quản lý certificate",
     desc: "Tích hợp Apple Developer API — tự động tạo Distribution Certificate và Provisioning Profile, renew khi hết hạn.",
   },
   {
-    icon: "🛠️",
     title: "Dễ debug hơn",
     desc: "Full build log được lưu lại sau mỗi lần build. Xem lại log của bất kỳ build nào, bất kỳ lúc nào.",
   },
   {
-    icon: "📦",
     title: "IPA sẵn sàng tải về",
     desc: "File .ipa và .dSYM được lưu trữ sau mỗi build thành công, kèm link tải về và nút submit thẳng lên App Store Connect.",
   },
@@ -150,16 +144,15 @@ export default function HomePage() {
       {/* Hero */}
       <section className="max-w-4xl mx-auto text-center py-24 px-6">
         <span className="inline-block bg-indigo-900/50 text-indigo-300 text-xs font-semibold px-3 py-1 rounded-full mb-6 uppercase tracking-widest">
-          Self-Hosted · iOS CI/CD
+          MULTIPLE PLATFORM · IOS/ANDROID
         </span>
         <h1 className="text-5xl md:text-6xl font-extrabold leading-tight mb-6">
           Build iOS app{" "}
           <span className="text-indigo-400">nhanh hơn</span>,
-          <br />rẻ hơn EAS
+          <br />rẻ hơn bao giờ hết
         </h1>
         <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-4">
-          Dịch vụ build iOS cho React Native / Expo — chạy trên Mac server riêng của chúng tôi.
-          Không subscription theo phút, không hàng chờ, log stream realtime thẳng về dashboard.
+          Dịch vụ build iOS và Android cho React Native / Expo — Không subscription theo phút, không chờ lâu, log stream realtime, dễ dàng debug.
         </p>
         <p className="text-gray-600 text-sm mb-10 font-mono">
           $ npm install -g ant-go &nbsp;&&nbsp; ant-go build
@@ -183,7 +176,6 @@ export default function HomePage() {
               key={f.title}
               className="bg-gray-900 border border-gray-800 rounded-2xl p-6 hover:border-indigo-700 transition"
             >
-              <div className="text-3xl mb-3">{f.icon}</div>
               <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
               <p className="text-gray-400 text-sm leading-relaxed">{f.desc}</p>
             </div>
@@ -250,7 +242,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-3">Pricing</h2>
           <p className="text-gray-400 text-center text-sm mb-12">
-            Trả cố định theo tháng — build bao nhiêu tuỳ thích, không tính phí theo phút.
+            Build iOS app nhanh hơn, rẻ hơn bao giờ hết.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {plans.map((plan) => (
@@ -299,23 +291,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Tech stack */}
-      <section className="max-w-4xl mx-auto px-6 py-16 text-center">
-        <h2 className="text-3xl font-bold mb-8">Tech Stack</h2>
-        <div className="flex flex-wrap justify-center gap-3">
-          {["Node.js CLI", "Next.js", "Firebase Firestore", "Firebase Storage", "Firebase Auth", "Fastlane", "Xcode", "Apple Developer API"].map(
-            (t) => (
-              <span
-                key={t}
-                className="bg-gray-800 border border-gray-700 text-gray-300 text-sm px-4 py-2 rounded-full"
-              >
-                {t}
-              </span>
-            )
-          )}
-        </div>
-      </section>
-
       {/* CTA */}
       <section className="bg-indigo-900/30 border-y border-indigo-800/40 py-16 text-center px-6">
         <h2 className="text-3xl font-bold mb-4">Sẵn sàng build?</h2>
@@ -329,7 +304,7 @@ export default function HomePage() {
       </section>
 
       <footer className="text-center text-gray-600 text-sm py-8">
-        © {new Date().getFullYear()} Ant Go · Self-hosted iOS CI/CD
+        © {new Date().getFullYear()} Ant Go · MULTIPLE PLATFORM · IOS/ANDROID
       </footer>
     </main>
   );
