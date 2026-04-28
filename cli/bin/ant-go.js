@@ -17,6 +17,7 @@ program
   .option('--project <path>', 'Đường dẫn tới project (mặc định: thư mục hiện tại)')
   .option('--reauth', 'Bỏ qua cache, đăng nhập lại Apple Developer từ đầu')
   .option('--refresh-profile', 'Tạo lại Provisioning Profile (dùng khi thay đổi Capabilities)')
+  .option('--auto-submit', 'Tự động submit IPA lên TestFlight sau khi build thành công')
   .action(async (options) => {
     const { runBuild } = require('../src/commands/build');
     await runBuild(options);

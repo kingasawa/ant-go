@@ -219,6 +219,28 @@ export default function DocPage() {
               </div>
             </Terminal>
 
+            <p className="text-gray-400 text-sm mt-6 mb-3">
+              Tự động submit lên TestFlight sau khi build xong:
+            </p>
+            <Terminal title="Terminal">
+              <div>
+                <span className="text-gray-500 select-none">$ </span>
+                <span className="text-yellow-300">ant-go</span>
+                <span className="text-white"> build</span>
+                <span className="text-blue-400"> --platform</span>
+                <span className="text-orange-300"> ios</span>
+                <span className="text-blue-400"> --auto-submit</span>
+              </div>
+              <div className="mt-2 space-y-1 text-sm">
+                <div className="text-gray-500">...</div>
+                <div className="text-white font-semibold">Build đã được gửi lên server!</div>
+                <div className="text-gray-500">{"   "}✈{"  "}Auto Submit: bật — IPA sẽ tự động được gửi lên TestFlight sau khi build xong.</div>
+              </div>
+            </Terminal>
+            <p className="text-gray-500 text-xs mt-2">
+              Chỉ dùng được với profile có <Code>distribution: store</Code>. Dùng với <Code>distribution: internal</Code> sẽ báo lỗi.
+            </p>
+
             <div className="mt-6 border border-gray-800 rounded-xl p-4">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Options</p>
               <Option flag="--platform <platform>" desc="Nền tảng build: ios hoặc android" />
@@ -226,6 +248,7 @@ export default function DocPage() {
               <Option flag="--project <path>"      desc="Override đường dẫn project" />
               <Option flag="--reauth"              desc="Đăng nhập lại Apple Developer, bỏ qua session cache" />
               <Option flag="--refresh-profile"     desc="Tạo lại Provisioning Profile (khi thay đổi Capabilities)" />
+              <Option flag="--auto-submit"         desc="Tự động submit IPA lên TestFlight sau khi build xong (chỉ dùng với distribution: store)" />
             </div>
           </Section>
 

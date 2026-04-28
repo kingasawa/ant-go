@@ -275,12 +275,23 @@ async function runBuild(options) {
   const profileConfig = resolveAntJson(projectRoot, profileName);
   const { distribution, developmentClient } = profileConfig;
 
+  const autoSubmit = !!options.autoSubmit;
+
+  if (autoSubmit && distribution !== 'store') {
+    console.log('');
+    console.log(chalk.red('✖  --auto-submit chỉ dùng được với distribution: store'));
+    console.log(chalk.gray(`   Profile "${profileName}" đang dùng distribution: ${distribution}`));
+    console.log('');
+    process.exit(1);
+  }
+
   const projectInfo = resolveProjectInfo(projectRoot);
   printHeader([
     `Ant Go CLI : v${CLI_VERSION}`,
     `Project ID : ${projectInfo.projectId}`,
     `Bundle ID  : ${projectInfo.bundleId}`,
     `Profile    : ${profileName}  (${distribution}${developmentClient ? ', devClient' : ''})`,
+    ...(autoSubmit ? ['Auto Submit: TestFlight'] : []),
   ]);
 
   // 2. Apple credentials (iOS only)
@@ -303,7 +314,7 @@ async function runBuild(options) {
   const spinner = ora('Đang tạo build job...').start();
   let jobId, tarUrl, credsUrl;
   try {
-    const res = await createBuild(client, { projectId: projectInfo.projectId });
+    const res = await createBuild(client, { projectId: projectInfo.projectId, autoSubmit });
     jobId    = res.jobId;
     tarUrl   = res.tarUrl;
     credsUrl = res.credsUrl;
@@ -389,6 +400,9 @@ async function runBuild(options) {
   const hyperlink = (url, text) => `]8;;${url}\\${text}]8;;\\`;
   console.log('');
   console.log(chalk.bold('Build đã được gửi lên server!'));
+  if (autoSubmit) {
+    console.log(chalk.gray('   ✈  Auto Submit: bật — IPA sẽ tự động được gửi lên TestFlight sau khi build xong.'));
+  }
   console.log('');
   console.log(`   Theo dõi tiến trình tại:`);
   console.log(`   ${chalk.cyan.underline(hyperlink(appUrl, appUrl))}`);
