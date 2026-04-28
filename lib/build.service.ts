@@ -117,7 +117,10 @@ async function ensureProvisioningProfile(ctx: any, certId: string, bundleId: str
 }
 
 // ── prepareBuild ──────────────────────────────────────────────────────────────
-export async function prepareBuild(projectId: string) {
+export async function prepareBuild(
+  projectId: string,
+  options: { autoSubmit?: boolean } = {}
+) {
   const db     = getAdminDb();
   const bucket = getAdminBucket();
 
@@ -133,10 +136,11 @@ export async function prepareBuild(projectId: string) {
 
   await db.collection(BUILDS_COLLECTION).doc(jobId).set({
     projectId,
-    userId:   projectSnap.data()?.userId ?? null,
-    appName:  projectSnap.data()?.name   ?? null,
-    status:   "uploading",
-    step:     "uploading",
+    userId:      projectSnap.data()?.userId ?? null,
+    appName:     projectSnap.data()?.name   ?? null,
+    status:      "uploading",
+    step:        "uploading",
+    autoSubmit:  options.autoSubmit ?? false,
     basePath,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),

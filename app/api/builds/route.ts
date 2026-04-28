@@ -13,14 +13,16 @@ import { prepareBuild } from "@/lib/build.service";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
-  const { projectId } = body;
+  const { projectId, autoSubmit } = body;
 
   if (!projectId || typeof projectId !== "string") {
     return NextResponse.json({ error: "projectId là bắt buộc" }, { status: 400 });
   }
 
   try {
-    const { jobId, tarUrl, credsUrl } = await prepareBuild(projectId.trim());
+    const { jobId, tarUrl, credsUrl } = await prepareBuild(projectId.trim(), {
+      autoSubmit: autoSubmit === true,
+    });
     return NextResponse.json({ jobId, tarUrl, credsUrl }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: err.status ?? 500 });
