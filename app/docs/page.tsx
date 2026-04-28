@@ -270,8 +270,22 @@ export default function DocPage() {
 
           {/* ── add device ── */}
           <Section id="add-device" title="Add device">
+            <div className="mb-5 p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/20">
+              <p className="text-sm text-gray-300 font-semibold mb-1">Chỉ áp dụng cho iOS</p>
+              <p className="text-sm text-gray-400">
+                Android không cần đăng ký device — file <Code>.apk</Code> có thể cài trực tiếp trên bất kỳ thiết bị nào. iOS thì khác: Apple bắt buộc mọi thiết bị chạy app ngoài App Store phải được đăng ký UDID trước trong Apple Developer Portal. Đây là cơ chế kiểm soát của Apple, không phải giới hạn của ant-go.
+              </p>
+            </div>
+
+            <p className="text-gray-400 text-sm mb-2">
+              <span className="text-white font-semibold">Tại sao cần làm việc này?</span>
+            </p>
+            <p className="text-gray-400 text-sm mb-5">
+              Khi build với <Code>distribution: internal</Code>, iOS app được ký bằng <strong className="text-gray-300">Development / Ad Hoc Provisioning Profile</strong>. Profile này chứa danh sách UDID các thiết bị được phép cài. Nếu UDID của thiết bị không có trong profile, iOS sẽ từ chối cài app — dù file <Code>.ipa</Code> hợp lệ. Luồng add device giúp tự động lấy UDID và thêm vào profile mà không cần vào Apple Developer Portal thủ công.
+            </p>
+
             <p className="text-gray-400 text-sm mb-4">
-              Khi build với profile có <Code>distribution: internal</Code> (ví dụ: <Code>development</Code>, <Code>preview</Code>), CLI tự động kích hoạt luồng đăng ký device. iPhone của bạn sẽ được thêm vào Apple Developer Portal để Provisioning Profile có thể cài trực tiếp lên thiết bị.
+              Luồng này tự động chạy khi build với profile có <Code>distribution: internal</Code> (ví dụ: <Code>development</Code>, <Code>preview</Code>).
             </p>
 
             <Terminal title="Terminal — device enrollment">
