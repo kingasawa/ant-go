@@ -1,4 +1,5 @@
 import Link from "next/link";
+import React from "react";
 
 /* ─── Apple-style Terminal Window ──────────────────────────────────────────── */
 function Terminal({ title, children }: { title?: string; children: React.ReactNode }) {
@@ -55,11 +56,11 @@ function Option({ flag, desc }: { flag: string; desc: string }) {
 
 /* ─── Sidebar nav ───────────────────────────────────────────────────────────── */
 const navItems = [
-  { id: "install",    label: "Cài đặt" },
-  { id: "build",      label: "Build" },
+  { id: "install",    label: "Installation" },
+  { id: "build",      label: "Command" },
   { id: "status",     label: "Status" },
   { id: "add-device", label: "Add device" },
-  { id: "ant-json",   label: "Ant.json" },
+  { id: "ant-json",   label: "Profiles" },
 ];
 
 /* ─── Page ───────────────────────────────────────────────────────────────────── */
@@ -70,7 +71,7 @@ export default function DocPage() {
       <header className="sticky top-0 z-30 border-b border-gray-800 bg-gray-950/90 backdrop-blur">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 text-indigo-400 font-bold text-lg">
-            <span>⚙️</span> ant-go
+            ant-go
             <span className="ml-1 text-xs font-normal text-gray-500 tracking-widest uppercase">docs</span>
           </Link>
           <Link
@@ -87,7 +88,7 @@ export default function DocPage() {
         <aside className="hidden lg:block w-48 flex-shrink-0">
           <div className="sticky top-24 space-y-1">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-600 mb-3">
-              Mục lục
+              GENERALS
             </p>
             {navItems.map((n) => (
               <a
@@ -140,7 +141,7 @@ export default function DocPage() {
           </Section>
 
           {/* ── build ── */}
-          <Section id="build" title="ant-go build">
+          <Section id="build" title="Build Command">
             <p className="text-gray-400 text-sm mb-4">
               Lệnh chính — nén project, upload lên build server và gửi yêu cầu build iOS. Sau khi submit, theo dõi tiến trình tại web console.
             </p>
@@ -199,20 +200,6 @@ export default function DocPage() {
             </Terminal>
 
             <p className="text-gray-400 text-sm mt-6 mb-3">
-              Force đăng nhập lại Apple Developer (bỏ cache):
-            </p>
-            <Terminal title="Terminal">
-              <div>
-                <span className="text-gray-500 select-none">$ </span>
-                <span className="text-yellow-300">ant-go</span>
-                <span className="text-white"> build</span>
-                <span className="text-blue-400"> --platform</span>
-                <span className="text-orange-300"> ios</span>
-                <span className="text-blue-400"> --reauth</span>
-              </div>
-            </Terminal>
-
-            <p className="text-gray-400 text-sm mt-6 mb-3">
               Tự động submit lên TestFlight sau khi build xong:
             </p>
             <Terminal title="Terminal">
@@ -230,6 +217,21 @@ export default function DocPage() {
                 <div className="text-gray-500">{"   "}✈{"  "}Auto Submit: bật — IPA sẽ tự động được gửi lên TestFlight sau khi build xong.</div>
               </div>
             </Terminal>
+
+            <p className="text-gray-400 text-sm mt-6 mb-3">
+              Force đăng nhập lại Apple Developer (bỏ cache):
+            </p>
+            <Terminal title="Terminal">
+              <div>
+                <span className="text-gray-500 select-none">$ </span>
+                <span className="text-yellow-300">ant-go</span>
+                <span className="text-white"> build</span>
+                <span className="text-blue-400"> --platform</span>
+                <span className="text-orange-300"> ios</span>
+                <span className="text-blue-400"> --reauth</span>
+              </div>
+            </Terminal>
+
             <p className="text-gray-500 text-xs mt-2">
               Chỉ dùng được với profile có <Code>distribution: store</Code>. Dùng với <Code>distribution: internal</Code> sẽ báo lỗi.
             </p>
@@ -246,7 +248,7 @@ export default function DocPage() {
           </Section>
 
           {/* ── status ── */}
-          <Section id="status" title="ant-go status">
+          <Section id="status" title="Build Status">
             <p className="text-gray-400 text-sm mb-4">
               Xem trạng thái của một build job theo Job ID.
             </p>
@@ -364,7 +366,7 @@ export default function DocPage() {
           </Section>
 
           {/* ── ant.json ── */}
-          <Section id="ant-json" title="ant.json — Build Profiles">
+          <Section id="ant-json" title="Build Profiles">
             <p className="text-gray-400 text-sm mb-4">
               File cấu hình build profiles đặt ở root của project. Nếu chưa có, <Code>ant-go build</Code> sẽ tự tạo với các profile mặc định.
             </p>
@@ -476,7 +478,7 @@ export default function DocPage() {
 
           {/* Footer */}
           <div className="border-t border-gray-800 pt-8 mt-4 flex items-center justify-between">
-            <p className="text-xs text-gray-600">ant-go CLI v1.0 · iOS build automation</p>
+            <p className="text-xs text-gray-600">ant-go CLI v1.0 · Build automation service</p>
             <Link href="/login" className="text-xs text-indigo-400 hover:text-indigo-300 transition">
               Mở Console →
             </Link>
