@@ -38,11 +38,12 @@ async function checkStatus(jobId, options) {
 }
 
 function colorStatus(s) {
-  if (s === 'success') return chalk.green.bold(s);
-  if (s === 'failed')  return chalk.red.bold(s);
-  if (s === 'running') return chalk.cyan(s);
-  if (s === 'pending') return chalk.yellow(s);
-  return s ?? '(unknown)';
+  const u = (s ?? '').toUpperCase();
+  if (s === 'success') return chalk.green.bold(u);
+  if (s === 'failed')  return chalk.red.bold(u);
+  if (s === 'running') return chalk.cyan(u);
+  if (s === 'pending') return chalk.yellow(u);
+  return u || '(UNKNOWN)';
 }
 
 module.exports = { checkStatus };
