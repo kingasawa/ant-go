@@ -1,0 +1,40 @@
+steps:
+  - name: "gcr.io/cloud-builders/npm"
+    args: ["ci"]
+
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
+    entrypoint: "bash"
+    secretEnv: ["FIREBASE_ADMIN_CREDENTIALS_JSON"]
+    args:
+      - "-c"
+      - |
+        cat > env.yaml <<EOF
+        env_variables:
+          FIREBASE_ADMIN_CREDENTIALS_JSON: '$$FIREBASE_ADMIN_CREDENTIALS_JSON'
+          NEXT_PUBLIC_FIREBASE_API_KEY: "${_NEXT_PUBLIC_FIREBASE_API_KEY}"
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "${_NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}"
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: "${_NEXT_PUBLIC_FIREBASE_PROJECT_ID}"
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "${_NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}"
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "${_NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}"
+          NEXT_PUBLIC_FIREBASE_APP_ID: "${_NEXT_PUBLIC_FIREBASE_APP_ID}"
+        EOF
+
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
+    args: ["app", "deploy", "app.yaml", "--quiet", "--project=$PROJECT_ID"]
+
+availableSecrets:
+  secretManager:
+    - versionName: "projects/$PROJECT_ID/secrets/FIREBASE_ADMIN_CREDENTIALS_JSON/versions/latest"
+      env: "FIREBASE_ADMIN_CREDENTIALS_JSON"
+
+substitutions:
+  _NEXT_PUBLIC_FIREBASE_API_KEY: ""
+  _NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ""
+  _NEXT_PUBLIC_FIREBASE_PROJECT_ID: ""
+  _NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ""
+  _NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ""
+  _NEXT_PUBLIC_FIREBASE_APP_ID: ""
+
+options:
+  substitution_option: "ALLOW_LOOSE"
+

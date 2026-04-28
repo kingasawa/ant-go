@@ -9,6 +9,9 @@
 cli/
 *.md
 !README.md
-.env*
+.env.local
+.env.development
+.env.development.local
+.env.local
 env.yaml
 
