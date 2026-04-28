@@ -392,10 +392,69 @@ export default function DocPage() {
               <div className="text-gray-500">{"}"}</div>
             </Terminal>
 
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* production */}
+              <div className="rounded-xl border border-gray-700 bg-gray-900/60 p-4 flex flex-col gap-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-green-300 font-bold font-mono text-sm">production</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/30 text-green-400">store</span>
+                </div>
+                <p className="text-xs text-gray-400 leading-5">
+                  Submit lên <strong className="text-gray-300">App Store</strong> hoặc phân phối qua <strong className="text-gray-300">TestFlight</strong>.
+                </p>
+                <ul className="mt-1 space-y-1 text-xs text-gray-500">
+                  <li>🔑 Distribution Certificate</li>
+                  <li>📋 App Store Provisioning Profile</li>
+                  <li className="text-gray-600">✗ Không cần add device</li>
+                </ul>
+                <div className="mt-auto pt-3 border-t border-gray-800 text-xs text-gray-500">
+                  Dùng khi release chính thức hoặc gửi beta qua TestFlight
+                </div>
+              </div>
+
+              {/* development */}
+              <div className="rounded-xl border border-gray-700 bg-gray-900/60 p-4 flex flex-col gap-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-blue-300 font-bold font-mono text-sm">development</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400">internal</span>
+                </div>
+                <p className="text-xs text-gray-400 leading-5">
+                  Cài trực tiếp lên thiết bị để <strong className="text-gray-300">debug và develop</strong>. Hỗ trợ kết nối Metro bundler (hot reload).
+                </p>
+                <ul className="mt-1 space-y-1 text-xs text-gray-500">
+                  <li>🔑 Development Certificate</li>
+                  <li>📋 Development Provisioning Profile</li>
+                  <li className="text-yellow-500/80">⚠ Cần add device (UDID)</li>
+                </ul>
+                <div className="mt-auto pt-3 border-t border-gray-800 text-xs text-gray-500">
+                  Dùng trong quá trình phát triển, cần debug trên thiết bị thật
+                </div>
+              </div>
+
+              {/* preview */}
+              <div className="rounded-xl border border-gray-700 bg-gray-900/60 p-4 flex flex-col gap-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-orange-300 font-bold font-mono text-sm">preview</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-400">internal</span>
+                </div>
+                <p className="text-xs text-gray-400 leading-5">
+                  Chia sẻ bản test với <strong className="text-gray-300">QA / stakeholders</strong> mà không cần qua App Store, không cần debug tools.
+                </p>
+                <ul className="mt-1 space-y-1 text-xs text-gray-500">
+                  <li>🔑 Distribution Certificate (Ad Hoc)</li>
+                  <li>📋 Ad Hoc Provisioning Profile</li>
+                  <li className="text-yellow-500/80">⚠ Cần add device (UDID)</li>
+                </ul>
+                <div className="mt-auto pt-3 border-t border-gray-800 text-xs text-gray-500">
+                  Dùng khi cần share bản test nội bộ trước khi lên store
+                </div>
+              </div>
+            </div>
+
             <div className="mt-5 border border-gray-800 rounded-xl p-4">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Profile fields</p>
-              <Option flag="distribution"      desc='"store" (App Store) hoặc "internal" (Ad Hoc / TestFlight)' />
-              <Option flag="developmentClient" desc="true → build development client (không submit lên store)" />
+              <Option flag="distribution"      desc='"store" → App Store/TestFlight · "internal" → cài thẳng lên device (cần add device)' />
+              <Option flag="developmentClient" desc="true → build Expo development client, hỗ trợ kết nối Metro bundler" />
             </div>
           </Section>
 
