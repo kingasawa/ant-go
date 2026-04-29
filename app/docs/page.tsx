@@ -41,7 +41,7 @@ function Code({ children }: { children: React.ReactNode }) {
 /* ─── Section — each has its own glass box ───────────────────────────────────── */
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="scroll-mt-24 mb-6">
+    <section id={id} className="scroll-mt-24 mb-12">
       <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-3 px-1">
         <span className="w-1 h-6 bg-accent-light rounded-full inline-block" />
         {title}
@@ -155,23 +155,6 @@ export default function DocPage() {
         style={{ backgroundImage: "url('/assets/images/bgimg1.jpg')" }}
       />
       <div className="fixed inset-0 bg-black/65" />
-
-      {/* ── Floating logo (hiện khi nav ẩn) ── */}
-      <div
-        className="fixed top-3 left-6 z-40 pointer-events-none"
-        style={{
-          opacity: navVisible ? 0 : 1,
-          transform: navVisible ? "translateY(-8px)" : "translateY(0)",
-          transition: "opacity 0.3s ease, transform 0.3s cubic-bezier(0.4,0,0.2,1)",
-        }}
-      >
-        <img
-          src="/assets/images/logo-full.png"
-          alt="Logo"
-          className="h-8 w-auto"
-          style={{ filter: "brightness(0) invert(1)" }}
-        />
-      </div>
 
       {/* ── Top nav ── */}
       <header
