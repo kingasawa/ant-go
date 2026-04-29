@@ -109,14 +109,14 @@ function SidebarNav() {
         }}
       />
 
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-white/35 mb-2 px-3">
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-white/35 mb-3 mt-1 px-3">
         Generals
       </p>
       {navItems.map((n) => (
         <a
           key={n.id}
           href={`#${n.id}`}
-          className="relative z-10 block text-sm py-2 px-3 rounded-lg"
+          className="relative z-10 block text-sm py-2.5 px-3 rounded-lg"
           style={{
             color: activeId === n.id ? "rgb(var(--tw-accent-light))" : "rgba(255,255,255,0.55)",
             transition: "color 0.15s",
@@ -155,6 +155,23 @@ export default function DocPage() {
         style={{ backgroundImage: "url('/assets/images/bgimg1.jpg')" }}
       />
       <div className="fixed inset-0 bg-black/65" />
+
+      {/* ── Floating logo (hiện khi nav ẩn) ── */}
+      <div
+        className="fixed top-3 left-6 z-40 pointer-events-none"
+        style={{
+          opacity: navVisible ? 0 : 1,
+          transform: navVisible ? "translateY(-8px)" : "translateY(0)",
+          transition: "opacity 0.3s ease, transform 0.3s cubic-bezier(0.4,0,0.2,1)",
+        }}
+      >
+        <img
+          src="/assets/images/logo-full.png"
+          alt="Logo"
+          className="h-8 w-auto"
+          style={{ filter: "brightness(0) invert(1)" }}
+        />
+      </div>
 
       {/* ── Top nav ── */}
       <header

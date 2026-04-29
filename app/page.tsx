@@ -378,6 +378,23 @@ export default function HomePage() {
       <div className="fixed inset-0 bg-black/65" />
 
 
+      {/* Floating logo (hiện khi nav ẩn) */}
+      <div
+        className="fixed top-4 left-8 z-40 pointer-events-none"
+        style={{
+          opacity: navVisible ? 0 : 1,
+          transform: navVisible ? "translateY(-8px)" : "translateY(0)",
+          transition: "opacity 0.3s ease, transform 0.3s cubic-bezier(0.4,0,0.2,1)",
+        }}
+      >
+        <img
+          src="/assets/images/logo-full.png"
+          alt="Logo"
+          className="h-10 w-auto"
+          style={{ filter: "brightness(0) invert(1)" }}
+        />
+      </div>
+
       {/* Content — all relative z-10 */}
       <div className="relative z-10 pt-20">
         {/* Nav */}
