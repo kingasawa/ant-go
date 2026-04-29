@@ -92,7 +92,7 @@ export default function HomePage() {
       {/* Nav */}
       <nav className="flex items-center justify-between px-8 py-4 border-b border-gray-800">
         <Link href="/">
-          <img src="/assets/images/logo-full.png" alt="Logo" className="h-12 w-auto" style={{ filter: "brightness(0) invert(1)" }} />
+          <img src="/assets/images/logo-full.png" alt="Logo" className="h-12 w-auto" />
         </Link>
         <div className="flex items-center gap-3">
           <Link
