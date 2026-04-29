@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   createUserWithEmailAndPassword,
@@ -22,10 +22,11 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  if (!loading && user) {
-    router.replace("/account/overview");
-    return null;
-  }
+  useEffect(() => {
+    if (!loading && user) router.replace("/account/overview");
+  }, [user, loading, router]);
+
+  if (!loading && user) return null;
 
   const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault();
