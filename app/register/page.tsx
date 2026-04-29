@@ -9,6 +9,7 @@ import {
 import { auth, googleProvider } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { createUserProfileIfNeeded } from "@/lib/createUserProfile";
+import SceneBackground from "@/app/components/SceneBackground";
 import Link from "next/link";
 
 export default function RegisterPage() {
@@ -33,15 +34,15 @@ export default function RegisterPage() {
     setError("");
 
     if (!displayName.trim()) {
-      setError("Vui lòng nhập tên hiển thị.");
+      setError("Please enter your display name.");
       return;
     }
     if (password.length < 6) {
-      setError("Mật khẩu phải có ít nhất 6 ký tự.");
+      setError("Password must be at least 6 characters.");
       return;
     }
     if (password !== confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp.");
+      setError("Passwords do not match.");
       return;
     }
 
@@ -73,95 +74,116 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-950 flex flex-col items-center justify-center px-4">
+    <main className="relative min-h-screen overflow-hidden flex items-center justify-center px-4 py-10">
+      <SceneBackground />
+
       <Link
         href="/"
-        className="absolute top-6 left-6 text-gray-400 hover:text-white text-sm flex items-center gap-1"
+        className="absolute top-6 left-6 z-20 text-white/60 hover:text-white text-sm flex items-center gap-1 transition-colors"
       >
         ← Home
       </Link>
 
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-6">
-          <div className="text-5xl mb-3">⚙️</div>
-          <h1 className="text-2xl font-bold text-white mb-1">Tạo tài khoản</h1>
-          <p className="text-gray-400 text-sm">
-            Đăng ký để truy cập{" "}
-            <span className="text-indigo-400 font-medium">eas-clone</span> build dashboard
-          </p>
-        </div>
+      {/* Glass card */}
+      <div
+        className="relative z-10 w-full max-w-sm rounded-2xl px-8 py-9"
+        style={{
+          backdropFilter: "blur(22px) saturate(160%)",
+          WebkitBackdropFilter: "blur(22px) saturate(160%)",
+          background: "rgba(255, 255, 255, 0.10)",
+          border: "1px solid rgba(255, 255, 255, 0.22)",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
+        }}
+      >
+        <h1 className="text-3xl font-bold text-white text-center mb-7 tracking-wide">
+          Register
+        </h1>
 
-        {/* Google Sign Up */}
+        {/* Google sign-up */}
         <button
           type="button"
           onClick={handleGoogleRegister}
           disabled={busy || loading}
-          className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-semibold py-2.5 px-6 rounded-xl transition disabled:opacity-60 disabled:cursor-not-allowed mb-4"
+          className="w-full flex items-center justify-center gap-2.5 font-semibold text-sm text-white py-2.5 rounded-xl transition-all disabled:opacity-55 disabled:cursor-not-allowed"
+          style={{
+            background: "rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.18)",
+          }}
         >
           <GoogleIcon />
-          {busy ? "Đang xử lý…" : "Đăng ký với Google"}
+          Sign up with Google
         </button>
 
         {/* Divider */}
-        <div className="relative flex items-center my-4">
-          <div className="flex-grow border-t border-gray-700" />
-          <span className="mx-3 text-gray-500 text-xs uppercase tracking-wider">hoặc</span>
-          <div className="flex-grow border-t border-gray-700" />
+        <div className="relative flex items-center my-5">
+          <div className="flex-grow border-t border-white/15" />
+          <span className="mx-3 text-white/35 text-xs uppercase tracking-widest">or</span>
+          <div className="flex-grow border-t border-white/15" />
         </div>
 
-        {/* Email/Password Form */}
-        <form onSubmit={handleEmailRegister} className="space-y-4">
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Tên hiển thị</label>
+        <form onSubmit={handleEmailRegister} className="space-y-3.5">
+          {/* Display name */}
+          <div className="relative">
             <input
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Nguyễn Văn A"
+              placeholder="Full name"
               required
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition text-sm"
+              className="w-full rounded-xl px-4 py-3 pr-11 text-sm text-white placeholder:text-white/50 bg-white/10 border border-white/20 focus:outline-none focus:border-white/50 transition-colors"
             />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40">
+              <UserIcon />
+            </span>
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Email</label>
+          {/* Email */}
+          <div className="relative">
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder="Email"
               required
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition text-sm"
+              className="w-full rounded-xl px-4 py-3 pr-11 text-sm text-white placeholder:text-white/50 bg-white/10 border border-white/20 focus:outline-none focus:border-white/50 transition-colors"
             />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40">
+              <MailIcon />
+            </span>
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Mật khẩu</label>
+          {/* Password */}
+          <div className="relative">
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Ít nhất 6 ký tự"
+              placeholder="Password (min. 6 chars)"
               required
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition text-sm"
+              className="w-full rounded-xl px-4 py-3 pr-11 text-sm text-white placeholder:text-white/50 bg-white/10 border border-white/20 focus:outline-none focus:border-white/50 transition-colors"
             />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40">
+              <LockIcon />
+            </span>
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Xác nhận mật khẩu</label>
+          {/* Confirm password */}
+          <div className="relative">
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Nhập lại mật khẩu"
+              placeholder="Confirm password"
               required
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition text-sm"
+              className="w-full rounded-xl px-4 py-3 pr-11 text-sm text-white placeholder:text-white/50 bg-white/10 border border-white/20 focus:outline-none focus:border-white/50 transition-colors"
             />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40">
+              <LockIcon />
+            </span>
           </div>
 
           {error && (
-            <p className="text-red-400 text-sm bg-red-900/30 border border-red-800 rounded-lg px-4 py-2">
+            <p className="text-red-300 text-sm bg-red-900/30 border border-red-400/25 rounded-xl px-4 py-2.5 text-center">
               {error}
             </p>
           )}
@@ -169,20 +191,44 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={busy || loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-6 rounded-xl transition disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full bg-white hover:bg-white/90 text-gray-900 font-bold py-3 rounded-xl transition-all disabled:opacity-55 disabled:cursor-not-allowed mt-1"
           >
-            {busy ? "Đang tạo tài khoản…" : "Đăng ký"}
+            {busy ? "Creating account…" : "Create Account"}
           </button>
         </form>
 
-        <p className="mt-5 text-center text-gray-500 text-sm">
-          Đã có tài khoản?{" "}
-          <Link href="/login" className="text-indigo-400 hover:text-indigo-300 font-medium">
-            Đăng nhập
+        <p className="mt-6 text-center text-white/45 text-sm">
+          Already have an account?{" "}
+          <Link href="/login" className="text-white font-semibold hover:underline">
+            Login
           </Link>
         </p>
       </div>
     </main>
+  );
+}
+
+function UserIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 12c2.67 0 4.8-2.13 4.8-4.8S14.67 2.4 12 2.4 7.2 4.53 7.2 7.2 9.33 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
+    </svg>
+  );
+}
+
+function MailIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z" />
+    </svg>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+    </svg>
   );
 }
 
@@ -198,13 +244,13 @@ function GoogleIcon() {
 }
 
 function mapFirebaseError(e: unknown): string {
-  if (!(e instanceof Error)) return "Có lỗi xảy ra. Vui lòng thử lại.";
+  if (!(e instanceof Error)) return "Something went wrong. Please try again.";
   const code = (e as { code?: string }).code ?? "";
   const map: Record<string, string> = {
-    "auth/email-already-in-use": "Email này đã được sử dụng.",
-    "auth/invalid-email": "Email không hợp lệ.",
-    "auth/weak-password": "Mật khẩu quá yếu. Vui lòng dùng ít nhất 6 ký tự.",
-    "auth/popup-closed-by-user": "Bạn đã đóng cửa sổ đăng nhập.",
+    "auth/email-already-in-use": "This email is already registered.",
+    "auth/invalid-email": "Invalid email address.",
+    "auth/weak-password": "Password is too weak (min. 6 characters).",
+    "auth/popup-closed-by-user": "Sign-up popup was closed.",
     "auth/cancelled-popup-request": "",
   };
   return map[code] || e.message;
