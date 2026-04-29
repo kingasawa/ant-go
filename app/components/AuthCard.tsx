@@ -26,7 +26,7 @@ const FACE: React.CSSProperties = {
   position: "absolute",
   inset: 0,
   borderRadius: "1rem",
-  padding: "2.25rem 2rem",
+  padding: "2.25rem 2rem 4.5rem", // extra bottom room for the pinned footer link
   overflowY: "auto",
 };
 
@@ -214,7 +214,7 @@ export default function AuthCard({ initialMode }: { initialMode: Mode }) {
               <GoogleIcon /> Continue with Google
             </button>
 
-            <p className="mt-6 text-center text-white/45 text-sm">
+            <p className="absolute bottom-0 left-0 right-0 pb-6 text-center text-white/45 text-sm">
               Don&apos;t have an account?{" "}
               <button
                 type="button"
@@ -259,7 +259,7 @@ export default function AuthCard({ initialMode }: { initialMode: Mode }) {
               </button>
             </form>
 
-            <p className="mt-5 text-center text-white/45 text-sm">
+            <p className="absolute bottom-0 left-0 right-0 pb-6 text-center text-white/45 text-sm">
               Already have an account?{" "}
               <button
                 type="button"
