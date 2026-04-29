@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -81,7 +81,7 @@ function AppModal({
           <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:bg-white/10 transition" style={{ border: "1px solid rgba(255,255,255,0.2)" }}>
             Huỷ
           </button>
-          <button onClick={handleSubmit as unknown as React.MouseEventHandler} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white text-sm font-semibold transition">
+          <button onClick={handleSubmit as unknown as React.MouseEventHandler} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-accent hover:bg-accent disabled:opacity-60 text-white text-sm font-semibold transition">
             {saving ? "Đang lưu…" : "Tạo App"}
           </button>
         </div>
@@ -150,7 +150,7 @@ function AppCard({ app, onDelete }: { app: AppDoc; onDelete: (app: AppDoc) => vo
           <button
             onClick={handleCopy}
             title="Copy UUID"
-            className="flex-shrink-0 text-white/30 hover:text-indigo-300 transition"
+            className="flex-shrink-0 text-white/30 hover:text-accent-light transition"
           >
             {copied ? (
               <svg className="w-3.5 h-3.5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -254,12 +254,12 @@ export default function AppsPage() {
           <h1 className="text-2xl font-bold text-white">Apps</h1>
           <p className="text-white/50 text-sm mt-1">
             Quản lý các iOS app của bạn ·{" "}
-            <span className="text-indigo-300">{apps.length} app</span>
+            <span className="text-accent-light">{apps.length} app</span>
           </p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition"
+          className="flex items-center gap-2 bg-accent hover:bg-accent text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -285,7 +285,7 @@ export default function AppsPage() {
           <p className="text-sm mt-2 mb-6">Tạo app đầu tiên để bắt đầu build.</p>
           <button
             onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition"
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

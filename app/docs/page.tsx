@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import Link from "next/link";
 import React, { useState, useRef } from "react";
 
@@ -37,7 +37,7 @@ function Terminal({ title, children }: { title?: string; children: React.ReactNo
 /* ─── Inline code ────────────────────────────────────────────────────────────── */
 function Code({ children }: { children: React.ReactNode }) {
   return (
-    <code className="px-1.5 py-0.5 rounded-md text-indigo-300 font-mono text-[13px]"
+    <code className="px-1.5 py-0.5 rounded-md text-accent-light font-mono text-[13px]"
       style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
       {children}
     </code>
@@ -49,7 +49,7 @@ function Section({ id, title, children }: { id: string; title: string; children:
   return (
     <section id={id} className="scroll-mt-24 mb-6">
       <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-3 px-1">
-        <span className="w-1 h-6 bg-indigo-400 rounded-full inline-block" />
+        <span className="w-1 h-6 bg-accent-light rounded-full inline-block" />
         {title}
       </h2>
       <div className="rounded-2xl p-6" style={{ ...GLASS, boxShadow: "0 4px 24px rgba(0,0,0,0.35)" }}>
@@ -170,7 +170,7 @@ export default function DocPage() {
           </Link>
           <Link
             href="/login"
-            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600/80 hover:bg-indigo-500 text-white transition"
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-accent/80 hover:bg-accent text-white transition"
             style={{ border: "1px solid rgba(255,255,255,0.15)" }}
           >
             Console →
@@ -194,7 +194,7 @@ export default function DocPage() {
           {/* Hero — free, no glass box */}
           <div className="mb-10">
             <div
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-indigo-300 text-xs font-semibold mb-4"
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-accent-light text-xs font-semibold mb-4"
               style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)" }}
             >
               CLI v1.0
@@ -240,7 +240,7 @@ export default function DocPage() {
                 <span className="text-blue-400"> --platform</span>
                 <span className="text-orange-300"> ios</span>
               </div>
-              <div className="mt-3 space-y-0.5 text-cyan-300">
+              <div className="mt-3 space-y-0.5 text-accent-light">
                 <div>{"========================================"}</div>
                 <div>{"== Ant Go CLI : v1.0                  =="}</div>
                 <div>{"== Project ID : my-app-prod           =="}</div>
@@ -257,7 +257,7 @@ export default function DocPage() {
                 <div className="text-green-400">✔ Credentials đã cache tại: <span className="text-white/40">~/.ant-go/creds-production.json</span></div>
               </div>
               <div className="mt-3 space-y-1">
-                <div className="text-green-400">✔ Job tạo thành công: <span className="text-indigo-300">abc123xyz</span></div>
+                <div className="text-green-400">✔ Job tạo thành công: <span className="text-accent-light">abc123xyz</span></div>
                 <div className="text-green-400">✔ Project đã nén: <span className="text-white">12.4 MB</span></div>
                 <div className="text-green-400">✔ Upload ios.tar.gz hoàn tất</div>
                 <div className="text-green-400">✔ Upload credentials.json hoàn tất</div>
@@ -388,7 +388,7 @@ export default function DocPage() {
               </div>
               <div className="mt-3 space-y-1">
                 <div className="text-white/30">...</div>
-                <div className="text-cyan-300">📱{"  "}Đăng ký device để cài app development</div>
+                <div className="text-accent-light">📱{"  "}Đăng ký device để cài app development</div>
                 <div className="text-white/30">{"   "}iPhone sẽ tự động gửi UDID khi quét mã QR bên dưới</div>
               </div>
               <div className="mt-3 space-y-1">
@@ -399,7 +399,7 @@ export default function DocPage() {
                   {"  █ ███ █ ██▀▀█ █ ███ █"}<br />
                   {"  ▀▀▀▀▀▀▀ ▀ ▀ ▀ ▀▀▀▀▀▀▀"}
                 </div>
-                <div className="mt-1 text-white/30">Hoặc mở URL: <span className="text-indigo-300 underline">https://ant-go.app/enroll/xxxxxxxx</span></div>
+                <div className="mt-1 text-white/30">Hoặc mở URL: <span className="text-accent-light underline">https://ant-go.app/enroll/xxxxxxxx</span></div>
               </div>
               <div className="mt-3 space-y-1">
                 <div className="text-yellow-400">Đang chờ iPhone xác nhận...</div>
@@ -423,7 +423,7 @@ export default function DocPage() {
               ].map((item) => (
                 <div key={item.step} className="flex gap-3">
                   <span
-                    className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-indigo-300 text-xs font-bold"
+                    className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-accent-light text-xs font-bold"
                     style={{ background: "rgba(99,102,241,0.2)", border: "1px solid rgba(99,102,241,0.4)" }}
                   >
                     {item.step}
@@ -518,7 +518,7 @@ export default function DocPage() {
           {/* Footer */}
           <div className="pt-6 mt-2 flex items-center justify-between" style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
             <p className="text-xs text-white/25">ant-go CLI v1.0 · Build automation service</p>
-            <Link href="/login" className="text-xs text-indigo-400 hover:text-indigo-300 transition">
+            <Link href="/login" className="text-xs text-accent hover:text-accent-light transition">
               Mở Console →
             </Link>
           </div>

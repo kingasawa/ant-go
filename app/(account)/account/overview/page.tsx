@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useState } from "react";
 import { collection, query, where, onSnapshot, orderBy, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -50,7 +50,7 @@ function StatCard({
         <p className="text-sm font-medium text-white/70 mt-1">{label}</p>
         {sub && <p className="text-xs text-white/50 mt-0.5">{sub}</p>}
         {href && (
-          <div className="mt-3 flex items-center gap-1 text-xs text-indigo-300 font-medium">
+          <div className="mt-3 flex items-center gap-1 text-xs text-accent-light font-medium">
             Xem chi tiết
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -172,7 +172,7 @@ export default function DashboardPage() {
               </div>
               <div className="w-full bg-white/10 rounded-full h-1.5">
                 <div
-                  className={`h-1.5 rounded-full ${profile.freeBuildsRemaining <= 2 ? "bg-red-400" : profile.freeBuildsRemaining <= 5 ? "bg-yellow-400" : "bg-indigo-400"}`}
+                  className={`h-1.5 rounded-full ${profile.freeBuildsRemaining <= 2 ? "bg-red-400" : profile.freeBuildsRemaining <= 5 ? "bg-yellow-400" : "bg-accent-light"}`}
                   style={{ width: `${((10 - profile.freeBuildsRemaining) / 10) * 100}%` }}
                 />
               </div>
@@ -184,7 +184,7 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 rounded-2xl p-5" style={GLASS}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-white/80">Recent Builds</h2>
-            <Link href="/account/builds" className="text-xs text-indigo-300 hover:underline">Xem tất cả →</Link>
+            <Link href="/account/builds" className="text-xs text-accent-light hover:underline">Xem tất cả →</Link>
           </div>
           {recentBuilds.length === 0 ? (
             <div className="text-center py-8 text-white/40">
@@ -215,18 +215,18 @@ export default function DashboardPage() {
       <div className="rounded-2xl p-5" style={GLASS}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-white/80">Apps</h2>
-          <Link href="/account/apps" className="text-xs text-indigo-300 hover:underline">Quản lý →</Link>
+          <Link href="/account/apps" className="text-xs text-accent-light hover:underline">Quản lý →</Link>
         </div>
         {apps.length === 0 ? (
           <div className="text-center py-6 text-white/40">
             <p className="text-sm">Chưa có App nào.</p>
-            <Link href="/account/apps" className="text-xs text-indigo-300 hover:underline mt-1 inline-block">Tạo App đầu tiên →</Link>
+            <Link href="/account/apps" className="text-xs text-accent-light hover:underline mt-1 inline-block">Tạo App đầu tiên →</Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {apps.map((app) => (
               <Link key={app.id} href={`/account/app/${encodeURIComponent(app.name)}`}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/15 hover:border-indigo-400/60 hover:bg-white/10 transition"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/15 hover:border-accent/60 hover:bg-white/10 transition"
               >
                 <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                   {app.name.charAt(0).toUpperCase()}

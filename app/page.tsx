@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import Link from "next/link";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -82,10 +82,10 @@ const NAV_GLASS: React.CSSProperties = {
 const HIGHLIGHT_GLASS: React.CSSProperties = {
   backdropFilter: "blur(18px) saturate(180%)",
   WebkitBackdropFilter: "blur(18px) saturate(180%)",
-  background: "rgba(6, 182, 212, 0.18)",
-  border: "1px solid rgba(103, 232, 249, 0.45)",
+  background: "rgb(var(--tw-accent) / 0.18)",
+  border: "1px solid rgb(var(--tw-accent-light) / 0.45)",
   boxShadow:
-    "inset 0px -10px 20px rgba(0,0,0,0.3), inset 0px 2px 20px rgba(103,232,249,0.15), 0px 5px 30px rgba(0,0,0,0.4)",
+    "inset 0px -10px 20px rgba(0,0,0,0.3), inset 0px 2px 20px rgb(var(--tw-accent-light) / 0.15), 0px 5px 30px rgba(0,0,0,0.4)",
 };
 
 type TSegment = { text: string; cls: string };
@@ -103,14 +103,14 @@ const TERMINAL_LINES: TLine[] = [
       { text: "npm",      cls: "text-yellow-300" },
       { text: " install", cls: "text-white/80" },
       { text: " -g",      cls: "text-blue-400" },
-      { text: " ant-go",  cls: "text-cyan-400 font-semibold" },
+      { text: " ant-go",  cls: "text-accent font-semibold" },
     ],
   },
   { type: "output", raw: "added 42 packages in 3s",      outputCls: "text-white/35" },
   {
     type: "cmd", raw: "ant-go build",
     segments: [
-      { text: "ant-go", cls: "text-cyan-400 font-semibold" },
+      { text: "ant-go", cls: "text-accent font-semibold" },
       { text: " build",  cls: "text-green-300" },
     ],
   },
@@ -120,7 +120,7 @@ const TERMINAL_LINES: TLine[] = [
   {
     type: "cmd", raw: "ant-go status abc123xyz",
     segments: [
-      { text: "ant-go",     cls: "text-cyan-400 font-semibold" },
+      { text: "ant-go",     cls: "text-accent font-semibold" },
       { text: " status",    cls: "text-white/80" },
       { text: " abc123xyz", cls: "text-yellow-300" },
     ],
@@ -252,7 +252,7 @@ function StepsList() {
       <ol ref={listRef} className="space-y-5">
         {steps.map((s) => (
           <li key={s.n} className="step-item reveal flex items-start gap-4">
-            <span className="flex-shrink-0 w-9 h-9 rounded-full bg-cyan-500 flex items-center justify-center font-bold text-sm shadow-lg shadow-cyan-900/40">
+            <span className="flex-shrink-0 w-9 h-9 rounded-full bg-accent flex items-center justify-center font-bold text-sm shadow-lg shadow-accent/40">
               {s.n}
             </span>
             <p className="text-white/75 leading-relaxed pt-1">{s.label}</p>
@@ -376,7 +376,7 @@ export default function HomePage() {
           <div className="flex items-center gap-3">
             <Link
               href="/docs"
-              className="border border-white/20 hover:border-cyan-400 text-white/70 hover:text-white text-sm font-medium px-5 py-2 rounded-lg transition"
+              className="border border-white/20 hover:border-accent text-white/70 hover:text-white text-sm font-medium px-5 py-2 rounded-lg transition"
             >
               Docs
             </Link>
@@ -384,9 +384,9 @@ export default function HomePage() {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen((v) => !v)}
-                  className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-medium px-5 py-2 rounded-lg transition"
+                  className="flex items-center gap-2 bg-accent hover:bg-accent text-white text-sm font-medium px-5 py-2 rounded-lg transition"
                 >
-                  <span className="w-6 h-6 rounded-full bg-cyan-400 flex items-center justify-center text-xs font-bold uppercase">
+                  <span className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-xs font-bold uppercase">
                     {(user.displayName || user.email || "U")[0]}
                   </span>
                   <span className="max-w-[120px] truncate">{user.displayName || user.email}</span>
@@ -414,7 +414,7 @@ export default function HomePage() {
             ) : (
               <Link
                 href="/login"
-                className="bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-medium px-5 py-2 rounded-lg transition"
+                className="bg-accent hover:bg-accent text-white text-sm font-medium px-5 py-2 rounded-lg transition"
               >
                 Sign In
               </Link>
@@ -424,7 +424,7 @@ export default function HomePage() {
 
         {/* Hero */}
         <section className="max-w-4xl mx-auto text-center py-28 px-6">
-          <span className="fade-up inline-block text-cyan-300 text-xs font-semibold px-3 py-1 rounded-full mb-6 uppercase tracking-widest" style={{ background: "rgba(6,182,212,0.15)", border: "1px solid rgba(6,182,212,0.35)", animationDelay: "0ms" }}>
+          <span className="fade-up inline-block text-accent-light text-xs font-semibold px-3 py-1 rounded-full mb-6 uppercase tracking-widest" style={{ background: "rgb(var(--tw-accent) / 0.15)", border: "1px solid rgb(var(--tw-accent) / 0.35)", animationDelay: "0ms" }}>
             MULTIPLE PLATFORM · IOS/ANDROID
           </span>
           <h1 className="fade-up text-5xl md:text-6xl font-extrabold leading-tight mb-6" style={{ animationDelay: "100ms" }}>
@@ -442,7 +442,7 @@ export default function HomePage() {
           <div className="fade-up flex flex-col sm:flex-row gap-4 justify-center" style={{ animationDelay: "400ms" }}>
             <Link
               href="/login"
-              className="btn-pulse bg-cyan-500 hover:bg-cyan-400 text-white font-semibold px-8 py-3 rounded-xl transition text-lg shadow-lg shadow-cyan-900/40"
+              className="btn-pulse bg-accent hover:bg-accent text-white font-semibold px-8 py-3 rounded-xl transition text-lg shadow-lg shadow-accent/40"
             >
               Vào Dashboard →
             </Link>
@@ -487,7 +487,7 @@ export default function HomePage() {
                   style={plan.highlight ? HIGHLIGHT_GLASS : GLASS}
                 >
                   {plan.highlight && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyan-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
                       Phổ biến nhất
                     </span>
                   )}
@@ -500,7 +500,7 @@ export default function HomePage() {
                   <ul className="space-y-2 mb-8 flex-1">
                     {plan.features.map((f) => (
                       <li key={f} className="flex items-center gap-2 text-sm text-white/80">
-                        <svg className="w-4 h-4 text-cyan-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-accent flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                         {f}
@@ -511,7 +511,7 @@ export default function HomePage() {
                     href="/login"
                     className={`w-full text-center py-2.5 rounded-xl text-sm font-semibold transition ${
                       plan.highlight
-                        ? "bg-cyan-500 hover:bg-cyan-400 text-white"
+                        ? "bg-accent hover:bg-accent text-white"
                         : "hover:bg-white/10 text-white/80 hover:text-white"
                     }`}
                     style={plan.highlight ? {} : { border: "1px solid rgba(255,255,255,0.2)" }}
@@ -531,7 +531,7 @@ export default function HomePage() {
             <p className="text-white/60 mb-8">Đăng nhập để vào dashboard, tạo project và lấy Project ID cho CLI.</p>
             <Link
               href="/login"
-              className="bg-cyan-500 hover:bg-cyan-400 text-white font-semibold px-10 py-3 rounded-xl transition text-lg shadow-lg shadow-cyan-900/40"
+              className="bg-accent hover:bg-accent text-white font-semibold px-10 py-3 rounded-xl transition text-lg shadow-lg shadow-accent/40"
             >
               Đăng nhập →
             </Link>

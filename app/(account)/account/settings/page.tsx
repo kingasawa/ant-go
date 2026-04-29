@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -63,7 +63,7 @@ function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void 
   return (
     <button
       onClick={onToggle}
-      className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${enabled ? "bg-indigo-500" : "bg-white/20"}`}
+      className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${enabled ? "bg-accent" : "bg-white/20"}`}
     >
       <span
         className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${enabled ? "translate-x-5" : "translate-x-0"}`}
@@ -102,12 +102,12 @@ function ThemePicker() {
               onClick={() => setTheme(opt.id)}
               className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 transition-all
                 ${active
-                  ? "border-indigo-400 bg-indigo-500/20"
+                  ? "border-accent bg-accent/20"
                   : "border-white/20 hover:border-white/40"
                 }`}
             >
               <span className="text-2xl">{opt.icon}</span>
-              <span className={`text-xs font-semibold ${active ? "text-indigo-300" : "text-white/60"}`}>
+              <span className={`text-xs font-semibold ${active ? "text-accent-light" : "text-white/60"}`}>
                 {opt.label}
               </span>
               {opt.id === "system" && mounted && (

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useState } from "react";
 import { doc, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -8,7 +8,7 @@ import { GLASS } from "@/lib/glass";
 
 const PLAN_BADGE: Record<string, string> = {
   free: "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300",
-  pro: "bg-indigo-100 dark:bg-indigo-600/30 text-indigo-600 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700",
+  pro: "bg-accent/15 dark:bg-accent/30 text-accent dark:text-accent-light border border-accent dark:border-accent-dark",
   enterprise: "bg-yellow-50 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-300 border border-yellow-300 dark:border-yellow-700",
 };
 
@@ -113,7 +113,7 @@ export default function ProfilePage() {
         </div>
         <div className="w-full bg-white/10 rounded-full h-2.5">
           <div
-            className={`h-2.5 rounded-full transition-all ${freeUsed >= 10 ? "bg-red-400" : freeUsed >= 7 ? "bg-yellow-400" : "bg-indigo-400"}`}
+            className={`h-2.5 rounded-full transition-all ${freeUsed >= 10 ? "bg-red-400" : freeUsed >= 7 ? "bg-yellow-400" : "bg-accent-light"}`}
             style={{ width: `${Math.min((freeUsed / 10) * 100, 100)}%` }}
           />
         </div>

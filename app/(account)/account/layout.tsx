@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -86,7 +86,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 								onClick={() => setSidebarOpen(false)}
 								className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition
                   ${isActive
-										? "bg-indigo-600/20 text-indigo-300 font-medium"
+										? "bg-accent/20 text-accent-light font-medium"
 										: "text-white/50 hover:bg-white/10 hover:text-white"
 									}`}
 							>

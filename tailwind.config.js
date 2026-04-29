@@ -7,6 +7,14 @@ module.exports = {
   ],
   theme: {
     extend: {
+      colors: {
+        // Accent color — driven by CSS variables in globals.css
+        accent: {
+          DEFAULT: "rgb(var(--tw-accent) / <alpha-value>)",
+          light:   "rgb(var(--tw-accent-light) / <alpha-value>)",
+          dark:    "rgb(var(--tw-accent-dark) / <alpha-value>)",
+        },
+      },
       fontFamily: {
         sans: [
           "-apple-system",

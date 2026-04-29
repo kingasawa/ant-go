@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { collection, query, where, onSnapshot, getDocs, orderBy } from "firebase/firestore";
@@ -172,7 +172,7 @@ const BuildRow = React.memo(function BuildRow({ build, onClick, checked, onCheck
         removing
           ? "opacity-0 scale-y-0 h-0 overflow-hidden"
           : checked
-          ? "bg-indigo-950/30"
+          ? "bg-accent-dark/20/30"
           : "hover:bg-white/10"
       }`}
     >
@@ -181,7 +181,7 @@ const BuildRow = React.memo(function BuildRow({ build, onClick, checked, onCheck
           type="checkbox"
           checked={checked}
           onChange={(e) => onCheck(build.id, e.target.checked)}
-          className="w-3.5 h-3.5 rounded border-gray-600 bg-gray-800 accent-indigo-500 cursor-pointer"
+          className="w-3.5 h-3.5 rounded border-gray-600 bg-gray-800 accent-[rgb(var(--tw-accent))] cursor-pointer"
         />
       </td>
       <td className="px-4 py-3 font-mono text-xs text-white/60 max-w-[120px] truncate">{build.id}</td>
@@ -216,7 +216,7 @@ const BuildRow = React.memo(function BuildRow({ build, onClick, checked, onCheck
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center justify-center text-indigo-400 hover:text-indigo-300 transition"
+            className="inline-flex items-center justify-center text-accent hover:text-accent-light transition"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -391,7 +391,7 @@ export default function AppBuildsPage() {
         </div>
         <p className="text-white/50 text-sm mt-1">
           {decodedName}{" · "}
-          <span className="text-indigo-300">{builds.length} builds</span>
+          <span className="text-accent-light">{builds.length} builds</span>
         </p>
       </div>
 
@@ -408,7 +408,7 @@ export default function AppBuildsPage() {
           <button key={s} onClick={() => setStatusFilter(s)}
             className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition border
               ${statusFilter === s
-                ? "bg-indigo-600 text-white border-indigo-600"
+                ? "bg-accent text-white border-accent"
                 : "bg-white/10 text-white/60 border-white/20 hover:border-white/40"
               }`}
           >
@@ -468,7 +468,7 @@ export default function AppBuildsPage() {
                     checked={allPageSelected}
                     ref={(el) => { if (el) el.indeterminate = somePageSelected && !allPageSelected; }}
                     onChange={(e) => handleSelectAll(e.target.checked)}
-                    className="w-3.5 h-3.5 rounded border-gray-600 bg-gray-800 accent-indigo-500 cursor-pointer"
+                    className="w-3.5 h-3.5 rounded border-gray-600 bg-gray-800 accent-[rgb(var(--tw-accent))] cursor-pointer"
                   />
                 </th>
                 <th className="px-4 py-3 text-left">Job ID</th>
@@ -522,7 +522,7 @@ export default function AppBuildsPage() {
                     onClick={() => setPage(p as number)}
                     className={`px-2.5 py-1 text-xs rounded-lg border transition ${
                       page === p
-                        ? "bg-indigo-600 text-white border-indigo-600"
+                        ? "bg-accent text-white border-accent"
                         : "border-white/20 text-white/50 hover:border-white/40"
                     }`}
                   >{p}</button>

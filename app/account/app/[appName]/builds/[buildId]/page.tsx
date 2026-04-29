@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { collection, doc, onSnapshot, query } from "firebase/firestore";
@@ -446,7 +446,7 @@ function InstallTab({ build }: { build: Build }) {
               "Nhấn Install → chờ cài xong",
             ].map((step, i) => (
               <li key={i} className="flex items-start gap-2.5">
-                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-bold text-white mt-0.5">
+                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent flex items-center justify-center text-[10px] font-bold text-white mt-0.5">
                   {i + 1}
                 </span>
                 {step}
@@ -455,7 +455,7 @@ function InstallTab({ build }: { build: Build }) {
           </ol>
           <a
             href={installUrl}
-            className="mt-1 inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 transition"
+            className="mt-1 inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent-light transition"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -471,7 +471,7 @@ function InstallTab({ build }: { build: Build }) {
         <p className="text-xs text-gray-500 mb-3">
           App này dùng <span className="text-gray-300 font-mono">expo-dev-client</span> — cần Metro đang chạy trên máy để load JS bundle.
         </p>
-        <code className="block bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-sm text-indigo-300 font-mono select-all">
+        <code className="block bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-sm text-accent-light font-mono select-all">
           npx expo start --dev-client
         </code>
         <p className="text-xs text-gray-600 mt-2">
@@ -487,7 +487,7 @@ function InstallTab({ build }: { build: Build }) {
           </svg>
           <span>
             Cần cài thủ công?{" "}
-            <a href={build.ipaUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">
+            <a href={build.ipaUrl} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
               Download .ipa
             </a>{" "}
             rồi dùng Apple Configurator 2 hoặc Xcode.
@@ -682,7 +682,7 @@ export default function BuildDetailPage() {
           {canRebuild && (
             <button
               onClick={() => setShowConfirm(true)}
-              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition"
+              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-accent hover:bg-accent text-white transition"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -762,7 +762,7 @@ export default function BuildDetailPage() {
             onClick={() => setTab(t as "logs" | "info" | "install")}
             className={`py-2.5 mr-6 text-xs font-semibold uppercase tracking-wide border-b-2 transition -mb-px ${
               tab === t
-                ? "border-indigo-400 text-indigo-300"
+                ? "border-accent text-accent-light"
                 : "border-transparent text-white/40 hover:text-white/70"
             }`}
           >
@@ -842,8 +842,8 @@ export default function BuildDetailPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4" style={GLASS}>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <div className="w-9 h-9 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </div>
@@ -857,7 +857,7 @@ export default function BuildDetailPage() {
                 className="px-4 py-2 text-xs font-semibold rounded-lg text-white/70 hover:bg-white/10 transition disabled:opacity-50"
                 style={{ border: "1px solid rgba(255,255,255,0.2)" }}>Huỷ</button>
               <button onClick={handleRebuild} disabled={rebuilding}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition disabled:opacity-60">
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-accent hover:bg-accent text-white transition disabled:opacity-60">
                 {rebuilding ? (<><span className="w-3 h-3 rounded-full border-2 border-white/40 border-t-white animate-spin" />Đang xử lý...</>) : "Rebuild"}
               </button>
             </div>
