@@ -11,11 +11,11 @@
 .shimmer-text {
   background: linear-gradient(
     90deg,
-    #818cf8 0%,
-    #a5b4fc 30%,
+    #67e8f9 0%,
+    #a5f3fc 30%,
     #ffffff 50%,
-    #a5b4fc 70%,
-    #818cf8 100%
+    #a5f3fc 70%,
+    #67e8f9 100%
   );
   background-size: 200% auto;
   -webkit-background-clip: text;
@@ -41,7 +41,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: #6366f1;
+  background: #06b6d4;
   animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   pointer-events: none;
 }
@@ -53,10 +53,10 @@
 .card-glow:hover {
   transform: translateY(-4px) scale(1.01);
   box-shadow:
-    0 0 0 1px rgba(129, 140, 248, 0.5),
-    0 8px 32px rgba(99, 102, 241, 0.25),
-    inset 0 1px 0 rgba(165, 180, 252, 0.15);
-  border-color: rgba(129, 140, 248, 0.5) !important;
+    0 0 0 1px rgba(103, 232, 249, 0.5),
+    0 8px 32px rgba(6, 182, 212, 0.22),
+    inset 0 1px 0 rgba(165, 243, 252, 0.12);
+  border-color: rgba(103, 232, 249, 0.5) !important;
 }
 
 /* ── C1: Scroll reveal ───────────────────────────────────────────────────────── */
