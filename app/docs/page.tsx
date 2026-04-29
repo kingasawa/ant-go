@@ -126,6 +126,7 @@ function SidebarNav() {
           style={{
             color: activeId === n.id ? "rgba(165,180,252,1)" : "rgba(255,255,255,0.55)",
             transition: "color 0.15s",
+            // boxShadow: activeId === n.id ? "inset 0px -2px 20px rgba(0, 0, 0, 0.3), inset 0px 10px 20px rgba(255, 255, 255, 0.5)" : "",
           }}
           onMouseEnter={(e) => handleMouseEnter(e, n.id)}
         >

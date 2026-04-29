@@ -8,6 +8,7 @@ import {
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { AppDoc, AppFormData, APP_FORM_FIELDS } from "@/lib/appTypes";
+import { GLASS } from "@/lib/glass";
 
 /* ─── Empty form ─────────────────────────────────────────────────────────── */
 const emptyForm = (): AppFormData => ({
@@ -43,11 +44,11 @@ function AppModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm flex flex-col">
+      <div className="relative rounded-2xl w-full max-w-sm flex flex-col" style={GLASS}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white">📱 Tạo App mới</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 dark:hover:text-white p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.15)" }}>
+          <h2 className="text-base font-semibold text-white">📱 Tạo App mới</h2>
+          <button onClick={onClose} className="text-white/50 hover:text-white p-1 rounded-lg hover:bg-white/10 transition">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -56,8 +57,8 @@ function AppModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-6 py-5">
-          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-            Tên App <span className="text-red-500">*</span>
+          <label className="block text-xs font-medium text-white/60 mb-1">
+            Tên App <span className="text-red-400">*</span>
           </label>
           <input
             type="text"
@@ -65,19 +66,19 @@ function AppModal({
             value={name}
             onChange={(e) => { setName(e.target.value); setError(""); }}
             placeholder="My Awesome App"
-            className={`w-full px-3 py-2 rounded-xl border text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 outline-none transition
+            className={`w-full px-3 py-2 rounded-xl border text-sm bg-white/10 text-white placeholder-white/30 outline-none transition
               ${error
-                ? "border-red-400 dark:border-red-600 focus:ring-2 focus:ring-red-300"
-                : "border-gray-200 dark:border-gray-700 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-300/30"
+                ? "border-red-400/60 focus:ring-2 focus:ring-red-300/30"
+                : "border-white/20 focus:border-white/50 focus:ring-2 focus:ring-white/10"
               }`}
           />
-          {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-          <p className="text-xs text-gray-400 mt-2">Các thông tin còn lại (Bundle ID, Team ID, Scheme…) sẽ được cập nhật sau.</p>
+          {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
+          <p className="text-xs text-white/40 mt-2">Các thông tin còn lại (Bundle ID, Team ID, Scheme…) sẽ được cập nhật sau.</p>
         </form>
 
         {/* Footer */}
-        <div className="flex gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-800">
-          <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+        <div className="flex gap-3 px-6 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.15)" }}>
+          <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:bg-white/10 transition" style={{ border: "1px solid rgba(255,255,255,0.2)" }}>
             Huỷ
           </button>
           <button onClick={handleSubmit as unknown as React.MouseEventHandler} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white text-sm font-semibold transition">
@@ -94,15 +95,15 @@ function DeleteConfirm({ app, onClose, onConfirm }: { app: AppDoc; onClose: () =
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
+      <div className="relative rounded-2xl w-full max-w-sm p-6 text-center" style={GLASS}>
         <div className="text-4xl mb-3">🗑️</div>
-        <h3 className="text-base font-bold text-gray-900 dark:text-white mb-2">Xoá App</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          Bạn có chắc muốn xoá <strong className="text-gray-800 dark:text-gray-200">{app.name}</strong>?
+        <h3 className="text-base font-bold text-white mb-2">Xoá App</h3>
+        <p className="text-sm text-white/60 mb-6">
+          Bạn có chắc muốn xoá <strong className="text-white">{app.name}</strong>?
           Hành động này không thể hoàn tác.
         </p>
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:bg-white/10 transition" style={{ border: "1px solid rgba(255,255,255,0.2)" }}>
             Huỷ
           </button>
           <button onClick={onConfirm} className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-semibold transition">
@@ -130,28 +131,29 @@ function AppCard({ app, onDelete }: { app: AppDoc; onDelete: (app: AppDoc) => vo
   return (
     <div
       onClick={() => router.push(`/account/app/${encodeURIComponent(app.name)}`)}
-      className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 hover:border-indigo-300 dark:hover:border-indigo-700 transition group flex items-center gap-4 cursor-pointer"
+      className="rounded-2xl p-5 hover:scale-[1.01] transition-all group flex items-center gap-4 cursor-pointer"
+      style={GLASS}
     >
       {/* Icon / Avatar */}
-      <div className="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center flex-shrink-0 text-indigo-600 dark:text-indigo-300 font-bold text-lg select-none">
+      <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center flex-shrink-0 text-white font-bold text-lg select-none">
         {initial}
       </div>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">{app.name}</h3>
+        <h3 className="text-sm font-semibold text-white truncate">{app.name}</h3>
         {app.scheme && (
-          <p className="text-xs text-gray-400 font-mono mt-0.5 truncate">{app.scheme}</p>
+          <p className="text-xs text-white/50 font-mono mt-0.5 truncate">{app.scheme}</p>
         )}
         <div className="flex items-center gap-1 mt-0.5">
-          <p className="text-xs text-gray-300 dark:text-gray-600 font-mono break-all leading-relaxed">{app.id}</p>
+          <p className="text-xs text-white/25 font-mono break-all leading-relaxed">{app.id}</p>
           <button
             onClick={handleCopy}
             title="Copy UUID"
-            className="flex-shrink-0 text-gray-300 dark:text-gray-600 hover:text-indigo-500 dark:hover:text-indigo-400 transition"
+            className="flex-shrink-0 text-white/30 hover:text-indigo-300 transition"
           >
             {copied ? (
-              <svg className="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             ) : (
@@ -166,7 +168,7 @@ function AppCard({ app, onDelete }: { app: AppDoc; onDelete: (app: AppDoc) => vo
       {/* Delete button */}
       <button
         onClick={(e) => { e.stopPropagation(); onDelete(app); }}
-        className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition flex-shrink-0"
+        className="opacity-0 group-hover:opacity-100 text-white/40 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/20 transition flex-shrink-0"
         title="Xoá app"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,10 +251,10 @@ export default function AppsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Apps</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-white">Apps</h1>
+          <p className="text-white/50 text-sm mt-1">
             Quản lý các iOS app của bạn ·{" "}
-            <span className="text-indigo-600 dark:text-indigo-400">{apps.length} app</span>
+            <span className="text-indigo-300">{apps.length} app</span>
           </p>
         </div>
         <button
@@ -268,18 +270,18 @@ export default function AppsPage() {
 
       {/* Error */}
       {error && (
-        <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-3">
-          <p className="text-sm text-red-600 dark:text-red-400 font-mono">{error}</p>
+        <div className="mb-6 rounded-xl px-4 py-3" style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)" }}>
+          <p className="text-sm text-red-300 font-mono">{error}</p>
         </div>
       )}
 
       {/* Content */}
       {loading ? (
-        <div className="text-center py-24 text-gray-400 animate-pulse">Loading…</div>
+        <div className="text-center py-24 text-white/40 animate-pulse">Loading…</div>
       ) : apps.length === 0 ? (
-        <div className="text-center py-24 text-gray-400">
+        <div className="text-center py-24 text-white/40">
           <div className="text-6xl mb-4">📱</div>
-          <p className="text-lg font-medium text-gray-600 dark:text-gray-300">Chưa có App nào</p>
+          <p className="text-lg font-medium text-white/70">Chưa có App nào</p>
           <p className="text-sm mt-2 mb-6">Tạo app đầu tiên để bắt đầu build.</p>
           <button
             onClick={() => setShowCreate(true)}

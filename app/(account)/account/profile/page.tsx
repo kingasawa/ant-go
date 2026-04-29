@@ -4,6 +4,7 @@ import { doc, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { UserProfile } from "@/lib/createUserProfile";
+import { GLASS } from "@/lib/glass";
 
 const PLAN_BADGE: Record<string, string> = {
   free: "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300",
@@ -17,6 +18,7 @@ const PLAN_ICON: Record<string, string> = {
   enterprise: "🏢",
 };
 
+
 function formatTimestamp(value: unknown): string {
   if (!value) return "—";
   if (value instanceof Timestamp) return value.toDate().toLocaleString();
@@ -28,10 +30,10 @@ function formatTimestamp(value: unknown): string {
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
-      <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">{label}</p>
-      <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
-      {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+    <div className="rounded-2xl p-5" style={GLASS}>
+      <p className="text-xs text-white/50 uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-2xl font-bold text-white">{value}</p>
+      {sub && <p className="text-xs text-white/40 mt-1">{sub}</p>}
     </div>
   );
 }
@@ -53,14 +55,14 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-32">
-        <div className="text-gray-400 animate-pulse">Loading profile…</div>
+        <div className="text-white/40 animate-pulse">Loading profile…</div>
       </div>
     );
   }
 
   if (!profile || !user) {
     return (
-      <div className="flex items-center justify-center py-32 text-gray-400">
+      <div className="flex items-center justify-center py-32 text-white/40">
         <div className="text-center">
           <div className="text-4xl mb-3">😕</div>
           <p>Profile not found in Firestore.</p>
@@ -75,21 +77,21 @@ export default function ProfilePage() {
     <div className="max-w-3xl mx-auto space-y-8">
       {/* Page title */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Profile</h1>
-        <p className="text-gray-400 text-sm mt-1">Your account information synced from Firestore</p>
+        <h1 className="text-2xl font-bold text-white">Profile</h1>
+        <p className="text-white/50 text-sm mt-1">Your account information synced from Firestore</p>
       </div>
 
       {/* Avatar + identity */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 flex items-center gap-6">
+      <div className="rounded-2xl p-6 flex items-center gap-6" style={GLASS}>
         <img
           src={profile.photoURL ?? "/avatar.png"}
           alt={profile.displayName ?? "User"}
-          className="w-20 h-20 rounded-full border-2 border-gray-200 dark:border-gray-700 flex-shrink-0"
+          className="w-20 h-20 rounded-full border-2 border-white/25 flex-shrink-0"
         />
         <div className="flex-1 min-w-0">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white truncate">{profile.displayName ?? "—"}</h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm truncate">{profile.email ?? "—"}</p>
-          <p className="text-gray-400 text-xs font-mono mt-1 truncate">uid: {profile.uid}</p>
+          <h2 className="text-xl font-semibold text-white truncate">{profile.displayName ?? "—"}</h2>
+          <p className="text-white/60 text-sm truncate">{profile.email ?? "—"}</p>
+          <p className="text-white/30 text-xs font-mono mt-1 truncate">uid: {profile.uid}</p>
         </div>
         <span className={`text-xs font-semibold px-3 py-1 rounded-full ${PLAN_BADGE[profile.plan] ?? PLAN_BADGE.free}`}>
           {PLAN_ICON[profile.plan]} {profile.plan.charAt(0).toUpperCase() + profile.plan.slice(1)}
@@ -104,25 +106,25 @@ export default function ProfilePage() {
       </div>
 
       {/* Free credit usage bar */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+      <div className="rounded-2xl p-6" style={GLASS}>
         <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-medium text-gray-900 dark:text-white">Free Build Credits</p>
-          <p className="text-sm text-gray-400">{freeUsed} / 10 used</p>
+          <p className="text-sm font-medium text-white">Free Build Credits</p>
+          <p className="text-sm text-white/50">{freeUsed} / 10 used</p>
         </div>
-        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5">
+        <div className="w-full bg-white/10 rounded-full h-2.5">
           <div
-            className={`h-2.5 rounded-full transition-all ${freeUsed >= 10 ? "bg-red-500" : freeUsed >= 7 ? "bg-yellow-500" : "bg-indigo-500"}`}
+            className={`h-2.5 rounded-full transition-all ${freeUsed >= 10 ? "bg-red-400" : freeUsed >= 7 ? "bg-yellow-400" : "bg-indigo-400"}`}
             style={{ width: `${Math.min((freeUsed / 10) * 100, 100)}%` }}
           />
         </div>
         {profile.freeBuildsRemaining === 0 && (
-          <p className="text-xs text-red-500 mt-2">⚠ Free credits exhausted. Upgrade your plan to continue building.</p>
+          <p className="text-xs text-red-400 mt-2">⚠ Free credits exhausted. Upgrade your plan to continue building.</p>
         )}
       </div>
 
       {/* Account details */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 space-y-4">
-        <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Account Details</h3>
+      <div className="rounded-2xl p-6 space-y-4" style={GLASS}>
+        <h3 className="text-sm font-semibold text-white/50 uppercase tracking-wider">Account Details</h3>
         {[
           { label: "Display Name", value: profile.displayName ?? "—" },
           { label: "Email", value: profile.email ?? "—" },
@@ -131,9 +133,9 @@ export default function ProfilePage() {
           { label: "Member Since", value: formatTimestamp(profile.createdAt) },
           { label: "Last Updated", value: formatTimestamp(profile.updatedAt) },
         ].map((row) => (
-          <div key={row.label} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
-            <span className="text-sm text-gray-400">{row.label}</span>
-            <span className={`text-sm text-gray-700 dark:text-gray-200 max-w-[60%] truncate text-right ${row.mono ? "font-mono text-xs" : ""}`}>
+          <div key={row.label} className="flex items-center justify-between py-2 last:border-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+            <span className="text-sm text-white/50">{row.label}</span>
+            <span className={`text-sm text-white/90 max-w-[60%] truncate text-right ${row.mono ? "font-mono text-xs" : ""}`}>
               {row.value}
             </span>
           </div>

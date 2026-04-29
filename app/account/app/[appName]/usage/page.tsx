@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { GLASS } from "@/lib/glass";
 
 interface Build {
   id: string;
@@ -43,14 +44,14 @@ export default function UsagePage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Usage</h1>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Thống kê sử dụng của app.</p>
+      <h1 className="text-xl font-bold text-white mb-1">Usage</h1>
+      <p className="text-sm text-white/50 mb-6">Thống kê sử dụng của app.</p>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map(({ label, value }) => (
-          <div key={label} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
-            <p className="text-3xl font-bold text-gray-900 dark:text-white">{value}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{label}</p>
+          <div key={label} className="rounded-2xl p-5" style={GLASS}>
+            <p className="text-3xl font-bold text-white">{value}</p>
+            <p className="text-sm text-white/60 mt-1">{label}</p>
           </div>
         ))}
       </div>

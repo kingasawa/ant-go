@@ -43,6 +43,20 @@ function IconBuilds() {
   );
 }
 
+const SIDEBAR: React.CSSProperties = {
+  backdropFilter: "blur(20px) saturate(160%)",
+  WebkitBackdropFilter: "blur(20px) saturate(160%)",
+  background: "rgba(255,255,255,0.07)",
+  borderRight: "1px solid rgba(255,255,255,0.11)",
+};
+
+const TOPBAR: React.CSSProperties = {
+  backdropFilter: "blur(20px) saturate(160%)",
+  WebkitBackdropFilter: "blur(20px) saturate(160%)",
+  background: "rgba(255,255,255,0.07)",
+  borderBottom: "1px solid rgba(255,255,255,0.11)",
+};
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { appName } = useParams<{ appName: string }>();
   const decodedName = decodeURIComponent(appName ?? "");
@@ -68,15 +82,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     },
   ];
 
-  const sidebar = (
-    <aside className="w-60 flex-shrink-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col">
+  const sidebarContent = (
+    <>
       {/* App name header */}
-      <div className="px-5 py-5 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
+      <div className="px-5 py-5 flex-shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-300 font-bold text-sm flex-shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
             {decodedName.charAt(0).toUpperCase()}
           </div>
-          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{decodedName}</p>
+          <p className="text-sm font-semibold text-white truncate">{decodedName}</p>
         </div>
       </div>
 
@@ -84,7 +98,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="px-2 pt-3">
         <Link
           href="/account/overview"
-          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white/50 hover:bg-white/10 hover:text-white transition"
         >
           <IconBack />
           Account
@@ -95,7 +109,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <nav className="flex-1 px-2 py-2 space-y-4 overflow-y-auto">
         {sections.map((section) => (
           <div key={section.title}>
-            <p className="px-3 mb-1 text-[10px] font-semibold tracking-wider text-gray-400 dark:text-gray-500 uppercase">
+            <p className="px-3 mb-1 text-[10px] font-semibold tracking-wider text-white/30 uppercase">
               {section.title}
             </p>
             <div className="space-y-0.5">
@@ -108,8 +122,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition
                       ${isActive
-                        ? "bg-indigo-50 dark:bg-indigo-600/20 text-indigo-600 dark:text-indigo-300 font-medium"
-                        : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                        ? "bg-indigo-600/20 text-indigo-300 font-medium"
+                        : "text-white/50 hover:bg-white/10 hover:text-white"
                       }`}
                   >
                     <Icon />
@@ -122,34 +136,45 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         ))}
       </nav>
 
-      {/* User section — fixed at bottom */}
+      {/* User section */}
       <SidebarUserCard />
-    </aside>
+    </>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex">
+    <div className="min-h-screen relative text-white flex">
+      {/* Fixed background */}
+      <div
+        className="fixed inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('/assets/images/bgimg1.jpg')" }}
+      />
+      <div className="fixed inset-0 bg-black/60" />
+
       {/* Desktop sidebar */}
-      <div className="hidden lg:flex">{sidebar}</div>
+      <aside className="hidden lg:flex relative z-10 w-60 flex-shrink-0 flex-col" style={SIDEBAR}>
+        {sidebarContent}
+      </aside>
 
       {/* Mobile sidebar */}
       {sidebarOpen && (
         <>
           <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
-          <div className="fixed inset-y-0 left-0 z-40 lg:hidden">{sidebar}</div>
+          <aside className="fixed inset-y-0 left-0 z-40 w-60 flex flex-col lg:hidden" style={SIDEBAR}>
+            {sidebarContent}
+          </aside>
         </>
       )}
 
       {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="relative flex-1 flex flex-col min-w-0">
         {/* Mobile topbar */}
-        <header className="lg:hidden flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-          <button onClick={() => setSidebarOpen(true)} className="text-gray-500 dark:text-gray-400 p-1">
+        <header className="lg:hidden flex items-center gap-3 px-4 py-3" style={TOPBAR}>
+          <button onClick={() => setSidebarOpen(true)} className="text-white/60 hover:text-white p-1 transition">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <span className="text-sm font-semibold text-gray-900 dark:text-white">{decodedName}</span>
+          <span className="text-sm font-semibold text-white">{decodedName}</span>
         </header>
 
         <main className="flex-1 px-6 py-8 overflow-auto">{children}</main>
@@ -157,4 +182,3 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-

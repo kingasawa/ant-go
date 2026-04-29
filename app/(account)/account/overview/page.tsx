@@ -5,6 +5,7 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { UserProfile } from "@/lib/createUserProfile";
 import Link from "next/link";
+import { GLASS } from "@/lib/glass";
 
 interface Build {
   id: string;
@@ -29,10 +30,12 @@ function StatCard({
   bgIcon: React.ReactNode;
 }) {
   const inner = (
-    <div className="relative overflow-hidden bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5
-                    transition-all duration-300 ease-out hover:scale-[1.025] hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-700 cursor-default">
+    <div
+      className="relative overflow-hidden rounded-2xl p-5 transition-all duration-300 ease-out hover:scale-[1.025] cursor-default"
+      style={GLASS}
+    >
       {/* SVG watermark background — right half, full height, tilted 30° */}
-      <div className="pointer-events-none absolute top-0 right-0 w-1/2 h-full text-gray-200 dark:text-gray-700/30 opacity-40">
+      <div className="pointer-events-none absolute top-0 right-0 w-1/2 h-full text-white/20 opacity-40">
         <div
           className="w-full h-full [&_svg]:w-full [&_svg]:h-full [&_svg]:stroke-current"
           style={{ transform: "rotate(30deg) scale(1.4)", transformOrigin: "center" }}
@@ -43,11 +46,11 @@ function StatCard({
 
       {/* Content */}
       <div className="relative">
-        <p className="text-3xl font-bold text-gray-900 dark:text-white">{value}</p>
-        <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mt-1">{label}</p>
-        {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+        <p className="text-3xl font-bold text-white">{value}</p>
+        <p className="text-sm font-medium text-white/70 mt-1">{label}</p>
+        {sub && <p className="text-xs text-white/50 mt-0.5">{sub}</p>}
         {href && (
-          <div className="mt-3 flex items-center gap-1 text-xs text-indigo-500 dark:text-indigo-400 font-medium">
+          <div className="mt-3 flex items-center gap-1 text-xs text-indigo-300 font-medium">
             Xem chi tiết
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -122,10 +125,10 @@ export default function DashboardPage() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl font-bold text-white">
           👋 Xin chào, {user?.displayName?.split(" ")[0]}!
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Đây là tổng quan tài khoản của bạn.</p>
+        <p className="text-white/50 text-sm mt-1">Đây là tổng quan tài khoản của bạn.</p>
       </div>
 
       {/* Stat cards */}
@@ -139,8 +142,8 @@ export default function DashboardPage() {
       {/* Build status breakdown + Recent builds */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Status breakdown */}
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Build Status</h2>
+        <div className="rounded-2xl p-5" style={GLASS}>
+          <h2 className="text-sm font-semibold text-white/80 mb-4">Build Status</h2>
           <div className="space-y-3">
             {([
               { status: "success",     label: "Success",     count: successCount },
@@ -148,28 +151,28 @@ export default function DashboardPage() {
               { status: "in_progress", label: "In Progress", count: builds.filter((b) => b.status === "in_progress").length },
               { status: "pending",     label: "Pending",     count: builds.filter((b) => b.status === "pending").length },
             ] as const).map(({ status, label, count }) => (
-              <div key={status} className="flex items-center gap-3">
+                <div key={status} className="flex items-center gap-3">
                 <span className={`inline-block border text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[status]}`}>{label}</span>
-                <div className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
-                  <div
-                    className={`h-1.5 rounded-full ${status === "success" ? "bg-green-500" : status === "failed" ? "bg-red-500" : status === "in_progress" ? "bg-blue-500" : "bg-yellow-500"}`}
-                    style={{ width: builds.length ? `${(count / builds.length) * 100}%` : "0%" }}
-                  />
+                  <div className="flex-1 bg-white/10 rounded-full h-1.5">
+                    <div
+                      className={`h-1.5 rounded-full ${status === "success" ? "bg-green-400" : status === "failed" ? "bg-red-400" : status === "in_progress" ? "bg-blue-400" : "bg-yellow-400"}`}
+                      style={{ width: builds.length ? `${(count / builds.length) * 100}%` : "0%" }}
+                    />
+                  </div>
+                  <span className="text-sm font-semibold text-white/80 w-6 text-right">{count}</span>
                 </div>
-                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 w-6 text-right">{count}</span>
-              </div>
             ))}
           </div>
           {/* Free credit bar */}
           {profile && (
-            <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-800">
+            <div className="mt-5 pt-4 border-t border-white/15">
               <div className="flex justify-between mb-1.5">
-                <span className="text-xs text-gray-500">Free credits</span>
-                <span className="text-xs text-gray-500">{10 - profile.freeBuildsRemaining}/10 used</span>
+                <span className="text-xs text-white/50">Free credits</span>
+                <span className="text-xs text-white/50">{10 - profile.freeBuildsRemaining}/10 used</span>
               </div>
-              <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5">
+              <div className="w-full bg-white/10 rounded-full h-1.5">
                 <div
-                  className={`h-1.5 rounded-full ${profile.freeBuildsRemaining <= 2 ? "bg-red-500" : profile.freeBuildsRemaining <= 5 ? "bg-yellow-500" : "bg-indigo-500"}`}
+                  className={`h-1.5 rounded-full ${profile.freeBuildsRemaining <= 2 ? "bg-red-400" : profile.freeBuildsRemaining <= 5 ? "bg-yellow-400" : "bg-indigo-400"}`}
                   style={{ width: `${((10 - profile.freeBuildsRemaining) / 10) * 100}%` }}
                 />
               </div>
@@ -178,13 +181,13 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent builds */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
+        <div className="lg:col-span-2 rounded-2xl p-5" style={GLASS}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Recent Builds</h2>
-            <Link href="/account/builds" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Xem tất cả →</Link>
+            <h2 className="text-sm font-semibold text-white/80">Recent Builds</h2>
+            <Link href="/account/builds" className="text-xs text-indigo-300 hover:underline">Xem tất cả →</Link>
           </div>
           {recentBuilds.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
+            <div className="text-center py-8 text-white/40">
               <p className="text-sm">Chưa có build nào.</p>
               <p className="text-xs mt-1">Tạo App và bắt đầu build đầu tiên!</p>
             </div>
@@ -192,13 +195,13 @@ export default function DashboardPage() {
             <div className="space-y-2">
               {recentBuilds.map((build) => (
                 <Link key={build.id} href="/account/builds"
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 transition"
                 >
-                  <span className={`inline-block border text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${STATUS_COLOR[build.status] ?? "bg-gray-100 dark:bg-gray-800 text-gray-500 border-gray-300"}`}>
+                  <span className={`inline-block border text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${STATUS_COLOR[build.status] ?? "bg-white/10 text-white/50 border-white/20"}`}>
                     {build.status}
                   </span>
-                  <span className="text-sm text-gray-700 dark:text-gray-300 flex-1 truncate">{build.schemeName ?? build.id}</span>
-                  <span className="text-xs text-gray-400 flex-shrink-0">
+                  <span className="text-sm text-white/80 flex-1 truncate">{build.schemeName ?? build.id}</span>
+                  <span className="text-xs text-white/40 flex-shrink-0">
                     {build.createdAt?.seconds ? new Date(build.createdAt.seconds * 1000).toLocaleDateString() : "—"}
                   </span>
                 </Link>
@@ -209,28 +212,28 @@ export default function DashboardPage() {
       </div>
 
       {/* Apps overview */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
+      <div className="rounded-2xl p-5" style={GLASS}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Apps</h2>
-          <Link href="/account/apps" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Quản lý →</Link>
+          <h2 className="text-sm font-semibold text-white/80">Apps</h2>
+          <Link href="/account/apps" className="text-xs text-indigo-300 hover:underline">Quản lý →</Link>
         </div>
         {apps.length === 0 ? (
-          <div className="text-center py-6 text-gray-400">
+          <div className="text-center py-6 text-white/40">
             <p className="text-sm">Chưa có App nào.</p>
-            <Link href="/account/apps" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline mt-1 inline-block">Tạo App đầu tiên →</Link>
+            <Link href="/account/apps" className="text-xs text-indigo-300 hover:underline mt-1 inline-block">Tạo App đầu tiên →</Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {apps.map((app) => (
               <Link key={app.id} href={`/account/app/${encodeURIComponent(app.name)}`}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-indigo-300 dark:hover:border-indigo-700 transition"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/15 hover:border-indigo-400/60 hover:bg-white/10 transition"
               >
-                <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-300 font-bold text-sm flex-shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                   {app.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{app.name}</p>
-                  {app.scheme && <p className="text-xs text-gray-400 font-mono truncate">{app.scheme}</p>}
+                  <p className="text-sm font-medium text-white/90 truncate">{app.name}</p>
+                  {app.scheme && <p className="text-xs text-white/50 font-mono truncate">{app.scheme}</p>}
                 </div>
               </Link>
             ))}

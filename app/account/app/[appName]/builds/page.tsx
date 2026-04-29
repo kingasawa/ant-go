@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { collection, query, where, onSnapshot, getDocs, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { GLASS } from "@/lib/glass";
 
 interface Build {
   id: string;
@@ -171,8 +172,8 @@ const BuildRow = React.memo(function BuildRow({ build, onClick, checked, onCheck
         removing
           ? "opacity-0 scale-y-0 h-0 overflow-hidden"
           : checked
-          ? "bg-indigo-50/60 dark:bg-indigo-950/30"
-          : "bg-white dark:bg-gray-950 hover:bg-indigo-50/50 dark:hover:bg-gray-900/60"
+          ? "bg-indigo-950/30"
+          : "hover:bg-white/10"
       }`}
     >
       <td className="pl-4 pr-2 py-3 text-center w-10" onClick={(e) => e.stopPropagation()}>
@@ -183,29 +184,29 @@ const BuildRow = React.memo(function BuildRow({ build, onClick, checked, onCheck
           className="w-3.5 h-3.5 rounded border-gray-600 bg-gray-800 accent-indigo-500 cursor-pointer"
         />
       </td>
-      <td className="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-300 max-w-[120px] truncate">{build.id}</td>
+      <td className="px-4 py-3 font-mono text-xs text-white/60 max-w-[120px] truncate">{build.id}</td>
       <td className="px-4 py-3 text-center">
-        <span className={`inline-block border text-xs font-semibold px-2 py-0.5 rounded-full uppercase ${STATUS_COLOR[build.status] ?? "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-700"}`}>
+        <span className={`inline-block border text-xs font-semibold px-2 py-0.5 rounded-full uppercase ${STATUS_COLOR[build.status] ?? "bg-white/10 text-white/60 border-white/20"}`}>
           {build.status}
         </span>
       </td>
-      <td className={`px-4 py-3 text-xs text-center uppercase ${STEP_COLOR[build.status] ?? "text-gray-400"}`}>
+      <td className={`px-4 py-3 text-xs text-center uppercase ${STEP_COLOR[build.status] ?? "text-white/40"}`}>
         {build.step ? (STEP_LABEL[build.step] ?? build.step) : "—"}
       </td>
-      <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs whitespace-nowrap">{formatDate(build)}</td>
-      <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs font-mono whitespace-nowrap">{formatDuration(build)}</td>
+      <td className="px-4 py-3 text-white/50 text-xs whitespace-nowrap">{formatDate(build)}</td>
+      <td className="px-4 py-3 text-white/50 text-xs font-mono whitespace-nowrap">{formatDuration(build)}</td>
       <td className="px-4 py-3">
         {build.ipaUrl ? (
-          <span className="inline-flex items-center gap-1 text-green-600 dark:text-green-400 text-xs font-medium">
+          <span className="inline-flex items-center gap-1 text-green-400 text-xs font-medium">
             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
             IPA ready
           </span>
         ) : build.status === "failed" && build.errorMessage ? (
-          <span className="text-red-500 text-xs">⚠ Error</span>
+          <span className="text-red-400 text-xs">⚠ Error</span>
         ) : (
-          <span className="text-gray-300 dark:text-gray-600 text-xs">—</span>
+          <span className="text-white/25 text-xs">—</span>
         )}
       </td>
       <td className="px-4 py-3 text-xs">
@@ -215,14 +216,14 @@ const BuildRow = React.memo(function BuildRow({ build, onClick, checked, onCheck
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center justify-center text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition"
+            className="inline-flex items-center justify-center text-indigo-400 hover:text-indigo-300 transition"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
           </a>
         ) : (
-          <span className="text-gray-300 dark:text-gray-600">—</span>
+          <span className="text-white/25">—</span>
         )}
       </td>
     </tr>
@@ -380,35 +381,35 @@ export default function AppBuildsPage() {
     <div>
       <div className="mb-6">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Builds</h1>
+          <h1 className="text-2xl font-bold text-white">Builds</h1>
           {isLive && (
-            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/30 text-green-500 text-[10px] font-semibold uppercase tracking-wide">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-[10px] font-semibold uppercase tracking-wide">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
               Live
             </span>
           )}
         </div>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+        <p className="text-white/50 text-sm mt-1">
           {decodedName}{" · "}
-          <span className="text-indigo-600 dark:text-indigo-400">{builds.length} builds</span>
+          <span className="text-indigo-300">{builds.length} builds</span>
         </p>
       </div>
 
       {error && (
-        <div className="mb-5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-3">
-          <p className="text-sm font-semibold text-red-600 dark:text-red-400 mb-1">⚠ Failed to load builds</p>
-          <p className="text-xs text-red-500 dark:text-red-400 font-mono break-all">{error}</p>
+        <div className="mb-5 rounded-xl px-4 py-3" style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)" }}>
+          <p className="text-sm font-semibold text-red-300 mb-1">⚠ Failed to load builds</p>
+          <p className="text-xs text-red-300/70 font-mono break-all">{error}</p>
         </div>
       )}
 
-      {/* Status filter + bulk action cùng hàng */}
+      {/* Status filter + bulk action */}
       <div className="flex items-center gap-2 mb-5 flex-wrap">
         {["all", "pending", "in_progress", "success", "failed"].map((s) => (
           <button key={s} onClick={() => setStatusFilter(s)}
             className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition border
               ${statusFilter === s
                 ? "bg-indigo-600 text-white border-indigo-600"
-                : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-indigo-400"
+                : "bg-white/10 text-white/60 border-white/20 hover:border-white/40"
               }`}
           >
             {s === "all" ? "All" : s.replace("_", " ")}
@@ -420,12 +421,12 @@ export default function AppBuildsPage() {
 
         {selectedIds.size > 0 && (
           <div className="ml-auto flex items-center gap-2">
-            <span className="text-xs text-gray-400 font-medium">
+            <span className="text-xs text-white/40 font-medium">
               {selectedIds.size} build{selectedIds.size > 1 ? "s" : ""} được chọn
             </span>
             <button
               onClick={() => setSelectedIds(new Set())}
-              className="text-xs text-gray-500 hover:text-gray-300 transition"
+              className="text-xs text-white/50 hover:text-white/80 transition"
             >
               Bỏ chọn
             </button>
@@ -449,17 +450,17 @@ export default function AppBuildsPage() {
 
       {/* Table */}
       {dataLoading ? (
-        <div className="text-gray-400 animate-pulse text-center py-16">Loading builds…</div>
+        <div className="text-white/40 animate-pulse text-center py-16">Loading builds…</div>
       ) : filteredBuilds.length === 0 ? (
-        <div className="text-center py-24 text-gray-400">
+        <div className="text-center py-24 text-white/40">
           <div className="text-5xl mb-4">📭</div>
           <p className="text-lg">No builds yet.</p>
           <p className="text-sm mt-2">Build jobs will appear here once the server picks them up.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-800">
+        <div className="overflow-x-auto rounded-2xl" style={GLASS}>
           <table className="w-full text-[11px]">
-            <thead className="bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 uppercase text-xs tracking-wider">
+            <thead className="text-white/50 uppercase text-xs tracking-wider" style={{ background: "rgba(255,255,255,0.08)", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
               <tr>
                 <th className="pl-4 pr-2 py-3 text-center w-10">
                   <input
@@ -479,7 +480,7 @@ export default function AppBuildsPage() {
                 <th className="px-4 py-3 text-left">IPA</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-white/10">
               {pagedBuilds.map((build) => (
                 <BuildRow
                   key={build.id}
@@ -498,20 +499,12 @@ export default function AppBuildsPage() {
       {/* Pagination */}
       {!dataLoading && totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-white/40">
             {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredBuilds.length)} / {filteredBuilds.length} builds
           </p>
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => setPage(1)}
-              disabled={page === 1}
-              className="px-2 py-1 text-xs rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:border-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed transition"
-            >«</button>
-            <button
-              onClick={() => setPage((p) => p - 1)}
-              disabled={page === 1}
-              className="px-2 py-1 text-xs rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:border-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed transition"
-            >‹</button>
+            <button onClick={() => setPage(1)} disabled={page === 1} className="px-2 py-1 text-xs rounded-lg border border-white/20 text-white/50 hover:border-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition">«</button>
+            <button onClick={() => setPage((p) => p - 1)} disabled={page === 1} className="px-2 py-1 text-xs rounded-lg border border-white/20 text-white/50 hover:border-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition">‹</button>
 
             {Array.from({ length: totalPages }, (_, i) => i + 1)
               .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
@@ -522,7 +515,7 @@ export default function AppBuildsPage() {
               }, [])
               .map((p, idx) =>
                 p === "…" ? (
-                  <span key={`ellipsis-${idx}`} className="px-2 text-xs text-gray-400">…</span>
+                  <span key={`ellipsis-${idx}`} className="px-2 text-xs text-white/30">…</span>
                 ) : (
                   <button
                     key={p}
@@ -530,31 +523,22 @@ export default function AppBuildsPage() {
                     className={`px-2.5 py-1 text-xs rounded-lg border transition ${
                       page === p
                         ? "bg-indigo-600 text-white border-indigo-600"
-                        : "border-gray-200 dark:border-gray-700 text-gray-500 hover:border-indigo-400"
+                        : "border-white/20 text-white/50 hover:border-white/40"
                     }`}
                   >{p}</button>
                 )
               )}
 
-            <button
-              onClick={() => setPage((p) => p + 1)}
-              disabled={page === totalPages}
-              className="px-2 py-1 text-xs rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:border-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed transition"
-            >›</button>
-            <button
-              onClick={() => setPage(totalPages)}
-              disabled={page === totalPages}
-              className="px-2 py-1 text-xs rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:border-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed transition"
-            >»</button>
+            <button onClick={() => setPage((p) => p + 1)} disabled={page === totalPages} className="px-2 py-1 text-xs rounded-lg border border-white/20 text-white/50 hover:border-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition">›</button>
+            <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="px-2 py-1 text-xs rounded-lg border border-white/20 text-white/50 hover:border-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition">»</button>
           </div>
         </div>
       )}
-      
 
       {/* Bulk delete confirm modal */}
       {showBulkConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
+          <div className="rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4" style={GLASS}>
             <div className="flex items-center gap-3 mb-3">
               <div className="w-9 h-9 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
                 <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
@@ -563,27 +547,23 @@ export default function AppBuildsPage() {
               </div>
               <h3 className="text-sm font-bold text-white">Xoá {selectedIds.size} build{selectedIds.size > 1 ? "s" : ""}?</h3>
             </div>
-            <p className="text-xs text-gray-400 mb-5 leading-relaxed">
+            <p className="text-xs text-white/60 mb-5 leading-relaxed">
               Toàn bộ <span className="text-white font-semibold">{selectedIds.size}</span> build và logs liên quan sẽ bị xoá vĩnh viễn. Hành động này <span className="text-red-400 font-semibold">không thể hoàn tác</span>.
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowBulkConfirm(false)}
                 disabled={bulkDeleting}
-                className="px-4 py-2 text-xs font-semibold rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition disabled:opacity-50"
-              >
-                Huỷ
-              </button>
+                className="px-4 py-2 text-xs font-semibold rounded-lg text-white/70 hover:bg-white/10 transition disabled:opacity-50"
+                style={{ border: "1px solid rgba(255,255,255,0.2)" }}
+              >Huỷ</button>
               <button
                 onClick={handleBulkDelete}
                 disabled={bulkDeleting}
                 className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-red-700 hover:bg-red-600 text-white transition disabled:opacity-60"
               >
                 {bulkDeleting ? (
-                  <>
-                    <span className="w-3 h-3 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-                    Đang xoá...
-                  </>
+                  <><span className="w-3 h-3 rounded-full border-2 border-white/40 border-t-white animate-spin" />Đang xoá...</>
                 ) : "Xoá"}
               </button>
             </div>
@@ -594,7 +574,7 @@ export default function AppBuildsPage() {
       {/* Delete confirm modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
+          <div className="rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4" style={GLASS}>
             <div className="flex items-center gap-3 mb-3">
               <div className="w-9 h-9 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
                 <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
@@ -603,27 +583,23 @@ export default function AppBuildsPage() {
               </div>
               <h3 className="text-sm font-bold text-white">Xoá build?</h3>
             </div>
-            <p className="text-xs text-gray-400 mb-5 leading-relaxed">
+            <p className="text-xs text-white/60 mb-5 leading-relaxed">
               Build <span className="text-white font-mono">{deleteTarget.id}</span> và toàn bộ logs sẽ bị xoá vĩnh viễn. Hành động này <span className="text-red-400 font-semibold">không thể hoàn tác</span>.
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setDeleteTarget(null)}
                 disabled={deleting}
-                className="px-4 py-2 text-xs font-semibold rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition disabled:opacity-50"
-              >
-                Huỷ
-              </button>
+                className="px-4 py-2 text-xs font-semibold rounded-lg text-white/70 hover:bg-white/10 transition disabled:opacity-50"
+                style={{ border: "1px solid rgba(255,255,255,0.2)" }}
+              >Huỷ</button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
                 className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-red-700 hover:bg-red-600 text-white transition disabled:opacity-60"
               >
                 {deleting ? (
-                  <>
-                    <span className="w-3 h-3 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-                    Đang xoá...
-                  </>
+                  <><span className="w-3 h-3 rounded-full border-2 border-white/40 border-t-white animate-spin" />Đang xoá...</>
                 ) : "Xoá"}
               </button>
             </div>
