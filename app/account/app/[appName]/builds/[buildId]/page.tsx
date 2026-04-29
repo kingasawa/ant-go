@@ -446,7 +446,7 @@ function InstallTab({ build }: { build: Build }) {
               "Nhấn Install → chờ cài xong",
             ].map((step, i) => (
               <li key={i} className="flex items-start gap-2.5">
-                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent flex items-center justify-center text-[10px] font-bold text-white mt-0.5">
+                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent flex items-center justify-center text-[10px] font-bold text-accent-contrast mt-0.5">
                   {i + 1}
                 </span>
                 {step}
@@ -682,7 +682,7 @@ export default function BuildDetailPage() {
           {canRebuild && (
             <button
               onClick={() => setShowConfirm(true)}
-              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-accent hover:bg-accent text-white transition"
+              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-accent hover:bg-accent text-accent-contrast transition"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -857,7 +857,7 @@ export default function BuildDetailPage() {
                 className="px-4 py-2 text-xs font-semibold rounded-lg text-white/70 hover:bg-white/10 transition disabled:opacity-50"
                 style={{ border: "1px solid rgba(255,255,255,0.2)" }}>Huỷ</button>
               <button onClick={handleRebuild} disabled={rebuilding}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-accent hover:bg-accent text-white transition disabled:opacity-60">
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-accent hover:bg-accent text-accent-contrast transition disabled:opacity-60">
                 {rebuilding ? (<><span className="w-3 h-3 rounded-full border-2 border-white/40 border-t-white animate-spin" />Đang xử lý...</>) : "Rebuild"}
               </button>
             </div>

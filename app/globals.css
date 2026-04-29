@@ -6,9 +6,10 @@
    ACCENT COLOR — đổi 3 dòng này để retheme toàn bộ site
    ══════════════════════════════════════════════════════════════════ */
 :root {
-  --tw-accent:       240 195 142;  /* #F0C38E — main   */
-  --tw-accent-light: 245 214 178;  /* lighter variant  */
-  --tw-accent-dark:  215 165 100;  /* darker variant   */
+  --tw-accent:          240 195 142;  /* #F0C38E — main   */
+  --tw-accent-light:    245 214 178;  /* lighter variant  */
+  --tw-accent-dark:     215 165 100;  /* darker variant   */
+  --tw-accent-contrast: 120  53  15;  /* #78350F — dark amber for text on accent bg */
 }
 
 /* ── B3: Shimmer sweep ───────────────────────────────────────────────────────── */

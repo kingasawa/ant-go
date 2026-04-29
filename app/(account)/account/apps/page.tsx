@@ -81,7 +81,7 @@ function AppModal({
           <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:bg-white/10 transition" style={{ border: "1px solid rgba(255,255,255,0.2)" }}>
             Huỷ
           </button>
-          <button onClick={handleSubmit as unknown as React.MouseEventHandler} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-accent hover:bg-accent disabled:opacity-60 text-white text-sm font-semibold transition">
+          <button onClick={handleSubmit as unknown as React.MouseEventHandler} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-accent hover:bg-accent disabled:opacity-60 text-accent-contrast text-sm font-semibold transition">
             {saving ? "Đang lưu…" : "Tạo App"}
           </button>
         </div>
@@ -259,7 +259,7 @@ export default function AppsPage() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 bg-accent hover:bg-accent text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition"
+          className="flex items-center gap-2 bg-accent hover:bg-accent text-accent-contrast text-sm font-semibold px-4 py-2.5 rounded-xl transition"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -285,7 +285,7 @@ export default function AppsPage() {
           <p className="text-sm mt-2 mb-6">Tạo app đầu tiên để bắt đầu build.</p>
           <button
             onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition"
+            className="inline-flex items-center gap-2 bg-accent hover:bg-accent text-accent-contrast text-sm font-semibold px-5 py-2.5 rounded-xl transition"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

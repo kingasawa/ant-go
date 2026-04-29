@@ -408,7 +408,7 @@ export default function AppBuildsPage() {
           <button key={s} onClick={() => setStatusFilter(s)}
             className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition border
               ${statusFilter === s
-                ? "bg-accent text-white border-accent"
+                ? "bg-accent text-accent-contrast border-accent"
                 : "bg-white/10 text-white/60 border-white/20 hover:border-white/40"
               }`}
           >
@@ -522,7 +522,7 @@ export default function AppBuildsPage() {
                     onClick={() => setPage(p as number)}
                     className={`px-2.5 py-1 text-xs rounded-lg border transition ${
                       page === p
-                        ? "bg-accent text-white border-accent"
+                        ? "bg-accent text-accent-contrast border-accent"
                         : "border-white/20 text-white/50 hover:border-white/40"
                     }`}
                   >{p}</button>

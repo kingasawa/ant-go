@@ -124,7 +124,7 @@ function SidebarNav() {
           href={`#${n.id}`}
           className="relative z-10 block text-sm py-2 px-3 rounded-lg"
           style={{
-            color: activeId === n.id ? "rgba(165,180,252,1)" : "rgba(255,255,255,0.55)",
+            color: activeId === n.id ? "rgb(var(--tw-accent-light))" : "rgba(255,255,255,0.55)",
             transition: "color 0.15s",
             // boxShadow: activeId === n.id ? "inset 0px -2px 20px rgba(0, 0, 0, 0.3), inset 0px 10px 20px rgba(255, 255, 255, 0.5)" : "",
           }}
@@ -170,7 +170,7 @@ export default function DocPage() {
           </Link>
           <Link
             href="/login"
-            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-accent/80 hover:bg-accent text-white transition"
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-accent/80 hover:bg-accent text-accent-contrast transition"
             style={{ border: "1px solid rgba(255,255,255,0.15)" }}
           >
             Console →
@@ -181,9 +181,9 @@ export default function DocPage() {
       {/* ── Body ── */}
       <div className="relative max-w-6xl mx-auto px-6 py-10 flex gap-8">
 
-        {/* Sidebar — no glass wrapper, hover effect per item */}
+        {/* Sidebar — glass panel, hover effect per item */}
         <aside className="hidden lg:block w-48 flex-shrink-0">
-          <div className="sticky top-24">
+          <div className="sticky top-24 rounded-2xl p-3" style={GLASS}>
             <SidebarNav />
           </div>
         </aside>
@@ -195,7 +195,7 @@ export default function DocPage() {
           <div className="mb-10">
             <div
               className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-accent-light text-xs font-semibold mb-4"
-              style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)" }}
+              style={{ background: "rgb(var(--tw-accent) / 0.15)", border: "1px solid rgb(var(--tw-accent) / 0.35)" }}
             >
               CLI v1.0
             </div>

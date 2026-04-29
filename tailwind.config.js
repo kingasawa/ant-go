@@ -10,9 +10,10 @@ module.exports = {
       colors: {
         // Accent color — driven by CSS variables in globals.css
         accent: {
-          DEFAULT: "rgb(var(--tw-accent) / <alpha-value>)",
-          light:   "rgb(var(--tw-accent-light) / <alpha-value>)",
-          dark:    "rgb(var(--tw-accent-dark) / <alpha-value>)",
+          DEFAULT:  "rgb(var(--tw-accent) / <alpha-value>)",
+          light:    "rgb(var(--tw-accent-light) / <alpha-value>)",
+          dark:     "rgb(var(--tw-accent-dark) / <alpha-value>)",
+          contrast: "rgb(var(--tw-accent-contrast) / <alpha-value>)",
         },
       },
       fontFamily: {

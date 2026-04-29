@@ -384,7 +384,7 @@ export default function HomePage() {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen((v) => !v)}
-                  className="flex items-center gap-2 bg-accent hover:bg-accent text-white text-sm font-medium px-5 py-2 rounded-lg transition"
+                  className="flex items-center gap-2 bg-accent hover:bg-accent text-accent-contrast text-sm font-medium px-5 py-2 rounded-lg transition"
                 >
                   <span className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-xs font-bold uppercase">
                     {(user.displayName || user.email || "U")[0]}
@@ -414,7 +414,7 @@ export default function HomePage() {
             ) : (
               <Link
                 href="/login"
-                className="bg-accent hover:bg-accent text-white text-sm font-medium px-5 py-2 rounded-lg transition"
+                className="bg-accent hover:bg-accent text-accent-contrast text-sm font-medium px-5 py-2 rounded-lg transition"
               >
                 Sign In
               </Link>
@@ -442,7 +442,7 @@ export default function HomePage() {
           <div className="fade-up flex flex-col sm:flex-row gap-4 justify-center" style={{ animationDelay: "400ms" }}>
             <Link
               href="/login"
-              className="btn-pulse bg-accent hover:bg-accent text-white font-semibold px-8 py-3 rounded-xl transition text-lg shadow-lg shadow-accent/40"
+              className="btn-pulse bg-accent hover:bg-accent text-accent-contrast font-semibold px-8 py-3 rounded-xl transition text-lg shadow-lg shadow-accent/40"
             >
               Vào Dashboard →
             </Link>
@@ -487,7 +487,7 @@ export default function HomePage() {
                   style={plan.highlight ? HIGHLIGHT_GLASS : GLASS}
                 >
                   {plan.highlight && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-contrast text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
                       Phổ biến nhất
                     </span>
                   )}
@@ -511,7 +511,7 @@ export default function HomePage() {
                     href="/login"
                     className={`w-full text-center py-2.5 rounded-xl text-sm font-semibold transition ${
                       plan.highlight
-                        ? "bg-accent hover:bg-accent text-white"
+                        ? "bg-accent hover:bg-accent text-accent-contrast"
                         : "hover:bg-white/10 text-white/80 hover:text-white"
                     }`}
                     style={plan.highlight ? {} : { border: "1px solid rgba(255,255,255,0.2)" }}
@@ -531,7 +531,7 @@ export default function HomePage() {
             <p className="text-white/60 mb-8">Đăng nhập để vào dashboard, tạo project và lấy Project ID cho CLI.</p>
             <Link
               href="/login"
-              className="bg-accent hover:bg-accent text-white font-semibold px-10 py-3 rounded-xl transition text-lg shadow-lg shadow-accent/40"
+              className="bg-accent hover:bg-accent text-accent-contrast font-semibold px-10 py-3 rounded-xl transition text-lg shadow-lg shadow-accent/40"
             >
               Đăng nhập →
             </Link>

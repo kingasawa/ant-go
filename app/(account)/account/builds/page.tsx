@@ -100,7 +100,7 @@ function BuildDetailDrawer({ build, onClose }: { build: Build; onClose: () => vo
                 <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                 Download .ipa
               </a>
-              <button onClick={() => setShowConfirm(true)} className="w-full flex items-center justify-center gap-2 bg-accent hover:bg-accent text-white text-sm font-semibold py-2.5 rounded-xl transition">
+              <button onClick={() => setShowConfirm(true)} className="w-full flex items-center justify-center gap-2 bg-accent hover:bg-accent text-accent-contrast text-sm font-semibold py-2.5 rounded-xl transition">
                 🚀 Submit to App Store Connect
               </button>
             </div>
@@ -121,7 +121,7 @@ function BuildDetailDrawer({ build, onClose }: { build: Build; onClose: () => vo
             </p>
             <div className="flex gap-3">
               <button onClick={() => setShowConfirm(false)} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:bg-white/10 transition" style={{ border: "1px solid rgba(255,255,255,0.2)" }}>Cancel</button>
-              <button onClick={() => setShowConfirm(false)} className="flex-1 py-2.5 rounded-xl bg-accent hover:bg-accent text-white text-sm font-semibold transition">OK</button>
+              <button onClick={() => setShowConfirm(false)} className="flex-1 py-2.5 rounded-xl bg-accent hover:bg-accent text-accent-contrast text-sm font-semibold transition">OK</button>
             </div>
           </div>
         </div>
@@ -216,7 +216,7 @@ export default function BuildsPage() {
               onClick={() => setSelectedAppId("all")}
               className={`px-3 py-1.5 rounded-xl text-xs font-medium transition border
                 ${selectedAppId === "all"
-                  ? "bg-accent text-white border-accent"
+                  ? "bg-accent text-accent-contrast border-accent"
                   : "bg-white/10 text-white/60 border-white/20 hover:border-white/40"
                 }`}
             >
@@ -228,7 +228,7 @@ export default function BuildsPage() {
                 onClick={() => setSelectedAppId(app.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition border
                   ${selectedAppId === app.id
-                    ? "bg-accent text-white border-accent"
+                    ? "bg-accent text-accent-contrast border-accent"
                     : "bg-white/10 text-white/60 border-white/20 hover:border-white/40"
                   }`}
               >
@@ -266,7 +266,7 @@ export default function BuildsPage() {
           <button key={s} onClick={() => setStatusFilter(s)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border
               ${statusFilter === s
-                ? "bg-accent text-white border-accent"
+                ? "bg-accent text-accent-contrast border-accent"
                 : "bg-white/10 text-white/60 border-white/20 hover:border-white/40"
               }`}
           >
