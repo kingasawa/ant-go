@@ -1,18 +1,24 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  updateProfile,
+  signInWithPopup,
+} from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { createUserProfileIfNeeded } from "@/lib/createUserProfile";
 import Link from "next/link";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -21,12 +27,27 @@ export default function LoginPage() {
     return null;
   }
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setBusy(true);
     setError("");
+
+    if (!displayName.trim()) {
+      setError("Vui lòng nhập tên hiển thị.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Mật khẩu xác nhận không khớp.");
+      return;
+    }
+
+    setBusy(true);
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(result.user, { displayName: displayName.trim() });
       await createUserProfileIfNeeded(result.user);
       router.push("/account/overview");
     } catch (e: unknown) {
@@ -36,7 +57,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleRegister = async () => {
     setBusy(true);
     setError("");
     try {
@@ -63,33 +84,45 @@ export default function LoginPage() {
         {/* Header */}
         <div className="text-center mb-6">
           <div className="text-5xl mb-3">⚙️</div>
-          <h1 className="text-2xl font-bold text-white mb-1">Chào mừng trở lại</h1>
+          <h1 className="text-2xl font-bold text-white mb-1">Tạo tài khoản</h1>
           <p className="text-gray-400 text-sm">
-            Đăng nhập vào{" "}
+            Đăng ký để truy cập{" "}
             <span className="text-indigo-400 font-medium">eas-clone</span> build dashboard
           </p>
         </div>
 
-        {/* Google Sign In */}
+        {/* Google Sign Up */}
         <button
           type="button"
-          onClick={handleGoogleLogin}
+          onClick={handleGoogleRegister}
           disabled={busy || loading}
-          className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-semibold py-2.5 px-6 rounded-xl transition disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-semibold py-2.5 px-6 rounded-xl transition disabled:opacity-60 disabled:cursor-not-allowed mb-4"
         >
           <GoogleIcon />
-          {busy ? "Đang xử lý…" : "Tiếp tục với Google"}
+          {busy ? "Đang xử lý…" : "Đăng ký với Google"}
         </button>
 
         {/* Divider */}
-        <div className="relative flex items-center my-5">
+        <div className="relative flex items-center my-4">
           <div className="flex-grow border-t border-gray-700" />
           <span className="mx-3 text-gray-500 text-xs uppercase tracking-wider">hoặc</span>
           <div className="flex-grow border-t border-gray-700" />
         </div>
 
         {/* Email/Password Form */}
-        <form onSubmit={handleEmailLogin} className="space-y-4">
+        <form onSubmit={handleEmailRegister} className="space-y-4">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Tên hiển thị</label>
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Nguyễn Văn A"
+              required
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition text-sm"
+            />
+          </div>
+
           <div>
             <label className="block text-sm text-gray-400 mb-1">Email</label>
             <input
@@ -103,14 +136,24 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-sm text-gray-400">Mật khẩu</label>
-            </div>
+            <label className="block text-sm text-gray-400 mb-1">Mật khẩu</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="Ít nhất 6 ký tự"
+              required
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Xác nhận mật khẩu</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Nhập lại mật khẩu"
               required
               className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition text-sm"
             />
@@ -127,14 +170,14 @@ export default function LoginPage() {
             disabled={busy || loading}
             className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-6 rounded-xl transition disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {busy ? "Đang đăng nhập…" : "Đăng nhập"}
+            {busy ? "Đang tạo tài khoản…" : "Đăng ký"}
           </button>
         </form>
 
         <p className="mt-5 text-center text-gray-500 text-sm">
-          Chưa có tài khoản?{" "}
-          <Link href="/register" className="text-indigo-400 hover:text-indigo-300 font-medium">
-            Đăng ký ngay
+          Đã có tài khoản?{" "}
+          <Link href="/login" className="text-indigo-400 hover:text-indigo-300 font-medium">
+            Đăng nhập
           </Link>
         </p>
       </div>
@@ -157,11 +200,9 @@ function mapFirebaseError(e: unknown): string {
   if (!(e instanceof Error)) return "Có lỗi xảy ra. Vui lòng thử lại.";
   const code = (e as { code?: string }).code ?? "";
   const map: Record<string, string> = {
+    "auth/email-already-in-use": "Email này đã được sử dụng.",
     "auth/invalid-email": "Email không hợp lệ.",
-    "auth/user-not-found": "Không tìm thấy tài khoản với email này.",
-    "auth/wrong-password": "Mật khẩu không đúng.",
-    "auth/invalid-credential": "Email hoặc mật khẩu không đúng.",
-    "auth/too-many-requests": "Quá nhiều lần thử. Vui lòng thử lại sau.",
+    "auth/weak-password": "Mật khẩu quá yếu. Vui lòng dùng ít nhất 6 ký tự.",
     "auth/popup-closed-by-user": "Bạn đã đóng cửa sổ đăng nhập.",
     "auth/cancelled-popup-request": "",
   };
