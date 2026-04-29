@@ -212,29 +212,31 @@ export default function DocPage() {
   const lastScrollY = useRef(0);
 
   useEffect(() => {
+    const NAV_OFFSET = 90; // fixed header height + buffer
+
+    const updateActiveSection = () => {
+      let active = navItems[0].id;
+      for (const { id } of navItems) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= NAV_OFFSET) {
+          active = id;
+        }
+      }
+      setScrollActiveId(active);
+    };
+
     const onScroll = () => {
       const y = window.scrollY;
       setNavVisible(y < lastScrollY.current || y < 56);
       lastScrollY.current = y;
       const total = document.documentElement.scrollHeight - window.innerHeight;
       setProgress(total > 0 ? (y / total) * 100 : 0);
+      updateActiveSection();
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
-  useEffect(() => {
-    const observers = navItems.map(({ id }) => {
-      const el = document.getElementById(id);
-      if (!el) return null;
-      const obs = new IntersectionObserver(
-        ([entry]) => { if (entry.isIntersecting) setScrollActiveId(id); },
-        { rootMargin: "-15% 0px -70% 0px" }
-      );
-      obs.observe(el);
-      return obs;
-    });
-    return () => observers.forEach(obs => obs?.disconnect());
+    window.addEventListener("scroll", onScroll, { passive: true });
+    updateActiveSection(); // set initial active on mount
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
