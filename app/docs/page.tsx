@@ -1,20 +1,14 @@
 ﻿"use client";
 import Link from "next/link";
 import React, { useState, useRef } from "react";
+import { GLASS } from "@/lib/glass";
 
-/* ─── Glass style constants ─────────────────────────────────────────────────── */
-const GLASS = {
-  backdropFilter: "blur(18px) saturate(160%)",
-  WebkitBackdropFilter: "blur(18px) saturate(160%)",
-  background: "rgba(255,255,255,0.09)",
-  border: "1px solid rgba(255,255,255,0.16)",
-} satisfies React.CSSProperties;
-
+/* ─── Nav glass (stronger blur for sticky header) ───────────────────────────── */
 const GLASS_STRONG = {
-  backdropFilter: "blur(22px) saturate(160%)",
-  WebkitBackdropFilter: "blur(22px) saturate(160%)",
-  background: "rgba(255,255,255,0.12)",
-  border: "1px solid rgba(255,255,255,0.2)",
+  backdropFilter: "blur(22px) saturate(180%)",
+  WebkitBackdropFilter: "blur(22px) saturate(180%)",
+  background: "rgb(255 247 247 / 0.11)",
+  border: "1px solid rgba(255,255,255,0.25)",
 } satisfies React.CSSProperties;
 
 /* ─── Apple-style Terminal Window ───────────────────────────────────────────── */
