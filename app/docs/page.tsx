@@ -13,8 +13,35 @@ const GLASS_STRONG = {
 
 /* ─── Apple-style Terminal Window ───────────────────────────────────────────── */
 function Terminal({ title, children }: { title?: string; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      { threshold: 0.15 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const staggered = React.Children.toArray(children).map((child, i) =>
+    React.isValidElement<{ style?: React.CSSProperties }>(child)
+      ? React.cloneElement(child, {
+          style: {
+            ...child.props.style,
+            opacity: visible ? 1 : 0,
+            transform: visible ? "translateY(0)" : "translateY(6px)",
+            transition: `opacity 0.3s ease ${i * 0.07}s, transform 0.3s ease ${i * 0.07}s`,
+          },
+        })
+      : child
+  );
+
   return (
-    <div className="rounded-xl overflow-hidden shadow-2xl shadow-black/50" style={{ background: "rgba(20,20,20,0.85)", border: "1px solid rgba(255,255,255,0.1)" }}>
+    <div ref={ref} className="rounded-xl overflow-hidden shadow-2xl shadow-black/50" style={{ background: "rgba(20,20,20,0.85)", border: "1px solid rgba(255,255,255,0.1)" }}>
       <div className="flex items-center gap-2 px-4 py-3" style={{ background: "rgba(40,40,40,0.9)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
         <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
         <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
@@ -22,7 +49,7 @@ function Terminal({ title, children }: { title?: string; children: React.ReactNo
         {title && <span className="ml-3 text-xs text-white/40 font-medium tracking-wide">{title}</span>}
       </div>
       <div className="px-5 py-4 font-mono text-sm leading-7 text-gray-200 overflow-x-auto">
-        {children}
+        {staggered}
       </div>
     </div>
   );
@@ -38,10 +65,33 @@ function Code({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* ─── Section — each has its own glass box ───────────────────────────────────── */
+/* ─── Section — fade-in + slide-up on scroll ─────────────────────────────────── */
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+  const ref = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      { threshold: 0.06 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   return (
-    <section id={id} className="scroll-mt-24 mb-12">
+    <section
+      ref={ref}
+      id={id}
+      className="scroll-mt-24 mb-12"
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(28px)",
+        transition: "opacity 0.55s cubic-bezier(0.4,0,0.2,1), transform 0.55s cubic-bezier(0.4,0,0.2,1)",
+      }}
+    >
       <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-3 px-1">
         <span className="w-1 h-6 bg-accent-light rounded-full inline-block" />
         {title}
@@ -73,9 +123,9 @@ const navItems = [
 ];
 
 /* ─── Sidebar Nav with sliding glass hover ───────────────────────────────────── */
-function SidebarNav() {
+function SidebarNav({ scrollActiveId }: { scrollActiveId: string | null }) {
   const [highlight, setHighlight] = useState<{ top: number; height: number } | null>(null);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [hoverActiveId, setHoverActiveId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
@@ -84,12 +134,12 @@ function SidebarNav() {
     const containerRect = container.getBoundingClientRect();
     const itemRect = e.currentTarget.getBoundingClientRect();
     setHighlight({ top: itemRect.top - containerRect.top, height: itemRect.height });
-    setActiveId(id);
+    setHoverActiveId(id);
   };
 
   const handleMouseLeave = () => {
     setHighlight(null);
-    setActiveId(null);
+    setHoverActiveId(null);
   };
 
   return (
@@ -118,11 +168,13 @@ function SidebarNav() {
           href={`#${n.id}`}
           className="relative z-10 block text-sm py-2.5 px-3 rounded-lg"
           style={{
-            color: activeId === n.id ? "rgb(var(--tw-accent-light))" : "rgba(255,255,255,0.55)",
-            transition: "color 0.15s",
-            // boxShadow: activeId === n.id ? "inset 0px -2px 20px rgba(0, 0, 0, 0.3), inset 0px 10px 20px rgba(255, 255, 255, 0.5)" : "",
+            color: (hoverActiveId ?? scrollActiveId) === n.id
+              ? "rgb(var(--tw-accent-light))"
+              : "rgba(255,255,255,0.45)",
+            fontWeight: scrollActiveId === n.id && !hoverActiveId ? 500 : undefined,
+            transition: "color 0.2s, font-weight 0.2s",
           }}
-          onMouseEnter={(e) => handleMouseEnter(e, n.id)}
+          onMouseEnter={(e) => handleMouseEnter(e, n.id as string)}
         >
           {n.label}
         </a>
@@ -134,6 +186,8 @@ function SidebarNav() {
 /* ─── Page ───────────────────────────────────────────────────────────────────── */
 export default function DocPage() {
   const [navVisible, setNavVisible] = useState(true);
+  const [scrollActiveId, setScrollActiveId] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
   const lastScrollY = useRef(0);
 
   useEffect(() => {
@@ -141,9 +195,25 @@ export default function DocPage() {
       const y = window.scrollY;
       setNavVisible(y < lastScrollY.current || y < 56);
       lastScrollY.current = y;
+      const total = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(total > 0 ? (y / total) * 100 : 0);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const observers = navItems.map(({ id }) => {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      const obs = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setScrollActiveId(id); },
+        { rootMargin: "-15% 0px -70% 0px" }
+      );
+      obs.observe(el);
+      return obs;
+    });
+    return () => observers.forEach(obs => obs?.disconnect());
   }, []);
 
   return (
@@ -155,6 +225,17 @@ export default function DocPage() {
         style={{ backgroundImage: "url('/assets/images/bgimg1.jpg')" }}
       />
       <div className="fixed inset-0 bg-black/65" />
+
+      {/* C — Reading progress bar */}
+      <div
+        className="fixed top-0 left-0 z-50 h-[2px]"
+        style={{
+          width: `${progress}%`,
+          background: "rgb(var(--tw-accent))",
+          transition: "width 0.1s linear",
+          boxShadow: "0 0 6px rgb(var(--tw-accent) / 0.6)",
+        }}
+      />
 
       {/* ── Top nav ── */}
       <header
@@ -194,7 +275,7 @@ export default function DocPage() {
         {/* Sidebar — hover glass per item, no wrapper */}
         <aside className="hidden lg:block w-48 flex-shrink-0">
           <div className="sticky top-24">
-            <SidebarNav />
+            <SidebarNav scrollActiveId={scrollActiveId} />
           </div>
         </aside>
 
