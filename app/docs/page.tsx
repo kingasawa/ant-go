@@ -171,9 +171,9 @@ export default function DocPage() {
       {/* ── Body ── */}
       <div className="relative max-w-6xl mx-auto px-6 py-10 flex gap-8">
 
-        {/* Sidebar — glass panel, hover effect per item */}
+        {/* Sidebar — hover glass per item, no wrapper */}
         <aside className="hidden lg:block w-48 flex-shrink-0">
-          <div className="sticky top-24 rounded-2xl p-3" style={GLASS}>
+          <div className="sticky top-24">
             <SidebarNav />
           </div>
         </aside>
