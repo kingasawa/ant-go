@@ -48,8 +48,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 			>
 				{/* Logo */}
 				<div className="px-5 py-5 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
-					<Link href="/" className="text-lg font-bold text-indigo-500 dark:text-indigo-400">
-						⚙️ eas-clone
+					<Link href="/">
+						<img src="/assets/images/logo-full.png" alt="Logo" className="h-8 w-auto" />
 					</Link>
 				</div>
 
@@ -99,7 +99,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
 						</svg>
 					</button>
-					<span className="text-indigo-500 dark:text-indigo-400 font-bold">⚙️ eas-clone</span>
+					<img src="/assets/images/logo-full.png" alt="Logo" className="h-7 w-auto" />
 					<img
 						src={user.photoURL ?? "/avatar.png"}
 						alt=""
