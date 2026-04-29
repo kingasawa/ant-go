@@ -1,6 +1,6 @@
 ﻿"use client";
 import Link from "next/link";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { GLASS } from "@/lib/glass";
 
 /* ─── Nav glass (stronger blur for sticky header) ───────────────────────────── */
@@ -133,6 +133,19 @@ function SidebarNav() {
 
 /* ─── Page ───────────────────────────────────────────────────────────────────── */
 export default function DocPage() {
+  const [navVisible, setNavVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      setNavVisible(y < lastScrollY.current || y < 56);
+      lastScrollY.current = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <div className="min-h-screen relative text-white">
 
@@ -143,10 +156,17 @@ export default function DocPage() {
       />
       <div className="fixed inset-0 bg-black/65" />
 
-      {/* ── Sticky top nav ── */}
+      {/* ── Top nav ── */}
       <header
-        className="sticky top-0 z-30"
-        style={{ ...GLASS_STRONG, borderLeft: "none", borderRight: "none", borderTop: "none" }}
+        className="fixed top-0 left-0 right-0 z-30"
+        style={{
+          ...GLASS_STRONG,
+          borderLeft: "none",
+          borderRight: "none",
+          borderTop: "none",
+          transform: navVisible ? "translateY(0)" : "translateY(-100%)",
+          transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
       >
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
@@ -169,7 +189,7 @@ export default function DocPage() {
       </header>
 
       {/* ── Body ── */}
-      <div className="relative max-w-6xl mx-auto px-6 py-10 flex gap-8">
+      <div className="relative max-w-6xl mx-auto px-6 pt-24 pb-10 flex gap-8">
 
         {/* Sidebar — hover glass per item, no wrapper */}
         <aside className="hidden lg:block w-48 flex-shrink-0">

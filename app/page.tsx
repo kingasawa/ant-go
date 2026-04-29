@@ -345,6 +345,8 @@ export default function HomePage() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { displayed: cliText, done: cliDone } = useTypewriter(CLI_TEXT);
+  const [navVisible, setNavVisible] = useState(true);
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -354,6 +356,16 @@ export default function HomePage() {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      setNavVisible(y < lastScrollY.current || y < 64);
+      lastScrollY.current = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
@@ -367,9 +379,16 @@ export default function HomePage() {
 
 
       {/* Content — all relative z-10 */}
-      <div className="relative z-10">
+      <div className="relative z-10 pt-20">
         {/* Nav */}
-        <nav className="sticky top-0 z-50 flex items-center justify-between px-8 py-4" style={NAV_GLASS}>
+        <nav
+          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4"
+          style={{
+            ...NAV_GLASS,
+            transform: navVisible ? "translateY(0)" : "translateY(-100%)",
+            transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
+        >
           <Link href="/">
             <img src="/assets/images/logo-full.png" alt="Logo" className="h-12 w-auto" style={{ filter: "brightness(0) invert(1)" }} />
           </Link>
