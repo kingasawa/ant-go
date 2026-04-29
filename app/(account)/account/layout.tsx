@@ -49,7 +49,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 				{/* Logo */}
 				<div className="px-5 py-5 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
 					<Link href="/">
-						<img src="/assets/images/logo-full.png" alt="Logo" className="w-full h-auto" style={{ filter: "brightness(0) invert(1)" }} />
+						<img src="/assets/images/logo-text.png" alt="Logo" className="w-auto h-auto" style={{ filter: "brightness(0) invert(1)" }} />
 					</Link>
 				</div>
 
