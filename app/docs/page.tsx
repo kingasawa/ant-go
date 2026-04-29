@@ -122,40 +122,56 @@ const navItems = [
   { id: "ant-json",   label: "Profiles" },
 ];
 
-/* ─── Sidebar Nav with sliding glass hover ───────────────────────────────────── */
+/* ─── Sidebar Nav with sliding glass pill ────────────────────────────────────── */
 function SidebarNav({ scrollActiveId }: { scrollActiveId: string | null }) {
-  const [highlight, setHighlight] = useState<{ top: number; height: number } | null>(null);
+  const [pill, setPill] = useState<{ top: number; height: number } | null>(null);
   const [hoverActiveId, setHoverActiveId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+
+  const getPillFromEl = (el: HTMLAnchorElement) => ({
+    top: el.offsetTop,
+    height: el.offsetHeight,
+  });
+
+  // Anchor pill to scroll-active item when not hovering
+  useEffect(() => {
+    if (hoverActiveId) return;
+    if (!scrollActiveId) { setPill(null); return; }
+    const el = itemRefs.current[scrollActiveId];
+    if (el) setPill(getPillFromEl(el));
+  }, [scrollActiveId, hoverActiveId]);
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
-    const container = containerRef.current;
-    if (!container) return;
-    const containerRect = container.getBoundingClientRect();
-    const itemRect = e.currentTarget.getBoundingClientRect();
-    setHighlight({ top: itemRect.top - containerRect.top, height: itemRect.height });
+    setPill(getPillFromEl(e.currentTarget));
     setHoverActiveId(id);
   };
 
   const handleMouseLeave = () => {
-    setHighlight(null);
     setHoverActiveId(null);
+    // Snap pill back to scroll-active position
+    const el = scrollActiveId ? itemRefs.current[scrollActiveId] : null;
+    setPill(el ? getPillFromEl(el) : null);
   };
+
+  const isHovering = !!hoverActiveId;
 
   return (
     <div ref={containerRef} className="relative" onMouseLeave={handleMouseLeave}>
-      {/* Sliding glass pill */}
+      {/* Sliding pill — white on hover, accent-tinted on reading position */}
       <div
         className="absolute left-0 right-0 rounded-lg pointer-events-none"
         style={{
-          top: highlight?.top ?? 0,
-          height: highlight?.height ?? 36,
-          opacity: highlight ? 1 : 0,
+          top: pill?.top ?? 0,
+          height: pill?.height ?? 36,
+          opacity: pill ? 1 : 0,
           backdropFilter: "blur(14px) saturate(160%)",
           WebkitBackdropFilter: "blur(14px) saturate(160%)",
-          background: "rgba(255,255,255,0.09)",
-          border: "1px solid rgba(255,255,255,0.16)",
-          transition: "top 0.18s cubic-bezier(0.4,0,0.2,1), opacity 0.15s ease",
+          background: isHovering ? "rgba(255,255,255,0.09)" : "rgb(var(--tw-accent) / 0.13)",
+          border: isHovering
+            ? "1px solid rgba(255,255,255,0.16)"
+            : "1px solid rgb(var(--tw-accent) / 0.35)",
+          transition: "top 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease",
         }}
       />
 
@@ -165,6 +181,7 @@ function SidebarNav({ scrollActiveId }: { scrollActiveId: string | null }) {
       {navItems.map((n) => (
         <a
           key={n.id}
+          ref={(el) => { itemRefs.current[n.id] = el; }}
           href={`#${n.id}`}
           className="relative z-10 block text-sm py-2.5 px-3 rounded-lg"
           onClick={(e) => {
@@ -175,10 +192,10 @@ function SidebarNav({ scrollActiveId }: { scrollActiveId: string | null }) {
             color: (hoverActiveId ?? scrollActiveId) === n.id
               ? "rgb(var(--tw-accent-light))"
               : "rgba(255,255,255,0.45)",
-            fontWeight: scrollActiveId === n.id && !hoverActiveId ? 500 : undefined,
-            transition: "color 0.2s, font-weight 0.2s",
+            fontWeight: (hoverActiveId ?? scrollActiveId) === n.id ? 500 : undefined,
+            transition: "color 0.2s",
           }}
-          onMouseEnter={(e) => handleMouseEnter(e, n.id as string)}
+          onMouseEnter={(e) => handleMouseEnter(e, n.id)}
         >
           {n.label}
         </a>
