@@ -53,15 +53,12 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
 	return (
 		<div className="min-h-screen relative text-white flex">
-			{/* Fixed grayscale background */}
+			{/* Background */}
 			<div
-				className="fixed inset-0 bg-cover bg-center"
-				style={{
-					backgroundImage: "url('/assets/images/bgimg1.jpg')",
-					filter: "grayscale(1) brightness(0.4)",
-				}}
+				className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+				style={{ backgroundImage: "url('/assets/images/bgimg1.jpg')" }}
 			/>
-			<div className="fixed inset-0 bg-black/50" />
+			<div className="fixed inset-0 bg-black/65" />
 
 			{/* Sidebar */}
 			<aside
