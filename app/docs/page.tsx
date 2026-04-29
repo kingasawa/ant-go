@@ -1,5 +1,6 @@
+"use client";
 import Link from "next/link";
-import React from "react";
+import React, { useState, useRef } from "react";
 
 /* ─── Glass style constants ─────────────────────────────────────────────────── */
 const GLASS = {
@@ -43,15 +44,17 @@ function Code({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* ─── Section ────────────────────────────────────────────────────────────────── */
+/* ─── Section — each has its own glass box ───────────────────────────────────── */
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="scroll-mt-24 mb-14">
-      <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+    <section id={id} className="scroll-mt-24 mb-6">
+      <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-3 px-1">
         <span className="w-1 h-6 bg-indigo-400 rounded-full inline-block" />
         {title}
       </h2>
-      {children}
+      <div className="rounded-2xl p-6" style={{ ...GLASS, boxShadow: "0 4px 24px rgba(0,0,0,0.35)" }}>
+        {children}
+      </div>
     </section>
   );
 }
@@ -66,7 +69,7 @@ function Option({ flag, desc }: { flag: string; desc: string }) {
   );
 }
 
-/* ─── Sidebar nav ────────────────────────────────────────────────────────────── */
+/* ─── Sidebar nav items ──────────────────────────────────────────────────────── */
 const navItems = [
   { id: "install",    label: "Installation" },
   { id: "build",      label: "Command" },
@@ -74,6 +77,64 @@ const navItems = [
   { id: "add-device", label: "Add device" },
   { id: "ant-json",   label: "Profiles" },
 ];
+
+/* ─── Sidebar Nav with sliding glass hover ───────────────────────────────────── */
+function SidebarNav() {
+  const [highlight, setHighlight] = useState<{ top: number; height: number } | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    const container = containerRef.current;
+    if (!container) return;
+    const containerRect = container.getBoundingClientRect();
+    const itemRect = e.currentTarget.getBoundingClientRect();
+    setHighlight({ top: itemRect.top - containerRect.top, height: itemRect.height });
+    setActiveId(id);
+  };
+
+  const handleMouseLeave = () => {
+    setHighlight(null);
+    setActiveId(null);
+  };
+
+  return (
+    <div ref={containerRef} className="relative" onMouseLeave={handleMouseLeave}>
+      {/* Sliding glass pill */}
+      <div
+        className="absolute left-0 right-0 rounded-lg pointer-events-none"
+        style={{
+          top: highlight?.top ?? 0,
+          height: highlight?.height ?? 36,
+          opacity: highlight ? 1 : 0,
+          backdropFilter: "blur(14px) saturate(160%)",
+          WebkitBackdropFilter: "blur(14px) saturate(160%)",
+          background: "rgba(255,255,255,0.09)",
+          border: "1px solid rgba(255,255,255,0.16)",
+          transition: "top 0.18s cubic-bezier(0.4,0,0.2,1), opacity 0.15s ease",
+        }}
+      />
+
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-white/35 mb-2 px-3">
+        Generals
+      </p>
+      {navItems.map((n) => (
+        <a
+          key={n.id}
+          href={`#${n.id}`}
+          className="relative z-10 block text-sm py-2 px-3 rounded-lg"
+          style={{
+            color: activeId === n.id ? "rgba(165,180,252,1)" : "rgba(255,255,255,0.55)",
+            transition: "color 0.15s",
+          }}
+          onMouseEnter={(e) => handleMouseEnter(e, n.id)}
+        >
+          {n.label}
+        </a>
+      ))}
+    </div>
+  );
+}
 
 /* ─── Page ───────────────────────────────────────────────────────────────────── */
 export default function DocPage() {
@@ -117,33 +178,24 @@ export default function DocPage() {
       </header>
 
       {/* ── Body ── */}
-      <div className="relative max-w-6xl mx-auto px-6 py-10 flex gap-6">
+      <div className="relative max-w-6xl mx-auto px-6 py-10 flex gap-8">
 
-        {/* Sidebar */}
+        {/* Sidebar — no glass wrapper, hover effect per item */}
         <aside className="hidden lg:block w-48 flex-shrink-0">
-          <div className="sticky top-24 rounded-2xl p-4" style={GLASS}>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-white/35 mb-3">
-              Generals
-            </p>
-            {navItems.map((n) => (
-              <a
-                key={n.id}
-                href={`#${n.id}`}
-                className="block text-sm text-white/55 hover:text-indigo-300 py-1.5 transition"
-              >
-                {n.label}
-              </a>
-            ))}
+          <div className="sticky top-24">
+            <SidebarNav />
           </div>
         </aside>
 
-        {/* Main content glass card */}
-        <main className="flex-1 min-w-0 rounded-2xl p-8" style={{ ...GLASS, boxShadow: "0 8px 40px rgba(0,0,0,0.4)" }}>
+        {/* Main content — each section in its own glass box */}
+        <div className="flex-1 min-w-0">
 
-          {/* Hero */}
-          <div className="mb-14">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-indigo-300 text-xs font-semibold mb-4"
-              style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)" }}>
+          {/* Hero — free, no glass box */}
+          <div className="mb-10">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-indigo-300 text-xs font-semibold mb-4"
+              style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)" }}
+            >
               CLI v1.0
             </div>
             <h1 className="text-4xl font-extrabold text-white mb-4 leading-tight">ant-go CLI</h1>
@@ -369,8 +421,10 @@ export default function DocPage() {
                 { step: "5", desc: "Tiếp tục build với Provisioning Profile đã bao gồm device mới." },
               ].map((item) => (
                 <div key={item.step} className="flex gap-3">
-                  <span className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-indigo-300 text-xs font-bold"
-                    style={{ background: "rgba(99,102,241,0.2)", border: "1px solid rgba(99,102,241,0.4)" }}>
+                  <span
+                    className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-indigo-300 text-xs font-bold"
+                    style={{ background: "rgba(99,102,241,0.2)", border: "1px solid rgba(99,102,241,0.4)" }}
+                  >
                     {item.step}
                   </span>
                   <p className="text-sm text-white/55 pt-0.5">{item.desc}</p>
@@ -461,14 +515,14 @@ export default function DocPage() {
           </Section>
 
           {/* Footer */}
-          <div className="pt-8 mt-4 flex items-center justify-between" style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+          <div className="pt-6 mt-2 flex items-center justify-between" style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
             <p className="text-xs text-white/25">ant-go CLI v1.0 · Build automation service</p>
             <Link href="/login" className="text-xs text-indigo-400 hover:text-indigo-300 transition">
               Mở Console →
             </Link>
           </div>
 
-        </main>
+        </div>
       </div>
     </div>
   );
