@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -88,11 +88,263 @@ const HIGHLIGHT_GLASS: React.CSSProperties = {
     "inset 0px -10px 20px rgba(0,0,0,0.3), inset 0px 2px 20px rgba(129,140,248,0.2), 0px 5px 30px rgba(0,0,0,0.4)",
 };
 
+type TSegment = { text: string; cls: string };
+type TLine = {
+  type: "cmd" | "output";
+  raw: string;
+  segments?: TSegment[];
+  outputCls?: string;
+};
+
+const TERMINAL_LINES: TLine[] = [
+  {
+    type: "cmd", raw: "npm install -g ant-go",
+    segments: [
+      { text: "npm",      cls: "text-yellow-300" },
+      { text: " install", cls: "text-white/80" },
+      { text: " -g",      cls: "text-blue-400" },
+      { text: " ant-go",  cls: "text-indigo-400 font-semibold" },
+    ],
+  },
+  { type: "output", raw: "added 42 packages in 3s",      outputCls: "text-white/35" },
+  {
+    type: "cmd", raw: "ant-go build",
+    segments: [
+      { text: "ant-go", cls: "text-indigo-400 font-semibold" },
+      { text: " build",  cls: "text-green-300" },
+    ],
+  },
+  { type: "output", raw: "✔ Project packed: 12.4 MB",    outputCls: "text-green-400" },
+  { type: "output", raw: "✔ Upload hoàn tất",             outputCls: "text-green-400" },
+  { type: "output", raw: "✔ Build đã gửi lên server!",   outputCls: "text-emerald-300" },
+  {
+    type: "cmd", raw: "ant-go status abc123xyz",
+    segments: [
+      { text: "ant-go",     cls: "text-indigo-400 font-semibold" },
+      { text: " status",    cls: "text-white/80" },
+      { text: " abc123xyz", cls: "text-yellow-300" },
+    ],
+  },
+  { type: "output", raw: "Status: SUCCESS · IPA ready",  outputCls: "text-white/50" },
+];
+
+type TActiveLine = { type: string; raw: string; segments?: TSegment[]; outputCls?: string; partial?: string; done?: boolean };
+
+function AnimatedTerminal() {
+  const [lines, setLines] = useState<TActiveLine[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !startedRef.current) {
+          startedRef.current = true;
+          observer.disconnect();
+          runAnimation();
+        }
+      },
+      { threshold: 0.4 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  function runAnimation() {
+    let lineIndex = 0;
+
+    function nextLine() {
+      if (lineIndex >= TERMINAL_LINES.length) return;
+      const line = TERMINAL_LINES[lineIndex];
+      lineIndex++;
+
+      if (line.type === "output") {
+        setTimeout(() => {
+          setLines((prev) => [...prev, { ...line, done: true }]);
+          nextLine();
+        }, 300);
+      } else {
+        setLines((prev) => [...prev, { ...line, partial: "", done: false }]);
+        let charIndex = 0;
+        const interval = setInterval(() => {
+          charIndex++;
+          setLines((prev) =>
+            prev.map((l, i) =>
+              i === prev.length - 1 ? { ...l, partial: line.raw.slice(0, charIndex) } : l
+            )
+          );
+          if (charIndex >= line.raw.length) {
+            clearInterval(interval);
+            setLines((prev) =>
+              prev.map((l, i) => (i === prev.length - 1 ? { ...l, done: true } : l))
+            );
+            setTimeout(nextLine, 500);
+          }
+        }, 40);
+      }
+    }
+
+    setTimeout(nextLine, 300);
+  }
+
+  return (
+    <div ref={containerRef} className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.15)", boxShadow: "0 5px 30px rgba(0,0,0,0.5)" }}>
+      <div className="flex items-center gap-2 px-4 py-3 bg-gray-800 border-b border-gray-700">
+        <span className="w-3 h-3 rounded-full bg-red-500/70" />
+        <span className="w-3 h-3 rounded-full bg-yellow-500/70" />
+        <span className="w-3 h-3 rounded-full bg-green-500/70" />
+        <span className="ml-3 text-xs text-gray-400 font-mono">terminal</span>
+      </div>
+      <div className="bg-gray-950 px-6 py-5 font-mono text-sm min-h-[200px] space-y-1.5">
+        {lines.map((line, i) => (
+          <p key={i}>
+            {line.type === "cmd" ? (
+              <>
+                <span className="text-green-400/60 select-none">~/project</span>
+                <span className="text-white/30 select-none"> $ </span>
+                {line.done && line.segments
+                  ? line.segments.map((seg, j) => (
+                      <span key={j} className={seg.cls}>{seg.text}</span>
+                    ))
+                  : <span className="text-white/90">{line.partial}</span>
+                }
+                {!line.done && (
+                  <span className="inline-block w-[2px] h-[1em] bg-white/60 ml-0.5 align-middle animate-pulse" />
+                )}
+              </>
+            ) : (
+              <span className={`pl-4 ${line.outputCls ?? "text-white/50"}`}>{line.raw}</span>
+            )}
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StepsList() {
+  const listRef = useRef<HTMLOListElement>(null);
+
+  useEffect(() => {
+    const items = listRef.current?.querySelectorAll<HTMLElement>(".step-item");
+    if (!items) return;
+    const observers: IntersectionObserver[] = [];
+    items.forEach((item, i) => {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setTimeout(() => item.classList.add("visible"), i * 120);
+            observer.disconnect();
+          }
+        },
+        { threshold: 0.2 }
+      );
+      observer.observe(item);
+      observers.push(observer);
+    });
+    return () => observers.forEach((o) => o.disconnect());
+  }, []);
+
+  return (
+    <div className="rounded-2xl p-8" style={GLASS}>
+      <ol ref={listRef} className="space-y-5">
+        {steps.map((s) => (
+          <li key={s.n} className="step-item reveal flex items-start gap-4">
+            <span className="flex-shrink-0 w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-indigo-900/40">
+              {s.n}
+            </span>
+            <p className="text-white/75 leading-relaxed pt-1">{s.label}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+function FeatureGrid() {
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const cards = gridRef.current?.querySelectorAll<HTMLElement>(".reveal");
+    if (!cards) return;
+    const observers: IntersectionObserver[] = [];
+    cards.forEach((card, i) => {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setTimeout(() => card.classList.add("visible"), i * 80);
+            observer.disconnect();
+          }
+        },
+        { threshold: 0.1 }
+      );
+      observer.observe(card);
+      observers.push(observer);
+    });
+    return () => observers.forEach((o) => o.disconnect());
+  }, []);
+
+  return (
+    <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {features.map((f) => (
+        <div
+          key={f.title}
+          className="reveal card-glow rounded-2xl p-6"
+          style={GLASS}
+        >
+          <h3 className="text-lg font-semibold mb-2 text-white">{f.title}</h3>
+          <p className="text-white/55 text-sm leading-relaxed">{f.desc}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function useReveal() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { el.classList.add("visible"); observer.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  return ref;
+}
+
+const CLI_TEXT = "$ npm install -g ant-go && ant-go build";
+
+function useTypewriter(text: string, speed = 45, startDelay = 900) {
+  const [displayed, setDisplayed] = useState("");
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    let i = 0;
+    const timeout = setTimeout(() => {
+      const interval = setInterval(() => {
+        i++;
+        setDisplayed(text.slice(0, i));
+        if (i >= text.length) { clearInterval(interval); setDone(true); }
+      }, speed);
+      return () => clearInterval(interval);
+    }, startDelay);
+    return () => clearTimeout(timeout);
+  }, [text, speed, startDelay]);
+
+  return { displayed, done };
+}
+
 export default function HomePage() {
   const { user } = useAuth();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { displayed: cliText, done: cliDone } = useTypewriter(CLI_TEXT);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -112,6 +364,7 @@ export default function HomePage() {
         style={{ backgroundImage: "url('/assets/images/bgimg1.jpg')" }}
       />
       <div className="fixed inset-0 bg-black/65" />
+
 
       {/* Content — all relative z-10 */}
       <div className="relative z-10">
@@ -171,24 +424,25 @@ export default function HomePage() {
 
         {/* Hero */}
         <section className="max-w-4xl mx-auto text-center py-28 px-6">
-          <span className="inline-block text-indigo-300 text-xs font-semibold px-3 py-1 rounded-full mb-6 uppercase tracking-widest" style={{ background: "rgba(99,102,241,0.2)", border: "1px solid rgba(99,102,241,0.4)" }}>
+          <span className="fade-up inline-block text-indigo-300 text-xs font-semibold px-3 py-1 rounded-full mb-6 uppercase tracking-widest" style={{ background: "rgba(99,102,241,0.2)", border: "1px solid rgba(99,102,241,0.4)", animationDelay: "0ms" }}>
             MULTIPLE PLATFORM · IOS/ANDROID
           </span>
-          <h1 className="text-5xl md:text-6xl font-extrabold leading-tight mb-6">
+          <h1 className="fade-up text-5xl md:text-6xl font-extrabold leading-tight mb-6" style={{ animationDelay: "100ms" }}>
             Build iOS app{" "}
-            <span className="text-indigo-400">nhanh hơn</span>,
+            <span className="shimmer-text">nhanh hơn</span>,
             <br />rẻ hơn bao giờ hết
           </h1>
-          <p className="text-white/60 text-lg md:text-xl max-w-2xl mx-auto mb-4">
+          <p className="fade-up text-white/60 text-lg md:text-xl max-w-2xl mx-auto mb-4" style={{ animationDelay: "200ms" }}>
             Dịch vụ build iOS và Android cho React Native / Expo — Không subscription theo phút, không chờ lâu, log stream realtime, dễ dàng debug.
           </p>
-          <p className="text-white/30 text-sm mb-10 font-mono">
-            $ npm install -g ant-go &nbsp;&&nbsp; ant-go build
+          <p className="fade-up text-white/30 text-sm mb-10 font-mono" style={{ animationDelay: "300ms" }}>
+            {cliText}
+            {!cliDone && <span className="inline-block w-[2px] h-[1em] bg-white/50 ml-0.5 align-middle animate-pulse" />}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="fade-up flex flex-col sm:flex-row gap-4 justify-center" style={{ animationDelay: "400ms" }}>
             <Link
               href="/login"
-              className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-3 rounded-xl transition text-lg shadow-lg shadow-indigo-900/40"
+              className="btn-pulse bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-3 rounded-xl transition text-lg shadow-lg shadow-indigo-900/40"
             >
               Vào Dashboard →
             </Link>
@@ -198,36 +452,14 @@ export default function HomePage() {
         {/* Features */}
         <section className="max-w-6xl mx-auto px-6 py-16">
           <h2 className="text-3xl font-bold text-center mb-12">Tại sao dùng Ant Go?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((f) => (
-              <div
-                key={f.title}
-                className="rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300"
-                style={GLASS}
-              >
-                <h3 className="text-lg font-semibold mb-2 text-white">{f.title}</h3>
-                <p className="text-white/55 text-sm leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
-          </div>
+          <FeatureGrid />
         </section>
 
         {/* How it works */}
         <section className="py-16">
           <div className="max-w-3xl mx-auto px-6">
             <h2 className="text-3xl font-bold text-center mb-12">Hoạt động như thế nào?</h2>
-            <div className="rounded-2xl p-8" style={GLASS}>
-              <ol className="space-y-5">
-                {steps.map((s) => (
-                  <li key={s.n} className="flex items-start gap-4">
-                    <span className="flex-shrink-0 w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-indigo-900/40">
-                      {s.n}
-                    </span>
-                    <p className="text-white/75 leading-relaxed pt-1">{s.label}</p>
-                  </li>
-                ))}
-              </ol>
-            </div>
+            <StepsList />
           </div>
         </section>
 
@@ -237,23 +469,7 @@ export default function HomePage() {
           <p className="text-white/50 text-center text-sm mb-8">
             CLI chạy trên máy developer — không cần cài gì thêm trên server.
           </p>
-          {/* Terminal — giữ dark để dễ đọc code */}
-          <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.15)", boxShadow: "0 5px 30px rgba(0,0,0,0.5)" }}>
-            <div className="flex items-center gap-2 px-4 py-3 bg-gray-800 border-b border-gray-700">
-              <span className="w-3 h-3 rounded-full bg-red-500/70" />
-              <span className="w-3 h-3 rounded-full bg-yellow-500/70" />
-              <span className="w-3 h-3 rounded-full bg-green-500/70" />
-              <span className="ml-3 text-xs text-gray-400 font-mono">terminal</span>
-            </div>
-            <div className="bg-gray-950 px-6 py-5 space-y-3 font-mono text-sm">
-              <p><span className="text-white/30 select-none"># Cài CLI (một lần duy nhất)</span></p>
-              <p><span className="text-indigo-400 select-none">$ </span><span className="text-white">npm install -g ant-go</span></p>
-              <p className="pt-2"><span className="text-white/30 select-none"># Trigger build từ thư mục project</span></p>
-              <p><span className="text-indigo-400 select-none">$ </span><span className="text-white">ant-go build</span></p>
-              <p className="pt-2 text-white/30 select-none"># Xem trạng thái build</p>
-              <p><span className="text-indigo-400 select-none">$ </span><span className="text-white">ant-go status &lt;jobId&gt;</span></p>
-            </div>
-          </div>
+          <AnimatedTerminal />
         </section>
 
         {/* Pricing */}
