@@ -10,8 +10,18 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prepareBuild } from "@/lib/build.service";
+import { validateCliToken } from "@/lib/cli-auth.service";
 
 export async function POST(request: NextRequest) {
+  const token = request.headers.get("Authorization")?.replace("Bearer ", "").trim();
+  const session = await validateCliToken(token);
+  if (!session) {
+    return NextResponse.json(
+      { error: "Chưa đăng nhập. Chạy: ant-go auth login" },
+      { status: 401 }
+    );
+  }
+
   const body = await request.json().catch(() => ({}));
   const { projectId, platform, autoSubmit } = body;
 

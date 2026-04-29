@@ -380,7 +380,7 @@ export default function DocPage() {
               <div className="mt-3 space-y-1">
                 <div className="text-white font-semibold">Build đã được gửi lên server!</div>
                 <div className="mt-1 text-white/40">{"   "}Theo dõi tiến trình tại:</div>
-                <div className="text-blue-400 underline">{"   "}https://ant-go.app/account/app/MyApp/builds/abc123xyz</div>
+                <div className="text-blue-400 underline">{"   "}https://antgo.work/account/app/MyApp/builds/abc123xyz</div>
               </div>
             </Terminal>
 
@@ -513,7 +513,7 @@ export default function DocPage() {
                   {"  █ ███ █ ██▀▀█ █ ███ █"}<br />
                   {"  ▀▀▀▀▀▀▀ ▀ ▀ ▀ ▀▀▀▀▀▀▀"}
                 </div>
-                <div className="mt-1 text-white/30">Hoặc mở URL: <span className="text-accent-light underline">https://ant-go.app/enroll/xxxxxxxx</span></div>
+                <div className="mt-1 text-white/30">Hoặc mở URL: <span className="text-accent-light underline">https://antgo.work/enroll/xxxxxxxx</span></div>
               </div>
               <div className="mt-3 space-y-1">
                 <div className="text-yellow-400">Đang chờ iPhone xác nhận...</div>

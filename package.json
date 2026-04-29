@@ -22,10 +22,12 @@
   "type": "commonjs",
   "dependencies": {
     "@expo/apple-utils": "^2.1.21",
+    "@types/qrcode": "^1.5.6",
     "firebase": "^12.12.1",
     "firebase-admin": "^13.8.0",
     "next": "^15.5.15",
     "next-themes": "^0.4.6",
+    "qrcode": "^1.5.4",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },

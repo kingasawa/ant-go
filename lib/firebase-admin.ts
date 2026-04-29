@@ -49,3 +49,7 @@ export function getAdminDb() {
 export function getAdminBucket() {
   return getAdminApp().storage().bucket();
 }
+
+export function getAdminAuth() {
+  return getAdminApp().auth();
+}

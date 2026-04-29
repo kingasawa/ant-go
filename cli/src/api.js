@@ -4,10 +4,12 @@
 
 const axios = require('axios');
 
-function createClient(apiUrl) {
+function createClient(apiUrl, authToken) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
   return axios.create({
     baseURL: apiUrl.replace(/\/$/, ''),
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     timeout: 30_000,
   });
 }

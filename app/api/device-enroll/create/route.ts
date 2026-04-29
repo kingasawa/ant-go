@@ -12,11 +12,7 @@ import { randomUUID } from "crypto";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
-  const { projectId } = body;
-
-  if (!projectId || typeof projectId !== "string") {
-    return NextResponse.json({ error: "projectId là bắt buộc" }, { status: 400 });
-  }
+  const { projectId, source } = body;
 
   const token = randomUUID();
   const now = Date.now();
@@ -24,7 +20,8 @@ export async function POST(request: NextRequest) {
 
   const db = getAdminDb();
   await db.collection("device_enrollments").doc(token).set({
-    projectId: projectId.trim(),
+    projectId: typeof projectId === "string" ? projectId.trim() : null,
+    source: source ?? "cli",
     status: "pending",
     createdAt: now,
     expiresAt,

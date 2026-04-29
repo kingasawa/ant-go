@@ -23,6 +23,7 @@ const ora    = require('ora');
 const CLI_VERSION = '1.0';
 
 const { API_URL, loadConfig }          = require('../config');
+const { ensureToken }                  = require('./auth');
 const { createClient, createBuild, getBuildStatus } = require('../api');
 const { ensureAppleCreds }             = require('../apple-creds');
 const logger = require('../logger');
@@ -124,7 +125,7 @@ function resolveProjectInfo(projectRoot) {
     }
     console.log('');
     console.log(chalk.yellow('⚠  Chưa có projectId trong app.json → expo.extra.ant.projectId'));
-    console.log(`   Vào ${chalk.cyan('https://ant-go.app')} để lấy Project ID\n`);
+    console.log(`   Vào ${chalk.cyan('https://antgo.work')} để lấy Project ID\n`);
     process.exit(0);
   }
 
@@ -237,6 +238,9 @@ function uploadFile(uploadUrl, filePath, contentType, spinner) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function runBuild(options) {
+  // Kiểm tra đăng nhập — tự gia hạn token nếu cần
+  const authToken = await ensureToken();
+
   const platform = (options.platform || '').toLowerCase();
   if (!platform) {
     console.log('');
@@ -262,7 +266,7 @@ async function runBuild(options) {
     process.exit(1);
   }
   const cfg    = loadConfig();
-  const client = createClient(API_URL);
+  const client = createClient(API_URL, authToken);
 
   const projectRoot = options.project
     ? path.resolve(options.project)

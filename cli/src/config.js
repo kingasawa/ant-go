@@ -1,5 +1,5 @@
 /**
- * config.js — Config phía user: chỉ lưu projectRoot (optional)
+ * config.js — Config phía user: lưu projectRoot (optional) và auth session
  *
  * Server URL được hardcode — user không cần biết / thiết lập.
  */
@@ -8,8 +8,7 @@ const fs   = require('fs');
 const path = require('path');
 const os   = require('os');
 
-// URL server ant-go — đổi thành production URL khi deploy
-const API_URL = 'http://localhost:3000';
+const API_URL = process.env.ANT_GO_API_URL || 'https://antgo.work';
 
 const CONFIG_DIR  = path.join(os.homedir(), '.ant-go');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
@@ -23,7 +22,31 @@ function loadConfig() {
 function saveConfig(data) {
   fs.mkdirSync(CONFIG_DIR, { recursive: true });
   const current = loadConfig();
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify({ ...current, ...data }, null, 2));
+  fs.writeFileSync(CONFIG_FILE, JSON.stringify({ ...current, ...data }, null, 2), { mode: 0o600 });
 }
 
-module.exports = { API_URL, loadConfig, saveConfig, CONFIG_FILE };
+// ── Auth helpers ──────────────────────────────────────────────────────────────
+
+function getAuth() {
+  return loadConfig().auth ?? null;
+}
+
+function setAuth(data) {
+  saveConfig({ auth: data });
+}
+
+function clearAuth() {
+  fs.mkdirSync(CONFIG_DIR, { recursive: true });
+  const current = loadConfig();
+  delete current.auth;
+  fs.writeFileSync(CONFIG_FILE, JSON.stringify(current, null, 2), { mode: 0o600 });
+}
+
+function isLoggedIn() {
+  const session = getAuth();
+  if (!session?.token) return false;
+  if (!session.expiresAt) return true;
+  return new Date(session.expiresAt) > new Date();
+}
+
+module.exports = { API_URL, loadConfig, saveConfig, CONFIG_FILE, getAuth, setAuth, clearAuth, isLoggedIn };
