@@ -5,7 +5,6 @@ import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { createUserProfileIfNeeded } from "@/lib/createUserProfile";
-import SceneBackground from "@/app/components/SceneBackground";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -54,25 +53,29 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden flex items-center justify-center px-4 py-10">
-      <SceneBackground />
+    <main
+      className="relative min-h-screen flex items-center justify-center px-4 py-10 bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: "url('/assets/images/bgimg1.jpg')" }}
+    >
+      {/* Dark overlay for contrast — sits below the glass card */}
+      <div className="absolute inset-0 bg-black/40" />
 
       <Link
         href="/"
-        className="absolute top-6 left-6 z-20 text-white/60 hover:text-white text-sm flex items-center gap-1 transition-colors"
+        className="absolute top-6 left-6 z-20 text-white/70 hover:text-white text-sm flex items-center gap-1 transition-colors"
       >
         ← Home
       </Link>
 
-      {/* Glass card */}
+      {/* Glass card — backdrop-filter blurs the bg image behind it */}
       <div
         className="relative z-10 w-full max-w-sm rounded-2xl px-8 py-9"
         style={{
-          backdropFilter: "blur(22px) saturate(160%)",
-          WebkitBackdropFilter: "blur(22px) saturate(160%)",
-          background: "rgba(255, 255, 255, 0.10)",
-          border: "1px solid rgba(255, 255, 255, 0.22)",
-          boxShadow: "0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
+          backdropFilter: "blur(18px) saturate(180%)",
+          WebkitBackdropFilter: "blur(18px) saturate(180%)",
+          background: "rgba(255, 255, 255, 0.13)",
+          border: "1px solid rgba(255, 255, 255, 0.25)",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2)",
         }}
       >
         <h1 className="text-3xl font-bold text-white text-center mb-7 tracking-wide">
