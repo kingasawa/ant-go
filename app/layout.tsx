@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 export const metadata: Metadata = {
   title: "ANT GO WORK — CI/CD for React Native apps",
   description: "An Application Services for iOS and Android builds",
+  icons: { icon: "/assets/images/favicon.png" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
