@@ -167,6 +167,10 @@ function SidebarNav({ scrollActiveId }: { scrollActiveId: string | null }) {
           key={n.id}
           href={`#${n.id}`}
           className="relative z-10 block text-sm py-2.5 px-3 rounded-lg"
+          onClick={(e) => {
+            e.preventDefault();
+            document.getElementById(n.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
           style={{
             color: (hoverActiveId ?? scrollActiveId) === n.id
               ? "rgb(var(--tw-accent-light))"
