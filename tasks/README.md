@@ -14,32 +14,52 @@ Danh sách task và quy tắc làm việc cho Claude.
 
 ---
 
-## Quy tắc làm task
+## Quy tắc bắt buộc khi làm task
 
-### 1. Cập nhật status
+### 1. Branch
 
-- Khi **bắt đầu** làm một task → sửa status thành `in_progress` trong README này.
-- Khi **hoàn thành** task → sửa status thành `done`.
-- Không được bắt đầu task đã có status `done` — nếu cần làm lại thì hỏi trước.
+Trước khi bắt đầu, đảm bảo `main` đã có code mới nhất rồi tạo feature branch:
+
+```
+git checkout main
+git pull origin main
+git checkout -b feature/<tên-task>
+```
+
+Toàn bộ code của task được commit lên branch này.
 
 ---
 
-### 2. Đánh dấu tiến độ trong file task
+### 2. Cập nhật status
 
-Mỗi subtask trong file `.md` phải được cập nhật trạng thái khi làm xong:
+Status phải được cập nhật **đồng thời ở 2 nơi** mỗi khi thay đổi:
+- File `tasks/README.md` — cột Status trong bảng danh sách
+- File task tương ứng — dòng `**Status:**` ở đầu file
+
+Các mốc cập nhật:
+- `in_progress` — khi bắt đầu làm
+- `done` — khi hoàn thành và đã tạo PR
+
+Không được bắt đầu task đã có status `done` — nếu cần làm lại thì hỏi trước.
+
+---
+
+### 3. Đánh dấu tiến độ trong file task
+
+Mỗi subtask trong file `.md` phải được cập nhật trạng thái ngay khi làm xong:
 
 ```
 - [ ] TASK-01  →  chưa làm
-- [x] TASK-01  →  đã làm xong
 - [~] TASK-01  →  đang làm / làm dở
+- [x] TASK-01  →  đã làm xong
 ```
 
-Cập nhật **ngay sau khi** hoàn thành từng subtask, không chờ đến cuối.  
+Cập nhật **ngay sau khi** hoàn thành từng subtask, không chờ đến cuối.
 Nếu bị ngắt giữa chừng, file task phản ánh đúng đã làm đến đâu.
 
 ---
 
-### 3. Kiểm tra trước khi làm
+### 4. Kiểm tra trước khi làm
 
 Trước khi bắt đầu bất kỳ subtask nào:
 
@@ -55,12 +75,21 @@ Ví dụ những trường hợp phải hỏi trước:
 
 ---
 
-### 4. Tôn trọng tài liệu trong `/docs`
+### 5. Tôn trọng tài liệu trong `/docs`
 
 - **Trước khi làm:** đọc file tài liệu liên quan trong `/docs` (và `cli/docs`) để hiểu flow đã được ghi lại.
 - **Không được làm sai** so với tài liệu hiện có mà không có lý do.
 - Nếu việc sửa code sẽ **thay đổi flow đã mô tả trong tài liệu** → báo cho tôi biết phần nào bị ảnh hưởng và chờ xác nhận.
 - **Sau khi hoàn thành subtask** có ảnh hưởng đến tài liệu → cập nhật file `.md` tương ứng trong `/docs`.
+
+---
+
+### 6. Tạo PR khi hoàn thành
+
+1. Push branch lên remote.
+2. Tạo PR từ `feature/<tên-task>` vào `main`.
+3. Ghi URL PR vào dòng `**PR:**` trong file task.
+4. Cập nhật status thành `done` ở cả 2 nơi (README + file task).
 
 ---
 
@@ -76,4 +105,4 @@ Claude sẽ:
 1. Đọc file task tương ứng
 2. Kiểm tra subtask nào `[x]` (đã xong), `[~]` (đang dở), `[ ]` (chưa làm)
 3. Bắt đầu từ subtask chưa làm hoặc đang dở
-4. Cập nhật status README + đánh dấu tiến độ trong file task
+4. Cập nhật status + đánh dấu tiến độ trong file task
