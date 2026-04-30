@@ -5,6 +5,7 @@ import { collection, query, where, onSnapshot, orderBy } from "firebase/firestor
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { GLASS } from "@/lib/glass";
+import PageLoader from "@/app/components/PageLoader";
 
 interface Build {
   id: string;
@@ -17,6 +18,7 @@ export default function UsagePage() {
   const decodedName = decodeURIComponent(appName);
   const { user } = useAuth();
   const [builds, setBuilds] = useState<Build[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
@@ -28,7 +30,8 @@ export default function UsagePage() {
     );
     return onSnapshot(q, (snap) => {
       setBuilds(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Build)));
-    }, () => {});
+      setLoading(false);
+    }, () => { setLoading(false); });
   }, [user, decodedName]);
 
   const success = builds.filter((b) => b.status === "success").length;
@@ -41,6 +44,8 @@ export default function UsagePage() {
     { label: "Failed", value: failed },
     { label: "Success Rate", value: `${rate}%` },
   ];
+
+  if (loading) return <PageLoader label="Đang tải usage…" />;
 
   return (
     <div>

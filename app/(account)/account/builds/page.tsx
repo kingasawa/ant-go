@@ -4,6 +4,7 @@ import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { GLASS } from "@/lib/glass";
+import PageLoader from "@/app/components/PageLoader";
 
 export interface Build {
   id: string;
@@ -280,7 +281,7 @@ export default function BuildsPage() {
 
       {/* Table */}
       {dataLoading ? (
-        <div className="text-white/40 animate-pulse text-center py-16">Loading builds…</div>
+        <PageLoader label="Đang tải builds…" />
       ) : filteredBuilds.length === 0 ? (
         <div className="text-center py-24 text-white/40">
           <div className="text-5xl mb-4">📭</div>

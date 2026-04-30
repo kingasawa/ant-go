@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { UserProfile } from "@/lib/createUserProfile";
 import Link from "next/link";
 import { GLASS } from "@/lib/glass";
+import PageLoader from "@/app/components/PageLoader";
 
 interface Build {
   id: string;
@@ -93,25 +94,31 @@ export default function DashboardPage() {
   const [apps, setApps] = useState<AppDoc[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [recentBuilds, setRecentBuilds] = useState<Build[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
+    let buildsReady = false, appsReady = false, profileReady = false;
+    const checkDone = () => { if (buildsReady && appsReady && profileReady) setLoading(false); };
 
     const qBuilds = query(collection(db, "builds"), where("userId", "==", user.uid), orderBy("createdAt", "desc"));
     const unsubBuilds = onSnapshot(qBuilds, (snap) => {
       const data = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Build));
       setBuilds(data);
       setRecentBuilds(data.slice(0, 5));
-    }, () => {});
+      buildsReady = true; checkDone();
+    }, () => { buildsReady = true; checkDone(); });
 
     const qApps = query(collection(db, "apps"), where("userId", "==", user.uid));
     const unsubApps = onSnapshot(qApps, (snap) => {
       setApps(snap.docs.map((d) => ({ id: d.id, ...d.data() } as AppDoc)));
-    }, () => {});
+      appsReady = true; checkDone();
+    }, () => { appsReady = true; checkDone(); });
 
     const unsubProfile = onSnapshot(doc(db, "users", user.uid), (snap) => {
       if (snap.exists()) setProfile(snap.data() as UserProfile);
-    });
+      profileReady = true; checkDone();
+    }, () => { profileReady = true; checkDone(); });
 
     return () => { unsubBuilds(); unsubApps(); unsubProfile(); };
   }, [user]);
@@ -120,6 +127,8 @@ export default function DashboardPage() {
   const failedCount     = builds.filter((b) => b.status === "failed").length;
   const inProgressCount = builds.filter((b) => b.status === "in_progress" || b.status === "pending").length;
   const successRate     = builds.length > 0 ? Math.round((successCount / builds.length) * 100) : 0;
+
+  if (loading) return <PageLoader label="Đang tải overview…" />;
 
   return (
     <div>

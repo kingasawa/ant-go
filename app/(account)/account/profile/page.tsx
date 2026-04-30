@@ -5,6 +5,7 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { UserProfile } from "@/lib/createUserProfile";
 import { GLASS } from "@/lib/glass";
+import PageLoader from "@/app/components/PageLoader";
 
 const PLAN_BADGE: Record<string, string> = {
   free: "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300",
@@ -53,11 +54,7 @@ export default function ProfilePage() {
   }, [user]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-32">
-        <div className="text-white/40 animate-pulse">Loading profile…</div>
-      </div>
-    );
+    return <PageLoader label="Đang tải profile…" />;
   }
 
   if (!profile || !user) {

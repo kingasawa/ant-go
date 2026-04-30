@@ -5,6 +5,7 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { GLASS } from "@/lib/glass";
+import PageLoader from "@/app/components/PageLoader";
 
 interface AppDoc {
   id: string;
@@ -38,7 +39,7 @@ export default function AppInfoPage() {
     });
   }, [user, decodedName]);
 
-  if (loading) return <div className="text-white/40 animate-pulse">Loading…</div>;
+  if (loading) return <PageLoader label="Đang tải thông tin app…" />;
   if (!app) return <div className="text-white/40">App not found.</div>;
 
   const rows = [

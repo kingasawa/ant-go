@@ -5,6 +5,7 @@ import { db } from "@/lib/firebase";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useSearchParams } from "next/navigation";
 import { GLASS } from "@/lib/glass";
+import PageLoader from "@/app/components/PageLoader";
 
 const PLANS = [
   {
@@ -115,6 +116,8 @@ export default function BillingPage() {
   const currentIdx = PLAN_ORDER.indexOf(currentPlan);
   const statusInfo = billing?.planStatus ? STATUS_LABELS[billing.planStatus] : null;
   const hasPaidPlan = currentPlan !== "free" && billing?.stripeCustomerId;
+
+  if (loading) return <PageLoader label="Đang tải billing…" />;
 
   return (
     <div className="max-w-4xl">

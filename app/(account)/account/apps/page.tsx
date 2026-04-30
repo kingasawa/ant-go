@@ -9,6 +9,7 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { AppDoc, AppFormData, APP_FORM_FIELDS } from "@/lib/appTypes";
 import { GLASS } from "@/lib/glass";
+import PageLoader from "@/app/components/PageLoader";
 
 /* ─── Empty form ─────────────────────────────────────────────────────────── */
 const emptyForm = (): AppFormData => ({
@@ -277,7 +278,7 @@ export default function AppsPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="text-center py-24 text-white/40 animate-pulse">Loading…</div>
+        <PageLoader label="Đang tải apps…" />
       ) : apps.length === 0 ? (
         <div className="text-center py-24 text-white/40">
           <div className="text-6xl mb-4">📱</div>
