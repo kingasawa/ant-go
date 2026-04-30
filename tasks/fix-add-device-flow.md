@@ -1,6 +1,6 @@
 # Task: Fix Add Device Flow (CLI + Dashboard)
 
-**Status:** in_progress  
+**Status:** done  
 **Priority:** high  
 **Created:** 2026-04-30  
 **Branch:** feature/fix-add-device-flow  
@@ -27,7 +27,7 @@ Sửa lại toàn bộ flow thêm device trong CLI và Dashboard:
 - [x] TASK-03 — CLI: Thêm `fetchUserInfo()` và `saveDevice()` vào `api.js`
 - [x] TASK-04 — CLI: Sửa `build.js` — fetch user info và check quota
 - [x] TASK-05 — CLI: Sửa `apple-creds.js` — multi-select device UI
-- [ ] TASK-06 — Cập nhật tài liệu
+- [x] TASK-06 — Cập nhật tài liệu
 
 ---
 
