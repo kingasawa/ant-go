@@ -14,21 +14,29 @@ import Link from "next/link";
 
 type Mode = "login" | "register";
 
-// Shared glass face style — each face applies its own backdrop-filter
+// Face style — transparent content container, no visual chrome
 const FACE: React.CSSProperties = {
-  backdropFilter: "blur(18px) saturate(180%)",
-  WebkitBackdropFilter: "blur(18px) saturate(180%)",
-  background: "rgba(255, 255, 255, 0.13)",
-  border: "1px solid rgba(255, 255, 255, 0.25)",
-  // boxShadow: "0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2)",
-  boxShadow: "inset 0px -10px 20px rgba(0, 0, 0, 0.3), inset 0px 2px 20px rgba(255, 255, 255, 0.5), 0px 5px 30px rgba(0, 0, 0, 0.4)",
   backfaceVisibility: "hidden",
   WebkitBackfaceVisibility: "hidden",
   position: "absolute",
   inset: 0,
   borderRadius: "1rem",
-  padding: "2.25rem 2rem 4.5rem", // extra bottom room for the pinned footer link
+  padding: "2.25rem 2rem 4.5rem",
   overflowY: "auto",
+};
+
+// Static glass wrapper — owns ALL visual chrome (blur, tint, border, shadow)
+// Always rendered outside the 3D transform so GPU never repaints it during flip
+const BLUR_WRAPPER: React.CSSProperties = {
+  backdropFilter: "blur(18px) saturate(180%)",
+  WebkitBackdropFilter: "blur(18px) saturate(180%)",
+  background: "rgba(255, 255, 255, 0.13)",
+  border: "1px solid rgba(255, 255, 255, 0.25)",
+  boxShadow: "inset 0px -10px 20px rgba(0, 0, 0, 0.3), inset 0px 2px 20px rgba(255, 255, 255, 0.5), 0px 5px 30px rgba(0, 0, 0, 0.4)",
+  borderRadius: "1rem",
+  position: "absolute",
+  inset: 0,
+  pointerEvents: "none",
 };
 
 export default function AuthCard({ initialMode }: { initialMode: Mode }) {
@@ -146,6 +154,9 @@ export default function AuthCard({ initialMode }: { initialMode: Mode }) {
       {/* Perspective wrapper — must be the PARENT of the rotating element */}
       <div className="relative z-10 w-full max-w-sm" style={{ perspective: "1200px" }}>
 
+        {/* Static blur layer — always rendered, never participates in 3D transform */}
+        <div style={{ ...BLUR_WRAPPER, minHeight: "540px" }} />
+
         {/* Rotating card — both faces live inside here */}
         <div
           style={{
@@ -231,18 +242,6 @@ export default function AuthCard({ initialMode }: { initialMode: Mode }) {
           <div style={{ ...FACE, transform: "rotateY(180deg)" }}>
             <h1 className="text-3xl font-bold text-white text-center mb-5 tracking-wide">Register</h1>
 
-            <button
-              type="button"
-              onClick={handleGoogleRegister}
-              disabled={busy || loading}
-              className="w-full flex items-center justify-center gap-2.5 font-semibold text-sm text-white py-2.5 rounded-xl transition-all disabled:opacity-55 disabled:cursor-not-allowed"
-              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.18)" }}
-            >
-              <GoogleIcon /> Sign up with Google
-            </button>
-
-            <Divider />
-
             <form onSubmit={handleEmailRegister} className="space-y-3">
               <Field type="text"     value={displayName}  onChange={setDisplayName}  placeholder="Full name"            icon={<UserIcon />} />
               <Field type="email"    value={regEmail}     onChange={setRegEmail}     placeholder="Email"                icon={<MailIcon />} />
@@ -254,11 +253,23 @@ export default function AuthCard({ initialMode }: { initialMode: Mode }) {
               <button
                 type="submit"
                 disabled={busy || loading}
-                className="w-full bg-white hover:bg-white/90 text-gray-900 font-bold py-3 rounded-xl transition-all disabled:opacity-55 disabled:cursor-not-allowed"
+                className="w-full bg-white hover:bg-white/90 text-gray-900 font-bold py-3 rounded-xl transition-all disabled:opacity-55 disabled:cursor-not-allowed mt-1"
               >
                 {regBusy ? "Creating account…" : "Create Account"}
               </button>
             </form>
+
+            <Divider />
+
+            <button
+              type="button"
+              onClick={handleGoogleRegister}
+              disabled={busy || loading}
+              className="w-full flex items-center justify-center gap-2.5 font-semibold text-sm text-white py-2.5 rounded-xl transition-all disabled:opacity-55 disabled:cursor-not-allowed"
+              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.18)" }}
+            >
+              <GoogleIcon /> Sign up with Google
+            </button>
 
             <p className="absolute bottom-0 left-0 right-0 pb-6 text-center text-white/45 text-sm">
               Already have an account?{" "}
