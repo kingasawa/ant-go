@@ -7,6 +7,7 @@ import { UserProfile } from "@/lib/createUserProfile";
 import Link from "next/link";
 import { GLASS } from "@/lib/glass";
 import PageLoader from "@/app/components/PageLoader";
+import { Package, Smartphone, CheckCircle, CreditCard, ChevronRight } from "lucide-react";
 
 interface Build {
   id: string;
@@ -53,9 +54,7 @@ function StatCard({
         {href && (
           <div className="mt-3 flex items-center gap-1 text-xs text-accent-light font-medium">
             Xem chi tiết
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <ChevronRight className="w-3.5 h-3.5" />
           </div>
         )}
       </div>
@@ -64,22 +63,10 @@ function StatCard({
   return href ? <Link href={href} className="block">{inner}</Link> : inner;
 }
 
-// SVG icons dùng cho background watermark
-const BgBuilds  = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-    {/* box body */}
-    <path d="M2.25 12.75v6A2.25 2.25 0 004.5 21h15a2.25 2.25 0 002.25-2.25v-6" />
-    {/* left lid flap (raised up-left) */}
-    <path d="M2.25 12.75L6 7.5h5.25v5.25" />
-    {/* right lid flap (raised up-right) */}
-    <path d="M21.75 12.75L18 7.5h-5.25v5.25" />
-    {/* center seam on body */}
-    <path d="M11.25 12.75h1.5V21" />
-  </svg>
-);
-const BgApps    = () => <svg fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 8.25h3m-3 3h3m-3 3h3" /></svg>;
-const BgSuccess = () => <svg fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
-const BgPlan    = () => <svg fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>;
+const BgBuilds  = () => <Package strokeWidth={1.5} />;
+const BgApps    = () => <Smartphone strokeWidth={1.5} />;
+const BgSuccess = () => <CheckCircle strokeWidth={1.5} />;
+const BgPlan    = () => <CreditCard strokeWidth={1.5} />;
 
 const STATUS_COLOR: Record<string, string> = {
   pending:     "bg-yellow-500/20 text-yellow-600 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700",
