@@ -24,7 +24,7 @@ const CLI_VERSION = '1.0';
 
 const { API_URL, loadConfig }          = require('../config');
 const { ensureToken }                  = require('./auth');
-const { createClient, createBuild, getBuildStatus } = require('../api');
+const { createClient, createBuild, getBuildStatus, fetchUserInfo } = require('../api');
 const { ensureAppleCreds }             = require('../apple-creds');
 const logger = require('../logger');
 
@@ -268,6 +268,35 @@ async function runBuild(options) {
   const cfg    = loadConfig();
   const client = createClient(API_URL, authToken);
 
+  // Fetch fresh user info (plan, quota, devices)
+  const infoSpinner = ora('Đang tải thông tin tài khoản...').start();
+  let userInfo;
+  try {
+    userInfo = await fetchUserInfo(client);
+    infoSpinner.succeed(
+      `Plan: ${chalk.cyan(userInfo.plan)}  ·  ` +
+      `Builds còn lại: ${chalk.bold(userInfo.freeBuildsRemaining)}`
+    );
+  } catch (err) {
+    infoSpinner.fail('Không tải được thông tin tài khoản');
+    logger.error(err.response?.data?.error ?? err.message);
+    process.exit(1);
+  }
+
+  // Kiểm tra quota
+  if (userInfo.plan === 'free' && userInfo.freeBuildsRemaining <= 0) {
+    console.log('');
+    console.log(chalk.red('✖  Bạn đã hết lượt build miễn phí.'));
+    console.log(chalk.gray('   Nâng cấp tại: https://antgo.work/account/billing'));
+    console.log('');
+    process.exit(1);
+  }
+  if (userInfo.planStatus === 'past_due') {
+    console.log(chalk.yellow('⚠  Thanh toán thất bại — vui lòng cập nhật thông tin thanh toán.'));
+    console.log(chalk.gray('   https://antgo.work/account/billing'));
+    console.log('');
+  }
+
   const projectRoot = options.project
     ? path.resolve(options.project)
     : cfg.projectRoot ? path.resolve(cfg.projectRoot) : process.cwd();
@@ -311,6 +340,8 @@ async function runBuild(options) {
         refreshProfile: !!options.refreshProfile,
         distribution,
         profileName,
+        userDevices: userInfo.devices,
+        apiClient:   client,
       });
     } catch (err) {
       logger.error('Không lấy được Apple credentials: ' + err.message);
