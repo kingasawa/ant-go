@@ -4,7 +4,7 @@
 **Priority:** high  
 **Created:** 2026-04-30  
 **Branch:** feature/fix-add-device-flow  
-**PR:** —
+**PR:** https://github.com/kingasawa/ant-go/pull/1
 
 ---
 
