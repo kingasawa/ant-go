@@ -12,7 +12,7 @@ import { randomUUID } from "crypto";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
-  const { projectId, source } = body;
+  const { projectId, source, origin } = body;
 
   const token = randomUUID();
   const now = Date.now();
@@ -30,9 +30,9 @@ export async function POST(request: NextRequest) {
     deviceSerial: null,
   });
 
-  // Derive base URL from request so it works in both local and production
-  const reqUrl = new URL(request.url);
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `${reqUrl.protocol}//${reqUrl.host}`;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+    || (typeof origin === "string" && origin.startsWith("http") ? origin : null)
+    || (() => { const u = new URL(request.url); return `${u.protocol}//${u.host}`; })();
   const enrollUrl = `${baseUrl}/api/device-enroll/${token}/profile`;
 
   return NextResponse.json({ token, enrollUrl }, { status: 201 });

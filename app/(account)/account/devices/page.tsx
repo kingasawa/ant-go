@@ -45,7 +45,7 @@ function AddDeviceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
       const res = await fetch("/api/device-enroll/create", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
-        body: JSON.stringify({ source: "dashboard" }),
+        body: JSON.stringify({ source: "dashboard", origin: window.location.origin }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Không tạo được enrollment");
