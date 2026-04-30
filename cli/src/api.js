@@ -26,4 +26,22 @@ async function getBuildStatus(client, jobId) {
   return data;
 }
 
-module.exports = { createClient, createBuild, getBuildStatus };
+// Lấy user info + devices list (fresh từ Firestore)
+async function fetchUserInfo(client) {
+  const { data } = await client.get('/api/user/me');
+  return data;
+}
+
+// Lưu device mới vào Firestore sau khi enroll thành công
+async function saveDevice(client, { udid, name, deviceProduct, deviceSerial }) {
+  const { data } = await client.post('/api/devices', {
+    udid,
+    name,
+    deviceProduct,
+    deviceSerial,
+    source: 'cli',
+  });
+  return data;
+}
+
+module.exports = { createClient, createBuild, getBuildStatus, fetchUserInfo, saveDevice };

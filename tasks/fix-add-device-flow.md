@@ -1,10 +1,10 @@
 # Task: Fix Add Device Flow (CLI + Dashboard)
 
-**Status:** pending  
+**Status:** done  
 **Priority:** high  
 **Created:** 2026-04-30  
 **Branch:** feature/fix-add-device-flow  
-**PR:** —
+**PR:** https://github.com/kingasawa/ant-go/pull/1
 
 ---
 
@@ -22,12 +22,12 @@ Sửa lại toàn bộ flow thêm device trong CLI và Dashboard:
 
 ## Tiến độ
 
-- [ ] TASK-01 — API: Tạo `GET /api/user/me`
-- [ ] TASK-02 — API: Sửa `POST /api/devices` nhận CLI token
-- [ ] TASK-03 — CLI: Thêm `fetchUserInfo()` và `saveDevice()` vào `api.js`
-- [ ] TASK-04 — CLI: Sửa `build.js` — fetch user info và check quota
-- [ ] TASK-05 — CLI: Sửa `apple-creds.js` — multi-select device UI
-- [ ] TASK-06 — Cập nhật tài liệu
+- [x] TASK-01 — API: Tạo `GET /api/user/me`
+- [x] TASK-02 — API: Sửa `POST /api/devices` nhận CLI token
+- [x] TASK-03 — CLI: Thêm `fetchUserInfo()` và `saveDevice()` vào `api.js`
+- [x] TASK-04 — CLI: Sửa `build.js` — fetch user info và check quota
+- [x] TASK-05 — CLI: Sửa `apple-creds.js` — multi-select device UI
+- [x] TASK-06 — Cập nhật tài liệu
 
 ---
 

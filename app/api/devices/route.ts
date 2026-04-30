@@ -8,16 +8,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as admin from "firebase-admin";
 import { getAdminDb, getAdminAuth } from "@/lib/firebase-admin";
+import { validateCliToken } from "@/lib/cli-auth.service";
 
 async function resolveUid(request: NextRequest): Promise<string | null> {
-  const idToken = request.headers.get("Authorization")?.replace("Bearer ", "").trim();
-  if (!idToken) return null;
+  const token = request.headers.get("Authorization")?.replace("Bearer ", "").trim();
+  if (!token) return null;
+  // Firebase ID token (dashboard)
   try {
-    const decoded = await getAdminAuth().verifyIdToken(idToken);
+    const decoded = await getAdminAuth().verifyIdToken(token);
     return decoded.uid;
-  } catch {
-    return null;
-  }
+  } catch {}
+  // Fallback: CLI token
+  const session = await validateCliToken(token);
+  return session?.uid ?? null;
 }
 
 export async function GET(request: NextRequest) {

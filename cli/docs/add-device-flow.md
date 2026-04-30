@@ -10,38 +10,43 @@ Luồng đăng ký UDID thiết bị iOS từ CLI, được kích hoạt tự đ
 Developer Machine (CLI)              antgo.work API                 iPhone
         │                                  │                           │
         ├── ant-go build --profile development                         │
-        ├── đọc ant.json → distribution: internal                      │
-        ├── đăng nhập Apple Developer                                  │
+        ├── ensureToken()                  │                           │
         │                                  │                           │
-        ├── POST /api/device-enroll/create►│ tạo enrollment session    │
+        ├── GET /api/user/me ─────────────►│ trả plan, quota, devices  │
+        │◄── { plan, freeBuildsRemaining,  │                           │
+        │      devices: [...] } ───────────┤                           │
+        ├── check quota (free builds?)     │                           │
+        │                                  │                           │
+        ├── distribution: internal?        │                           │
+        │       └─ selectDevices()         │                           │
+        │           ├─ multi-select UI     │                           │
+        │           └─ "Thêm device mới":  │                           │
+        │               POST /device-enroll/create                     │
         │◄── { token, enrollUrl } ─────────┤                           │
-        ├── hiển thị QR code trong terminal│                           │
+        │               hiện QR code       │                           │
+        │               poll status 3s     │◄── iPhone quét QR ────────┤
+        │                                  │    iOS gửi UDID           │
+        │◄── { status: registered, udid } ◄┤                           │
+        │               POST /api/devices ►│ lưu Firestore             │
+        │               loop lại chọn      │                           │
         │                                  │                           │
-        │                                  │◄── iPhone quét QR ────────┤
-        │                                  │    tải .mobileconfig      │
-        │                                  │◄── iOS gửi UDID ──────────┤
-        │                                  │    cập nhật Firestore     │
-        │                                  │                           │
-        ├── poll /api/device-enroll/{token}/status (3s)                │
-        │◄── { status: "registered", udid } ◄───────────────────────────
-        │                                  │                           │
-        ├── kiểm tra UDID trên Apple Developer Portal                  │
-        ├── (nếu chưa có) hỏi tên device → Device.createAsync()        │
-        ├── tiếp tục lấy Certificate + Provisioning Profile            │
-        └── gửi build job lên server                                   │
+        ├── Apple login (cache / fresh)    │                           │
+        ├── sync UDIDs → Apple Developer (Device.getAsync / createAsync)
+        ├── Certificate (reuse / tạo mới)  │                           │
+        ├── Provisioning Profile({ devices: [id1, id2, ...] })         │
+        └── createBuild → upload → start   │                           │
 ```
 
 ---
 
 ## Điều kiện kích hoạt
 
-Flow này chỉ chạy khi cả hai điều kiện sau đều đúng:
+Flow này chỉ chạy khi cả hai điều kiện đều đúng:
 
 1. `--platform ios`
 2. Profile được chọn có `distribution: "internal"` trong `ant.json`
 
 ```json
-// ant.json
 {
   "build": {
     "development": {
@@ -63,180 +68,117 @@ ant-go build --platform ios --profile development
 
 | File | Vai trò |
 |---|---|
-| `cli/src/commands/build.js` | Entry point — đọc profile, gọi `ensureAppleCreds()` |
-| `cli/src/apple-creds.js` | Toàn bộ logic Apple credentials, bao gồm `enrollDevice()` |
-| `app/api/device-enroll/create/route.ts` | Tạo enrollment session trong Firestore |
+| `cli/src/commands/build.js` | Entry point — fetch user info, check quota, gọi `ensureAppleCreds()` |
+| `cli/src/api.js` | `fetchUserInfo()`, `saveDevice()` |
+| `cli/src/apple-creds.js` | `enrollDevice()`, `selectDevices()`, `ensureAppleCreds()` |
+| `app/api/user/me/route.ts` | Trả user info + danh sách devices (fresh từ Firestore) |
+| `app/api/device-enroll/create/route.ts` | Tạo enrollment session |
 | `app/api/device-enroll/[token]/profile/route.ts` | Trả `.mobileconfig` cho iPhone |
 | `app/api/device-enroll/[token]/complete/route.ts` | Nhận UDID từ iOS |
-| `app/api/device-enroll/[token]/status/route.ts` | CLI poll để biết khi nào UDID về |
+| `app/api/device-enroll/[token]/status/route.ts` | CLI poll để biết UDID về chưa |
+| `app/api/devices/route.ts` | Lưu / đọc devices — chấp nhận cả Firebase ID token lẫn CLI token |
 
 ---
 
 ## Flow chi tiết
 
-### Bước 1 — CLI đọc profile
+### Bước 1 — Fetch user info
 
-`build.js` gọi `resolveAntJson(projectRoot, profileName)` để lấy config của profile:
+Ngay sau `ensureToken()`, CLI gọi `GET /api/user/me` với CLI token:
 
-```js
-// Kết quả trả về:
-{
-  distribution: "internal",   // ← kích hoạt device enrollment
-  developmentClient: true
+```
+Response: {
+  plan: "free|starter|pro|team",
+  planStatus: "active|past_due|canceled|null",
+  freeBuildsRemaining: 5,
+  devices: [
+    { udid, name, deviceProduct, deviceSerial, addedAt }
+  ]
 }
 ```
 
-Nếu `ant.json` chưa tồn tại, CLI tự tạo với 3 profile mặc định (`production`, `development`, `preview`).
+Kiểm tra quota:
+- `plan === "free"` và `freeBuildsRemaining <= 0` → báo lỗi, thoát.
+- `planStatus === "past_due"` → hiện cảnh báo thanh toán, tiếp tục.
 
 ---
 
-### Bước 2 — Đăng nhập Apple Developer
+### Bước 2 — Multi-select device (`selectDevices`)
 
-`ensureAppleCreds()` trong `apple-creds.js` xử lý theo thứ tự:
+Khi `distribution: internal`, CLI gọi `selectDevices(userDevices, projectId, apiClient)`.
 
-1. **Kiểm tra cache** tại `~/.ant-go/creds-<profileName>.json` (TTL 24h).
-   - Cache còn hợp lệ → hỏi user có muốn dùng lại không.
-   - User chọn "tài khoản khác" hoặc cache hết hạn → xoá cache, tiếp tục.
+**Trường hợp chưa có device nào:** đi thẳng vào enrollment mới.
 
-2. **Prompt Apple ID + App-Specific Password** qua `inquirer`.
+**Trường hợp đã có device:** hiển thị checkbox multi-select:
 
-3. **Login** qua `@expo/apple-utils` `Auth.loginAsync()`:
-   - Hỗ trợ 2FA — nếu Apple yêu cầu, CLI dừng lại và hỏi mã 6 chữ số.
+```
+📱  Chọn device để build (Space = chọn/bỏ, Enter = xác nhận):
 
-4. **Chọn team** nếu account có nhiều team.
+ ◉  My iPhone        iPhone17,1   (00008110-001234...)
+ ◯  iPad Pro 11"     iPad8,1      (00008130-000ABC...)
+ ─────────────────────────────────────────────────────
+ ◯  ＋ Thêm device mới
+```
+
+**Nếu user chọn "＋ Thêm device mới":**
+
+1. Chạy `enrollDevice(projectId)`:
+   - `POST /api/device-enroll/create` → nhận `token`, `enrollUrl`
+   - Hiện QR code trong terminal
+   - Poll `GET /api/device-enroll/{token}/status` mỗi 3 giây (max 10 phút)
+   - Nhận `{ udid, deviceProduct, deviceSerial }`
+2. Prompt tên device.
+3. `POST /api/devices` → lưu vào Firestore `users/{uid}/devices/{udid}`.
+4. Thêm device mới vào danh sách, **quay lại màn hình chọn**.
+
+Return: `string[]` — mảng các UDID được chọn.
 
 ---
 
-### Bước 3 — Tạo enrollment session
+### Bước 3 — Đăng nhập Apple Developer
 
-`enrollDevice(projectId)` trong `apple-creds.js` gọi:
-
-```
-POST https://antgo.work/api/device-enroll/create
-Body: { projectId: "..." }
-```
-
-Server tạo document trong Firestore:
-```
-device_enrollments/{uuid}
-  status:    "pending"
-  projectId: "..."
-  source:    "cli"
-  createdAt: <timestamp>
-  expiresAt: <+10 phút>
-  udid:      null
-```
-
-Response trả về:
-```json
-{ "token": "uuid", "enrollUrl": "https://antgo.work/api/device-enroll/{token}/profile" }
-```
+`ensureAppleCreds()` xử lý cache (TTL 24h) → login → 2FA → chọn team.
 
 ---
 
-### Bước 4 — Hiển thị QR code trong terminal
+### Bước 4 — Đồng bộ UDIDs lên Apple Developer Portal
 
-CLI dùng thư viện `qrcode-terminal` để render `enrollUrl` trực tiếp trong terminal:
+Với mỗi UDID trong `selectedUdids`:
 
 ```
-Quét QR code bằng Camera app trên iPhone:
+Device.getAsync(authCtx)
+    ├── UDID đã có trên Apple? → lấy deviceId
+    └── Chưa có → Device.createAsync({ name, udid, platform: 'IOS' }) → lấy deviceId mới
 
-  ██████████████  ██  ██████████████
-  ██          ██  ██  ██          ██
-  ██  ██████  ██      ██  ██████  ██
-  ...
-
-Hoặc mở URL: https://antgo.work/api/device-enroll/{token}/profile
-
-Đang chờ iPhone xác nhận...
-```
-
-Đồng thời bắt đầu poll `GET /api/device-enroll/{token}/status` mỗi **3 giây**, hiển thị countdown còn bao nhiêu phút.
-
----
-
-### Bước 5 — iPhone quét QR → tải .mobileconfig
-
-iPhone mở Safari từ Camera app, truy cập `enrollUrl`.
-
-Server trả về file `.mobileconfig` với:
-```
-Content-Type: application/x-apple-aspen-config
-```
-
-Đây là **Profile Service** plist — iOS dùng để thu thập UDID từ thiết bị. iOS hiển thị hộp thoại "Cài đặt Profile", sau khi user cho phép:
-
-- iOS **tự động POST** một CMS-signed plist về `completeUrl` chứa `UDID`, `SERIAL`, `PRODUCT`, `IMEI`.
-- Server extract UDID và cập nhật Firestore: `status = "registered"`, `udid = "..."`.
-
----
-
-### Bước 6 — CLI nhận UDID
-
-Poll tại `GET /api/device-enroll/{token}/status` trả về:
-```json
-{ "status": "registered", "udid": "00008110-001234ABCDEF", "deviceProduct": "iPhone17,1" }
-```
-
-CLI hiển thị:
-```
-✔ Device đã xác nhận: iPhone17,1  (00008110-001234ABCDEF)
-```
-
-**Timeout:** 10 phút — nếu quá thời gian, CLI báo lỗi và thoát.
-
----
-
-### Bước 7 — Đăng ký UDID lên Apple Developer Portal
-
-Sau khi có UDID, CLI dùng `@expo/apple-utils` để kiểm tra và đăng ký:
-
-```js
-const devices = await Device.getAsync(authCtx, {});
-const existing = devices.find(d => d.attributes?.udid?.toLowerCase() === udid.toLowerCase());
-```
-
-**Nếu device đã đăng ký trên Apple Developer:**
-```
-✔ Device đã đăng ký: My iPhone
-```
-→ Dùng lại `deviceId` của device đó.
-
-**Nếu device chưa đăng ký:**
-- Prompt hỏi tên thiết bị (mặc định: "My iPhone").
-- Gọi `Device.createAsync()` để đăng ký lên Apple Developer Portal.
-```
-✔ Device đã đăng ký: My iPhone
+deviceIds = [id1, id2, ...]
 ```
 
 ---
 
-### Bước 8 — Lấy Certificate và Provisioning Profile
+### Bước 5 — Certificate + Provisioning Profile
 
-Sau khi có `deviceId`, CLI tiếp tục flow bình thường:
-
-1. **Development Certificate** (`CertificateType.DEVELOPMENT`):
-   - Reuse nếu có cert còn hiệu lực.
-   - Tạo mới nếu không có → export `.p12`.
-
-2. **Development Provisioning Profile** (`ProfileType.IOS_APP_DEVELOPMENT`):
-   - Reuse nếu profile đang ACTIVE và khớp cert + bundle ID.
-   - Tạo lại nếu cert mới hoặc profile không hợp lệ.
-   - **Profile tạo mới bao gồm `deviceId` vừa đăng ký** → app cài được lên device này.
-
-3. **Lưu cache** kết quả vào `~/.ant-go/creds-development.json` (TTL 24h).
+- **Certificate** (Development): reuse nếu còn hợp lệ, tạo mới nếu không.
+- **Provisioning Profile** (Development): tạo với **toàn bộ** `deviceIds`:
+  ```js
+  Profile.createAsync(authCtx, {
+    bundleId:     bundleIdObj.id,
+    certificates: [certId],
+    devices:      deviceIds,   // tất cả device đã chọn
+    profileType:  ProfileType.IOS_APP_DEVELOPMENT,
+  })
+  ```
 
 ---
 
-### Bước 9 — Tiếp tục build
+### Bước 6 — Build
 
-CLI đóng gói project, upload lên GCS và gửi build job — giống hệt flow build bình thường (xem [build-flow.md](../../docs/build-flow.md)).
+CLI đóng gói project, upload lên GCS và gửi build job — giống hệt flow build bình thường (xem [../../docs/build-flow.md](../../docs/build-flow.md)).
 
 ---
 
 ## Cache credentials
 
-CLI cache Apple credentials tại `~/.ant-go/creds-<profileName>.json`:
+File: `~/.ant-go/creds-<profileName>.json` (TTL 24h, mode 0600)
 
 ```json
 {
@@ -245,52 +187,12 @@ CLI cache Apple credentials tại `~/.ant-go/creds-<profileName>.json`:
   "p12Password": "...",
   "mobileprovisionBase64": "...",
   "teamId": "TEAMID123",
-  "udid": "00008110-001234ABCDEF",
+  "udids": ["00008110-001234ABCDEF", "00008130-000ABC123"],
   "_savedAt": 1714512345678
 }
 ```
 
-- TTL: **24 giờ** — sau đó cache bị xoá tự động khi đọc.
-- File mode: `0600` (chỉ owner đọc được).
-- Nếu có cache còn hiệu lực → CLI hỏi có dùng lại không.
-
-Xoá cache thủ công:
-```bash
-rm ~/.ant-go/creds-development.json
-```
-
-Hoặc chạy với flag `--reauth` để bỏ qua cache:
-```bash
-ant-go build --platform ios --profile development --reauth
-```
-
----
-
-## Sơ đồ quyết định device enrollment
-
-```
-ensureAppleCreds() được gọi
-        │
-        ▼
-distribution === "internal" ?
-        │ Có                    Không → bỏ qua enrollDevice(), dùng cert store
-        ▼
-enrollDevice(projectId)
-  POST /api/device-enroll/create
-  Hiện QR code trong terminal
-  Poll status mỗi 3s (max 10 phút)
-        │
-        ▼ udid nhận được
-Device.getAsync(authCtx)
-        │
-        ├── UDID đã tồn tại? → dùng deviceId hiện có
-        │
-        └── Chưa có → prompt tên → Device.createAsync() → lấy deviceId mới
-        │
-        ▼
-Profile.createAsync({ devices: [deviceId], ... })
-Device được include trong Provisioning Profile
-```
+**Backward compat:** cache cũ có field `udid` (string) vẫn được đọc, convert thành `udids: [udid]`.
 
 ---
 
@@ -298,8 +200,8 @@ Device được include trong Provisioning Profile
 
 | Lỗi | Nguyên nhân | Cách xử lý |
 |---|---|---|
+| `Bạn đã hết lượt build miễn phí` | `freeBuildsRemaining <= 0` | Nâng cấp plan tại antgo.work/account/billing |
 | `Device enrollment timeout` | iPhone không quét QR trong 10 phút | Chạy lại lệnh, quét QR nhanh hơn |
 | `Không tạo được enrollment session` | Mất kết nối đến antgo.work | Kiểm tra mạng, thử lại |
-| `App ID không tồn tại trên Apple Developer` | `bundleId` trong app.json chưa được tạo trên portal | Tạo App ID thủ công tại developer.apple.com |
+| `App ID không tồn tại trên Apple Developer` | `bundleId` chưa được tạo trên portal | Tạo App ID thủ công tại developer.apple.com |
 | `Đăng nhập thất bại` | Sai Apple ID / password | Kiểm tra App-Specific Password tại appleid.apple.com |
-| `Không tìm thấy Apple Developer team` | Account chưa accept Apple Developer Agreement | Đăng nhập developer.apple.com và accept agreement |

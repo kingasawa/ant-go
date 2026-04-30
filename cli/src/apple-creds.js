@@ -49,13 +49,13 @@ function clearCache(profileName) {
 }
 
 // ── Device enrollment via .mobileconfig ──────────────────────────────────────
+// Returns { udid, deviceProduct, deviceSerial }
 async function enrollDevice(projectId) {
   console.log('');
-  console.log(chalk.cyan('📱  Đăng ký device để cài app development'));
+  console.log(chalk.cyan('📱  Đăng ký device mới'));
   console.log(chalk.gray('   iPhone sẽ tự động gửi UDID khi quét mã QR bên dưới'));
   console.log('');
 
-  // Create enrollment session
   let token, enrollUrl;
   try {
     const res = await axios.post(`${API_URL}/api/device-enroll/create`, { projectId });
@@ -65,7 +65,6 @@ async function enrollDevice(projectId) {
     throw new Error('Không tạo được enrollment session: ' + (err.response?.data?.error || err.message));
   }
 
-  // Show QR code
   console.log(chalk.bold('Quét QR code bằng Camera app trên iPhone:'));
   console.log('');
   await new Promise(resolve => qrcode.generate(enrollUrl, { small: true }, resolve));
@@ -74,20 +73,19 @@ async function enrollDevice(projectId) {
   console.log('');
   console.log(chalk.yellow('Đang chờ iPhone xác nhận...'));
 
-  // Poll for UDID
   const POLL_INTERVAL = 3000;
-  const TIMEOUT = 10 * 60 * 1000; // 10 minutes
-  const deadline = Date.now() + TIMEOUT;
-  const spinner = require('ora')('').start();
+  const TIMEOUT       = 10 * 60 * 1000;
+  const deadline      = Date.now() + TIMEOUT;
+  const spinner       = require('ora')('').start();
 
   while (Date.now() < deadline) {
     await new Promise(r => setTimeout(r, POLL_INTERVAL));
     try {
       const res = await axios.get(`${API_URL}/api/device-enroll/${token}/status`);
-      const { status, udid, deviceProduct } = res.data;
+      const { status, udid, deviceProduct, deviceSerial } = res.data;
       if (status === 'registered' && udid) {
         spinner.succeed(chalk.green(`Device đã xác nhận: ${deviceProduct || udid}  (${udid})`));
-        return udid;
+        return { udid, deviceProduct: deviceProduct || null, deviceSerial: deviceSerial || null };
       }
       if (status === 'expired') {
         spinner.fail('Enrollment đã hết hạn (10 phút)');
@@ -97,12 +95,95 @@ async function enrollDevice(projectId) {
       spinner.text = `Chờ iPhone quét QR... (còn ${remaining} phút)`;
     } catch (err) {
       if (err.message === 'Device enrollment timeout') throw err;
-      // network hiccup — keep polling
     }
   }
 
   spinner.fail('Hết thời gian chờ (10 phút)');
   throw new Error('Device enrollment timeout');
+}
+
+// ── Multi-select device UI ────────────────────────────────────────────────────
+// Hiển thị danh sách device đã có + option thêm mới.
+// Returns: string[] — mảng các UDID được chọn
+async function selectDevices(existingDevices, projectId, apiClient) {
+  const { saveDevice } = require('../api');
+  const devices = [...existingDevices];
+
+  // Nếu chưa có device nào → đi thẳng vào enrollment
+  if (devices.length === 0) {
+    console.log(chalk.gray('   Chưa có device nào — tiến hành đăng ký device mới.'));
+    const enrolled = await enrollDevice(projectId);
+    const { deviceName } = await inquirer.prompt([{
+      type:    'input',
+      name:    'deviceName',
+      message: 'Tên device (để nhận ra sau này):',
+      default: 'My iPhone',
+    }]);
+    await apiClient.post('/api/devices', {
+      udid:          enrolled.udid,
+      name:          deviceName,
+      deviceProduct: enrolled.deviceProduct,
+      deviceSerial:  enrolled.deviceSerial,
+      source:        'cli',
+    });
+    return [enrolled.udid];
+  }
+
+  // Vòng lặp: hiển thị multi-select, xử lý "Thêm device mới"
+  while (true) {
+    const choices = [
+      ...devices.map(d => ({
+        name:    `${(d.name || 'Unnamed').padEnd(18)} ${(d.deviceProduct || '').padEnd(12)} (${d.udid.slice(0, 12)}...)`,
+        value:   d.udid,
+        checked: false,
+      })),
+      new inquirer.Separator('─────────────────────────────────────────'),
+      { name: chalk.cyan('＋ Thêm device mới'), value: '__new__' },
+    ];
+
+    console.log('');
+    const { selected } = await inquirer.prompt([{
+      type:    'checkbox',
+      name:    'selected',
+      message: '📱  Chọn device để build (Space = chọn/bỏ, Enter = xác nhận):',
+      choices,
+      validate: v => v.length > 0 ? true : 'Phải chọn ít nhất 1 device.',
+    }]);
+
+    if (!selected.includes('__new__')) {
+      return selected;
+    }
+
+    // Thêm device mới → enroll → lưu Firestore → quay lại chọn
+    const enrolled = await enrollDevice(projectId);
+    const { deviceName } = await inquirer.prompt([{
+      type:    'input',
+      name:    'deviceName',
+      message: 'Tên device (để nhận ra sau này):',
+      default: 'My iPhone',
+    }]);
+    const saveSpinner = require('ora')('Đang lưu device...').start();
+    try {
+      await apiClient.post('/api/devices', {
+        udid:          enrolled.udid,
+        name:          deviceName,
+        deviceProduct: enrolled.deviceProduct,
+        deviceSerial:  enrolled.deviceSerial,
+        source:        'cli',
+      });
+      saveSpinner.succeed(`Đã lưu: ${deviceName}`);
+    } catch (err) {
+      saveSpinner.fail('Không lưu được device: ' + (err.response?.data?.error || err.message));
+    }
+
+    // Thêm vào danh sách và vào lại vòng chọn
+    devices.push({
+      udid:          enrolled.udid,
+      name:          deviceName,
+      deviceProduct: enrolled.deviceProduct,
+      deviceSerial:  enrolled.deviceSerial,
+    });
+  }
 }
 
 // ── Public entry ──────────────────────────────────────────────────────────────
@@ -111,6 +192,8 @@ async function ensureAppleCreds(projectInfo, {
   refreshProfile = false,
   distribution   = 'store',
   profileName    = 'production',
+  userDevices    = [],
+  apiClient      = null,
 } = {}) {
 
   // ── Cache check ─────────────────────────────────────────────────────────────
@@ -122,8 +205,9 @@ async function ensureAppleCreds(projectInfo, {
       } else {
         const email  = cached.appleId;
         const teamId = cached.teamId || '';
-        const udidHint = distribution === 'internal' && cached.udid
-          ? `  UDID: ${cached.udid.slice(0, 8)}…`
+        const cachedUdids = cached.udids ?? (cached.udid ? [cached.udid] : []);
+        const udidHint = distribution === 'internal' && cachedUdids.length > 0
+          ? `  Devices: ${cachedUdids.length}`
           : '';
         const label = [email, teamId ? `(${teamId})` : '', udidHint]
           .filter(Boolean).join('   ');
@@ -229,36 +313,35 @@ async function ensureAppleCreds(projectInfo, {
     throw err;
   }
 
-  // ── UDID via .mobileconfig enrollment (internal only) ───────────────────────
-  let udid, deviceId;
+  // ── Device selection + enrollment (internal only) ────────────────────────────
+  let selectedUdids = [];
+  let deviceIds     = [];
   if (distribution === 'internal') {
-    udid = await enrollDevice(projectInfo.projectId || projectInfo.bundleId);
-    const deviceSpinner = require('ora')('Đang đăng ký device trên Apple Developer...').start();
+    selectedUdids = await selectDevices(userDevices, projectInfo.projectId, apiClient);
+
+    // Đồng bộ từng UDID lên Apple Developer Portal
+    const appleDevicesAll = await Device.getAsync(authCtx, {});
+    const syncSpinner = require('ora')(`Đang đồng bộ ${selectedUdids.length} device(s) lên Apple Developer...`).start();
     try {
-      const devices = await Device.getAsync(authCtx, {});
-      const existing = devices.find(d => d.attributes?.udid?.toLowerCase() === udid.toLowerCase());
-      if (existing) {
-        deviceId = existing.id;
-        deviceSpinner.succeed(`Device đã đăng ký: ${existing.attributes?.name || udid}`);
-      } else {
-        deviceSpinner.stop();
-        const { deviceName } = await inquirer.prompt([{
-          type:    'input',
-          name:    'deviceName',
-          message: 'Tên device (để dễ nhận biết):',
-          default: 'My iPhone',
-        }]);
-        const registerSpinner = require('ora')('Đang đăng ký device...').start();
-        const newDevice = await Device.createAsync(authCtx, {
-          name:     deviceName,
-          udid,
-          platform: 'IOS',
-        });
-        deviceId = newDevice.id;
-        registerSpinner.succeed(`Device đã đăng ký: ${deviceName}`);
+      for (const udid of selectedUdids) {
+        const existing = appleDevicesAll.find(
+          d => d.attributes?.udid?.toLowerCase() === udid.toLowerCase()
+        );
+        if (existing) {
+          deviceIds.push(existing.id);
+        } else {
+          const deviceEntry = userDevices.find(d => d.udid === udid);
+          const newDevice = await Device.createAsync(authCtx, {
+            name:     deviceEntry?.name || 'My iPhone',
+            udid,
+            platform: 'IOS',
+          });
+          deviceIds.push(newDevice.id);
+        }
       }
+      syncSpinner.succeed(`Đã đồng bộ ${deviceIds.length} device(s) lên Apple Developer`);
     } catch (err) {
-      deviceSpinner.fail('Lỗi khi kiểm tra/đăng ký device: ' + err.message);
+      syncSpinner.fail('Lỗi khi đồng bộ devices: ' + err.message);
       throw err;
     }
   }
@@ -349,7 +432,7 @@ async function ensureAppleCreds(projectInfo, {
       profile = await Profile.createAsync(authCtx, {
         bundleId:     bundleIdObj.id,
         certificates: [certId],
-        devices:      deviceId ? [deviceId] : [],
+        devices:      deviceIds,
         name:         profileName_,
         profileType,
       });
@@ -365,7 +448,7 @@ async function ensureAppleCreds(projectInfo, {
     throw err;
   }
 
-  const creds = { appleId: appleId.trim(), p12Base64, p12Password, mobileprovisionBase64, teamId, udid };
+  const creds = { appleId: appleId.trim(), p12Base64, p12Password, mobileprovisionBase64, teamId, udids: selectedUdids };
   saveCache(creds, profileName);
   console.log(chalk.green('✔  Credentials đã cache tại: ') + chalk.gray(getCacheFile(profileName)));
   console.log('');
