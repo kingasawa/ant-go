@@ -8,7 +8,7 @@ Danh sách task và quy tắc làm việc cho Claude.
 
 | File | Mô tả | Status | PR |
 |---|---|---|---|
-| [fix-add-device-flow.md](fix-add-device-flow.md) | Sửa lại flow add device CLI + Dashboard | `pending` | — |
+| [fix-add-device-flow.md](fix-add-device-flow.md) | Sửa lại flow add device CLI + Dashboard | `in_progress` | — |
 
 **Status hợp lệ:** `pending` · `in_progress` · `done` · `blocked`
 
