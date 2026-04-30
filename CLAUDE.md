@@ -10,7 +10,13 @@ Khi được yêu cầu làm task (ví dụ: "làm task fix-add-device-flow"):
 
 ### Quy tắc bắt buộc
 
-**Branch:** Tạo feature branch `feature/<tên-task>` từ `main` trước khi bắt đầu làm. Toàn bộ code của task được commit lên branch này.
+**Branch:** Trước khi tạo feature branch, phải đảm bảo `main` đã có code mới nhất:
+```
+git checkout main
+git pull origin main
+git checkout -b feature/<tên-task>
+```
+Toàn bộ code của task được commit lên branch này.
 
 **Status:** Cập nhật status **đồng thời** ở 2 nơi mỗi khi thay đổi:
 - `tasks/README.md` — cột Status trong bảng danh sách
