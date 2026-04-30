@@ -3,6 +3,11 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { GLASS } from "@/lib/glass";
+import {
+  Bell, AlertTriangle, User, Mail, KeyRound,
+  Package, FileText, ScrollText, ExternalLink, Trash2,
+  ChevronRight, Sun, Moon, Monitor, Palette,
+} from "lucide-react";
 
 /* ─── Reusable iOS-style primitives ──────────────────────────────────────── */
 
@@ -29,7 +34,7 @@ function Row({
   danger,
   onClick,
 }: {
-  icon: string;
+  icon: React.ReactNode;
   label: string;
   sublabel?: string;
   right?: React.ReactNode;
@@ -41,7 +46,7 @@ function Row({
       onClick={onClick}
       className={`flex items-center gap-3 px-4 py-3 ${onClick ? "cursor-pointer active:bg-white/10" : ""}`}
     >
-      <span className="text-lg w-6 text-center flex-shrink-0">{icon}</span>
+      <span className="w-6 flex items-center justify-center flex-shrink-0 text-white/60">{icon}</span>
       <div className="flex-1 min-w-0">
         <p className={`text-sm font-medium ${danger ? "text-red-400" : "text-white"}`}>
           {label}
@@ -49,11 +54,7 @@ function Row({
         {sublabel && <p className="text-xs text-white/50 mt-0.5">{sublabel}</p>}
       </div>
       {right ?? (
-        onClick && (
-          <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        )
+        onClick && <ChevronRight className="w-4 h-4 text-white/40" />
       )}
     </div>
   );
@@ -74,12 +75,12 @@ function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void 
 
 /* ─── Theme picker ────────────────────────────────────────────────────────── */
 
-type ThemeOption = { id: string; label: string; icon: string; desc: string };
+type ThemeOption = { id: string; label: string; icon: React.ReactNode; desc: string };
 
 const THEME_OPTIONS: ThemeOption[] = [
-  { id: "light", label: "Light", icon: "☀️", desc: "Always light" },
-  { id: "dark",  label: "Dark",  icon: "🌙", desc: "Always dark" },
-  { id: "system", label: "Auto", icon: "⚙️", desc: "Follow system setting" },
+  { id: "light",  label: "Light", icon: <Sun  className="w-6 h-6" />, desc: "Always light" },
+  { id: "dark",   label: "Dark",  icon: <Moon className="w-6 h-6" />, desc: "Always dark" },
+  { id: "system", label: "Auto",  icon: <Monitor className="w-6 h-6" />, desc: "Follow system setting" },
 ];
 
 function ThemePicker() {
@@ -91,7 +92,7 @@ function ThemePicker() {
   return (
     <div className="px-4 py-3">
       <p className="text-sm font-medium text-white mb-3 flex items-center gap-2">
-        🎨 <span>Appearance</span>
+        <Palette className="w-4 h-4" /> <span>Appearance</span>
       </p>
       <div className="grid grid-cols-3 gap-2">
         {THEME_OPTIONS.map((opt) => {
@@ -106,7 +107,7 @@ function ThemePicker() {
                   : "border-white/20 hover:border-white/40"
                 }`}
             >
-              <span className="text-2xl">{opt.icon}</span>
+              <span className={active ? "text-accent-light" : "text-white/60"}>{opt.icon}</span>
               <span className={`text-xs font-semibold ${active ? "text-accent-light" : "text-white/60"}`}>
                 {opt.label}
               </span>
@@ -144,13 +145,13 @@ export default function SettingsPage() {
       {/* Notifications */}
       <Section label="Notifications">
         <Row
-          icon="🔔"
+          icon={<Bell className="w-5 h-5" />}
           label="Push Notifications"
           sublabel="Receive alerts for build events"
           right={<Toggle enabled={notifications} onToggle={() => setNotifications((v) => !v)} />}
         />
         <Row
-          icon="🚨"
+          icon={<AlertTriangle className="w-5 h-5" />}
           label="Build Failure Alerts"
           sublabel="Notify when a build fails"
           right={<Toggle enabled={buildAlerts} onToggle={() => setBuildAlerts((v) => !v)} />}
@@ -159,22 +160,22 @@ export default function SettingsPage() {
 
       {/* Account */}
       <Section label="Account">
-        <Row icon="👤" label="Display Name" sublabel={user?.displayName ?? "—"} />
-        <Row icon="📧" label="Email" sublabel={user?.email ?? "—"} />
-        <Row icon="🔑" label="Authentication" sublabel="Google Sign-In" />
+        <Row icon={<User className="w-5 h-5" />} label="Display Name" sublabel={user?.displayName ?? "—"} />
+        <Row icon={<Mail className="w-5 h-5" />} label="Email" sublabel={user?.email ?? "—"} />
+        <Row icon={<KeyRound className="w-5 h-5" />} label="Authentication" sublabel="Google Sign-In" />
       </Section>
 
       {/* About */}
       <Section label="About">
-        <Row icon="📦" label="Version" right={<span className="text-sm text-gray-400">1.0.0</span>} />
-        <Row icon="📄" label="Privacy Policy" onClick={() => {}} />
-        <Row icon="📃" label="Terms of Service" onClick={() => {}} />
-        <Row icon="⭐" label="GitHub Repository" onClick={() => window.open("https://github.com", "_blank")} />
+        <Row icon={<Package className="w-5 h-5" />} label="Version" right={<span className="text-sm text-gray-400">1.0.0</span>} />
+        <Row icon={<FileText className="w-5 h-5" />} label="Privacy Policy" onClick={() => {}} />
+        <Row icon={<ScrollText className="w-5 h-5" />} label="Terms of Service" onClick={() => {}} />
+        <Row icon={<ExternalLink className="w-5 h-5" />} label="GitHub Repository" onClick={() => window.open("https://github.com", "_blank")} />
       </Section>
 
       {/* Danger zone */}
       <Section label="Danger Zone">
-        <Row icon="🗑️" label="Delete Account" danger onClick={() => {}} />
+        <Row icon={<Trash2 className="w-5 h-5" />} label="Delete Account" danger onClick={() => {}} />
       </Section>
     </div>
   );
