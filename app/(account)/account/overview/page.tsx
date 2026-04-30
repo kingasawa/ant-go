@@ -7,7 +7,7 @@ import { UserProfile } from "@/lib/createUserProfile";
 import Link from "next/link";
 import { GLASS } from "@/lib/glass";
 import PageLoader from "@/app/components/PageLoader";
-import { Package, Smartphone, CheckCircle, CreditCard, ChevronRight } from "lucide-react";
+import { HiOutlineCube, HiOutlineDevicePhoneMobile, HiOutlineCheckCircle, HiOutlineCreditCard, HiOutlineChevronRight } from "react-icons/hi2";
 
 interface Build {
   id: string;
@@ -54,7 +54,7 @@ function StatCard({
         {href && (
           <div className="mt-3 flex items-center gap-1 text-xs text-accent-light font-medium">
             Xem chi tiết
-            <ChevronRight className="w-3.5 h-3.5" />
+            <HiOutlineChevronRight className="w-3.5 h-3.5" />
           </div>
         )}
       </div>
@@ -63,10 +63,10 @@ function StatCard({
   return href ? <Link href={href} className="block">{inner}</Link> : inner;
 }
 
-const BgBuilds  = () => <Package strokeWidth={1.5} />;
-const BgApps    = () => <Smartphone strokeWidth={1.5} />;
-const BgSuccess = () => <CheckCircle strokeWidth={1.5} />;
-const BgPlan    = () => <CreditCard strokeWidth={1.5} />;
+const BgBuilds  = () => <HiOutlineCube />;
+const BgApps    = () => <HiOutlineDevicePhoneMobile />;
+const BgSuccess = () => <HiOutlineCheckCircle />;
+const BgPlan    = () => <HiOutlineCreditCard />;
 
 const STATUS_COLOR: Record<string, string> = {
   pending:     "bg-yellow-500/20 text-yellow-600 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700",

@@ -4,15 +4,16 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import SidebarUserCard from "@/app/components/SidebarUserCard";
-import { LayoutDashboard, Smartphone, Tablet, User, Settings, CreditCard, Menu } from "lucide-react";
+import { HiOutlineSquares2X2, HiOutlineDevicePhoneMobile, HiOutlineDeviceTablet, HiOutlineUser, HiOutlineCog6Tooth, HiOutlineCreditCard, HiOutlineBars3, HiMiniDevicePhoneMobile } from "react-icons/hi2";
+import { AiOutlineAppstoreAdd } from "react-icons/ai";
 
 const navItems = [
-	{ href: "/account/overview", label: "Overview", Icon: LayoutDashboard },
-	{ href: "/account/apps",     label: "Apps",     Icon: Smartphone },
-	{ href: "/account/devices",  label: "Devices",  Icon: Tablet },
-	{ href: "/account/profile",  label: "Profile",  Icon: User },
-	{ href: "/account/settings", label: "Settings", Icon: Settings },
-	{ href: "/account/billing",  label: "Billing",  Icon: CreditCard },
+	{ href: "/account/overview", label: "Overview", Icon: HiOutlineSquares2X2 },
+	{ href: "/account/apps",     label: "Apps",     Icon: AiOutlineAppstoreAdd },
+	{ href: "/account/devices",  label: "Devices",  Icon: HiMiniDevicePhoneMobile },
+	{ href: "/account/profile",  label: "Profile",  Icon: HiOutlineUser },
+	{ href: "/account/settings", label: "Settings", Icon: HiOutlineCog6Tooth },
+	{ href: "/account/billing",  label: "Billing",  Icon: HiOutlineCreditCard },
 ];
 
 const SIDEBAR: React.CSSProperties = {
@@ -111,7 +112,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 						onClick={() => setSidebarOpen(true)}
 						className="text-white/60 hover:text-white p-1 transition"
 					>
-						<Menu className="w-6 h-6" />
+						<HiOutlineBars3 className="w-6 h-6" />
 					</button>
 					<img src="/assets/images/logo-full.png" alt="Logo" className="h-8 w-auto" style={{ filter: "brightness(0) invert(1)" }} />
 					<img

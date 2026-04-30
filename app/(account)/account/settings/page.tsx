@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { GLASS } from "@/lib/glass";
 import {
-  Bell, AlertTriangle, User, Mail, KeyRound,
-  Package, FileText, ScrollText, ExternalLink, Trash2,
-  ChevronRight, Sun, Moon, Monitor, Palette,
-} from "lucide-react";
+  HiOutlineBell, HiOutlineExclamationTriangle, HiOutlineUser, HiOutlineEnvelope, HiOutlineKey,
+  HiOutlineCube, HiOutlineDocument, HiOutlineDocumentText, HiOutlineTrash,
+  HiOutlineChevronRight, HiOutlineSun, HiOutlineMoon, HiOutlineComputerDesktop, HiOutlineSwatch,
+} from "react-icons/hi2";
+import { FaGithub } from "react-icons/fa";
 
 /* ─── Reusable iOS-style primitives ──────────────────────────────────────── */
 
@@ -54,7 +55,7 @@ function Row({
         {sublabel && <p className="text-xs text-white/50 mt-0.5">{sublabel}</p>}
       </div>
       {right ?? (
-        onClick && <ChevronRight className="w-4 h-4 text-white/40" />
+        onClick && <HiOutlineChevronRight className="w-4 h-4 text-white/40" />
       )}
     </div>
   );
@@ -78,9 +79,9 @@ function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void 
 type ThemeOption = { id: string; label: string; icon: React.ReactNode; desc: string };
 
 const THEME_OPTIONS: ThemeOption[] = [
-  { id: "light",  label: "Light", icon: <Sun  className="w-6 h-6" />, desc: "Always light" },
-  { id: "dark",   label: "Dark",  icon: <Moon className="w-6 h-6" />, desc: "Always dark" },
-  { id: "system", label: "Auto",  icon: <Monitor className="w-6 h-6" />, desc: "Follow system setting" },
+  { id: "light",  label: "Light", icon: <HiOutlineSun              className="w-6 h-6" />, desc: "Always light" },
+  { id: "dark",   label: "Dark",  icon: <HiOutlineMoon             className="w-6 h-6" />, desc: "Always dark" },
+  { id: "system", label: "Auto",  icon: <HiOutlineComputerDesktop  className="w-6 h-6" />, desc: "Follow system setting" },
 ];
 
 function ThemePicker() {
@@ -92,7 +93,7 @@ function ThemePicker() {
   return (
     <div className="px-4 py-3">
       <p className="text-sm font-medium text-white mb-3 flex items-center gap-2">
-        <Palette className="w-4 h-4" /> <span>Appearance</span>
+        <HiOutlineSwatch className="w-4 h-4" /> <span>Appearance</span>
       </p>
       <div className="grid grid-cols-3 gap-2">
         {THEME_OPTIONS.map((opt) => {
@@ -145,13 +146,13 @@ export default function SettingsPage() {
       {/* Notifications */}
       <Section label="Notifications">
         <Row
-          icon={<Bell className="w-5 h-5" />}
+          icon={<HiOutlineBell className="w-5 h-5" />}
           label="Push Notifications"
           sublabel="Receive alerts for build events"
           right={<Toggle enabled={notifications} onToggle={() => setNotifications((v) => !v)} />}
         />
         <Row
-          icon={<AlertTriangle className="w-5 h-5" />}
+          icon={<HiOutlineExclamationTriangle className="w-5 h-5" />}
           label="Build Failure Alerts"
           sublabel="Notify when a build fails"
           right={<Toggle enabled={buildAlerts} onToggle={() => setBuildAlerts((v) => !v)} />}
@@ -160,22 +161,22 @@ export default function SettingsPage() {
 
       {/* Account */}
       <Section label="Account">
-        <Row icon={<User className="w-5 h-5" />} label="Display Name" sublabel={user?.displayName ?? "—"} />
-        <Row icon={<Mail className="w-5 h-5" />} label="Email" sublabel={user?.email ?? "—"} />
-        <Row icon={<KeyRound className="w-5 h-5" />} label="Authentication" sublabel="Google Sign-In" />
+        <Row icon={<HiOutlineUser className="w-5 h-5" />} label="Display Name" sublabel={user?.displayName ?? "—"} />
+        <Row icon={<HiOutlineEnvelope className="w-5 h-5" />} label="Email" sublabel={user?.email ?? "—"} />
+        <Row icon={<HiOutlineKey className="w-5 h-5" />} label="Authentication" sublabel="Google Sign-In" />
       </Section>
 
       {/* About */}
       <Section label="About">
-        <Row icon={<Package className="w-5 h-5" />} label="Version" right={<span className="text-sm text-gray-400">1.0.0</span>} />
-        <Row icon={<FileText className="w-5 h-5" />} label="Privacy Policy" onClick={() => {}} />
-        <Row icon={<ScrollText className="w-5 h-5" />} label="Terms of Service" onClick={() => {}} />
-        <Row icon={<ExternalLink className="w-5 h-5" />} label="GitHub Repository" onClick={() => window.open("https://github.com", "_blank")} />
+        <Row icon={<HiOutlineCube className="w-5 h-5" />} label="Version" right={<span className="text-sm text-gray-400">1.0.0</span>} />
+        <Row icon={<HiOutlineDocument className="w-5 h-5" />} label="Privacy Policy" onClick={() => {}} />
+        <Row icon={<HiOutlineDocumentText className="w-5 h-5" />} label="Terms of Service" onClick={() => {}} />
+        <Row icon={<FaGithub className="w-5 h-5" />} label="GitHub Repository" onClick={() => window.open("https://github.com", "_blank")} />
       </Section>
 
       {/* Danger zone */}
       <Section label="Danger Zone">
-        <Row icon={<Trash2 className="w-5 h-5" />} label="Delete Account" danger onClick={() => {}} />
+        <Row icon={<HiOutlineTrash className="w-5 h-5" />} label="Delete Account" danger onClick={() => {}} />
       </Section>
     </div>
   );

@@ -10,11 +10,11 @@ import { GLASS } from "@/lib/glass";
 const features = [
   {
     title: "Giá thành rẻ",
-    desc: "Không tính phí theo build minute. Trả phí gói cố định hàng tháng — build bao nhiêu tuỳ thích.",
+    desc: "Chỉ tính phí khi build thành công. Khi build failed - trừ credit rất thấp. Có gói cố định, build bao nhiêu tuỳ thích",
   },
   {
-    title: "Không phải chờ queue",
-    desc: "Build chạy trên Mac server riêng của chúng tôi. Không có hàng chờ chung với hàng nghìn user khác.",
+    title: "Không phải chờ queue lâu",
+    desc: "Cấu hình server mạnh. Không có hàng chờ chung với hàng nghìn user khác.",
   },
   {
     title: "Real-time build log",
@@ -492,7 +492,7 @@ export default function HomePage() {
             MULTIPLE PLATFORM · IOS/ANDROID
           </span>
           <h1 className="fade-up text-5xl md:text-6xl font-extrabold leading-tight mb-6" style={{ animationDelay: "100ms" }}>
-            Build iOS app{" "}
+            Build app{" "}
             <span className="shimmer-text">nhanh hơn</span>,
             <br />rẻ hơn bao giờ hết
           </h1>
@@ -541,7 +541,7 @@ export default function HomePage() {
           <div className="max-w-5xl mx-auto">
             <h2 className="text-3xl font-bold text-center mb-3">Pricing</h2>
             <p className="text-white/50 text-center text-sm mb-12">
-              Build iOS app nhanh hơn, rẻ hơn bao giờ hết.
+              Build app nhanh hơn, rẻ hơn bao giờ hết.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {plans.map((plan) => (

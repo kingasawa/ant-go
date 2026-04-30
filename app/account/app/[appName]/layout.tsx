@@ -3,7 +3,7 @@ import { useState } from "react";
 import { usePathname, useParams } from "next/navigation";
 import Link from "next/link";
 import SidebarUserCard from "@/app/components/SidebarUserCard";
-import { ChevronLeft, Info, BarChart3, GitBranch, Package, Menu } from "lucide-react";
+import { HiOutlineChevronLeft, HiOutlineInformationCircle, HiOutlineChartBar, HiOutlineCodeBracket, HiOutlineCube, HiOutlineBars3 } from "react-icons/hi2";
 
 const SIDEBAR: React.CSSProperties = {
   backdropFilter: "blur(20px) saturate(160%)",
@@ -31,15 +31,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     {
       title: "PROJECT",
       items: [
-        { href: `${base}/app-info`, label: "App info", Icon: Info },
-        { href: `${base}/usage`, label: "Usage", Icon: BarChart3 },
+        { href: `${base}/app-info`, label: "App info", Icon: HiOutlineInformationCircle },
+        { href: `${base}/usage`, label: "Usage", Icon: HiOutlineChartBar },
       ],
     },
     {
       title: "DEVELOP",
       items: [
-        { href: `${base}/workflows`, label: "Workflows", Icon: GitBranch },
-        { href: `${base}/builds`, label: "Builds", Icon: Package },
+        { href: `${base}/workflows`, label: "Workflows", Icon: HiOutlineCodeBracket },
+        { href: `${base}/builds`, label: "Builds", Icon: HiOutlineCube },
       ],
     },
   ];
@@ -62,7 +62,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           href="/account/overview"
           className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white/50 hover:bg-white/10 hover:text-white transition"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <HiOutlineChevronLeft className="w-4 h-4" />
           Account
         </Link>
       </div>
@@ -132,7 +132,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Mobile topbar */}
         <header className="lg:hidden flex items-center gap-3 px-4 py-3" style={TOPBAR}>
           <button onClick={() => setSidebarOpen(true)} className="text-white/60 hover:text-white p-1 transition">
-            <Menu className="w-5 h-5" />
+            <HiOutlineBars3 className="w-5 h-5" />
           </button>
           <span className="text-sm font-semibold text-white">{decodedName}</span>
         </header>

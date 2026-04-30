@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { User, Mail, Lock } from "lucide-react";
+import { HiOutlineUser, HiOutlineEnvelope, HiOutlineLockClosed } from "react-icons/hi2";
 import {
   signInWithPopup,
   signInWithEmailAndPassword,
@@ -179,14 +179,14 @@ export default function AuthCard({ initialMode }: { initialMode: Mode }) {
                 value={loginEmail}
                 onChange={setLoginEmail}
                 placeholder="Email"
-                icon={<User size={16} />}
+                icon={<HiOutlineUser size={16} />}
               />
               <Field
                 type="password"
                 value={loginPassword}
                 onChange={setLoginPassword}
                 placeholder="Password"
-                icon={<Lock size={16} />}
+                icon={<HiOutlineLockClosed size={16} />}
               />
 
               <div className="flex items-center justify-between pt-0.5">
@@ -244,10 +244,10 @@ export default function AuthCard({ initialMode }: { initialMode: Mode }) {
             <h1 className="text-3xl font-bold text-white text-center mb-5 tracking-wide">Register</h1>
 
             <form onSubmit={handleEmailRegister} className="space-y-3">
-              <Field type="text"     value={displayName}  onChange={setDisplayName}  placeholder="Full name"            icon={<User size={16} />} />
-              <Field type="email"    value={regEmail}     onChange={setRegEmail}     placeholder="Email"                icon={<Mail size={16} />} />
-              <Field type="password" value={regPassword}  onChange={setRegPassword}  placeholder="Password (min. 6)"    icon={<Lock size={16} />} />
-              <Field type="password" value={confirmPwd}   onChange={setConfirmPwd}   placeholder="Confirm password"     icon={<Lock size={16} />} />
+              <Field type="text"     value={displayName}  onChange={setDisplayName}  placeholder="Full name"            icon={<HiOutlineUser size={16} />} />
+              <Field type="email"    value={regEmail}     onChange={setRegEmail}     placeholder="Email"                icon={<HiOutlineEnvelope size={16} />} />
+              <Field type="password" value={regPassword}  onChange={setRegPassword}  placeholder="Password (min. 6)"    icon={<HiOutlineLockClosed size={16} />} />
+              <Field type="password" value={confirmPwd}   onChange={setConfirmPwd}   placeholder="Confirm password"     icon={<HiOutlineLockClosed size={16} />} />
 
               {regError && <ErrorMsg msg={regError} />}
 
