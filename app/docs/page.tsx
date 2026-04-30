@@ -116,14 +116,6 @@ function Option({ flag, desc }: { flag: string; desc: string }) {
 /* ─── Sidebar nav groups ─────────────────────────────────────────────────────── */
 const navGroups = [
   {
-    label: "Authentication",
-    items: [
-      { id: "auth-login",  label: "Login" },
-      { id: "auth-logout", label: "Logout" },
-      { id: "auth-whoami", label: "Whoami" },
-    ],
-  },
-  {
     label: "Generals",
     items: [
       { id: "install",    label: "Installation" },
@@ -131,6 +123,14 @@ const navGroups = [
       { id: "status",     label: "Status" },
       { id: "add-device", label: "Add device" },
       { id: "ant-json",   label: "Profiles" },
+    ],
+  },
+  {
+    label: "Authentication",
+    items: [
+      { id: "auth-login",  label: "Login" },
+      { id: "auth-logout", label: "Logout" },
+      { id: "auth-whoami", label: "Whoami" },
     ],
   },
 ];
@@ -357,98 +357,6 @@ export default function DocPage() {
               </div>
               <div className="text-white/40 mt-1">1.0.0</div>
             </Terminal>
-          </Section>
-
-          {/* ── auth login ── */}
-          <Section id="auth-login" title="Login">
-            <p className="text-white/55 text-sm mb-4">
-              Đăng nhập vào tài khoản ant-go để dùng các lệnh như <Code>build</Code>. Token được lưu tại <Code>~/.ant-go/config.json</Code> và có hiệu lực trong 24 giờ.
-            </p>
-
-            <p className="text-white/55 text-sm mb-3">Đăng nhập bằng email và mật khẩu:</p>
-            <Terminal title="Terminal — ant-go auth login">
-              <div>
-                <span className="text-white/30 select-none">$ </span>
-                <span className="text-yellow-300">ant-go</span>
-                <span className="text-white"> auth login</span>
-              </div>
-              <div className="mt-3 space-y-1">
-                <div className="text-white/40">{"? "}Email: <span className="text-white">dev@example.com</span></div>
-                <div className="text-white/40">{"? "}Password: <span className="text-white">••••••••</span></div>
-              </div>
-              <div className="mt-3 space-y-1">
-                <div className="text-green-400">✔ Đăng nhập thành công!</div>
-                <div className="text-white/40">{"  "}Xin chào, <span className="text-white">Nguyen Van A</span></div>
-                <div className="text-white/40">{"  "}Email:  <span className="text-white">dev@example.com</span></div>
-                <div className="text-white/40">{"  "}Plan:   <span className="text-accent-light">Pro</span></div>
-                <div className="text-white/40">{"  "}Builds: <span className="text-white">47 / unlimited</span></div>
-              </div>
-            </Terminal>
-
-            <p className="text-white/55 text-sm mt-6 mb-3">Hoặc đăng nhập qua Google bằng trình duyệt:</p>
-            <Terminal title="Terminal — browser login">
-              <div>
-                <span className="text-white/30 select-none">$ </span>
-                <span className="text-yellow-300">ant-go</span>
-                <span className="text-white"> auth login</span>
-                <span className="text-blue-400"> --browser</span>
-              </div>
-              <div className="mt-3 space-y-1">
-                <div className="text-white/40">Mở trình duyệt để đăng nhập...</div>
-                <div className="text-blue-400 underline">{"  "}https://antgo.work/auth/cli?port=9005&state=xxxxxxxx</div>
-                <div className="text-white/40 mt-2">Đang chờ xác nhận từ trình duyệt...</div>
-              </div>
-              <div className="mt-3 space-y-1">
-                <div className="text-green-400">✔ Đăng nhập thành công!</div>
-                <div className="text-white/40">{"  "}Xin chào, <span className="text-white">Nguyen Van A</span></div>
-              </div>
-            </Terminal>
-
-            <div className="mt-6 rounded-xl p-4" style={GLASS}>
-              <p className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-3">Options</p>
-              <Option flag="--browser" desc="Đăng nhập qua Google OAuth bằng trình duyệt thay vì email/password" />
-            </div>
-          </Section>
-
-          {/* ── auth logout ── */}
-          <Section id="auth-logout" title="Logout">
-            <p className="text-white/55 text-sm mb-4">
-              Đăng xuất khỏi tài khoản ant-go. Token hiện tại sẽ bị thu hồi trên server và xoá khỏi máy.
-            </p>
-            <Terminal title="Terminal — ant-go auth logout">
-              <div>
-                <span className="text-white/30 select-none">$ </span>
-                <span className="text-yellow-300">ant-go</span>
-                <span className="text-white"> auth logout</span>
-              </div>
-              <div className="mt-3 space-y-1">
-                <div className="text-green-400">✔ Đã đăng xuất thành công.</div>
-              </div>
-            </Terminal>
-          </Section>
-
-          {/* ── auth whoami ── */}
-          <Section id="auth-whoami" title="Whoami">
-            <p className="text-white/55 text-sm mb-4">
-              Xem thông tin tài khoản đang đăng nhập và trạng thái token hiện tại.
-            </p>
-            <Terminal title="Terminal — ant-go auth whoami">
-              <div>
-                <span className="text-white/30 select-none">$ </span>
-                <span className="text-yellow-300">ant-go</span>
-                <span className="text-white"> auth whoami</span>
-              </div>
-              <div className="mt-3 space-y-1">
-                <div className="text-white/40">{"  "}Name:    <span className="text-white">Nguyen Van A</span></div>
-                <div className="text-white/40">{"  "}Email:   <span className="text-white">dev@example.com</span></div>
-                <div className="text-white/40">{"  "}Plan:    <span className="text-accent-light">Pro</span></div>
-                <div className="text-white/40">{"  "}Builds:  <span className="text-white">47 / unlimited</span></div>
-                <div className="text-white/40">{"  "}Expires: <span className="text-yellow-300">2026-05-01 10:30:00</span></div>
-              </div>
-            </Terminal>
-            <p className="text-white/25 text-xs mt-4">
-              Nếu chưa đăng nhập, lệnh sẽ hiện thông báo và hướng dẫn chạy <Code>ant-go auth login</Code>.
-            </p>
           </Section>
 
           {/* ── build ── */}
@@ -737,6 +645,98 @@ export default function DocPage() {
               <Option flag="distribution"      desc='"store" → App Store/TestFlight · "internal" → cài thẳng lên device' />
               <Option flag="developmentClient" desc="true → build Expo development client, hỗ trợ kết nối Metro bundler" />
             </div>
+          </Section>
+
+          {/* ── auth login ── */}
+          <Section id="auth-login" title="Login">
+            <p className="text-white/55 text-sm mb-4">
+              Đăng nhập vào tài khoản ant-go để dùng các lệnh như <Code>build</Code>. Token được lưu tại <Code>~/.ant-go/config.json</Code> và có hiệu lực trong 24 giờ.
+            </p>
+
+            <p className="text-white/55 text-sm mb-3">Đăng nhập bằng email và mật khẩu:</p>
+            <Terminal title="Terminal — ant-go auth login">
+              <div>
+                <span className="text-white/30 select-none">$ </span>
+                <span className="text-yellow-300">ant-go</span>
+                <span className="text-white"> auth login</span>
+              </div>
+              <div className="mt-3 space-y-1">
+                <div className="text-white/40">{"? "}Email: <span className="text-white">dev@example.com</span></div>
+                <div className="text-white/40">{"? "}Password: <span className="text-white">••••••••</span></div>
+              </div>
+              <div className="mt-3 space-y-1">
+                <div className="text-green-400">✔ Đăng nhập thành công!</div>
+                <div className="text-white/40">{"  "}Xin chào, <span className="text-white">Nguyen Van A</span></div>
+                <div className="text-white/40">{"  "}Email:  <span className="text-white">dev@example.com</span></div>
+                <div className="text-white/40">{"  "}Plan:   <span className="text-accent-light">Pro</span></div>
+                <div className="text-white/40">{"  "}Builds: <span className="text-white">47 / unlimited</span></div>
+              </div>
+            </Terminal>
+
+            <p className="text-white/55 text-sm mt-6 mb-3">Hoặc đăng nhập qua Google bằng trình duyệt:</p>
+            <Terminal title="Terminal — browser login">
+              <div>
+                <span className="text-white/30 select-none">$ </span>
+                <span className="text-yellow-300">ant-go</span>
+                <span className="text-white"> auth login</span>
+                <span className="text-blue-400"> --browser</span>
+              </div>
+              <div className="mt-3 space-y-1">
+                <div className="text-white/40">Mở trình duyệt để đăng nhập...</div>
+                <div className="text-blue-400 underline">{"  "}https://antgo.work/auth/cli?port=9005&state=xxxxxxxx</div>
+                <div className="text-white/40 mt-2">Đang chờ xác nhận từ trình duyệt...</div>
+              </div>
+              <div className="mt-3 space-y-1">
+                <div className="text-green-400">✔ Đăng nhập thành công!</div>
+                <div className="text-white/40">{"  "}Xin chào, <span className="text-white">Nguyen Van A</span></div>
+              </div>
+            </Terminal>
+
+            <div className="mt-6 rounded-xl p-4" style={GLASS}>
+              <p className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-3">Options</p>
+              <Option flag="--browser" desc="Đăng nhập qua Google OAuth bằng trình duyệt thay vì email/password" />
+            </div>
+          </Section>
+
+          {/* ── auth logout ── */}
+          <Section id="auth-logout" title="Logout">
+            <p className="text-white/55 text-sm mb-4">
+              Đăng xuất khỏi tài khoản ant-go. Token hiện tại sẽ bị thu hồi trên server và xoá khỏi máy.
+            </p>
+            <Terminal title="Terminal — ant-go auth logout">
+              <div>
+                <span className="text-white/30 select-none">$ </span>
+                <span className="text-yellow-300">ant-go</span>
+                <span className="text-white"> auth logout</span>
+              </div>
+              <div className="mt-3 space-y-1">
+                <div className="text-green-400">✔ Đã đăng xuất thành công.</div>
+              </div>
+            </Terminal>
+          </Section>
+
+          {/* ── auth whoami ── */}
+          <Section id="auth-whoami" title="Whoami">
+            <p className="text-white/55 text-sm mb-4">
+              Xem thông tin tài khoản đang đăng nhập và trạng thái token hiện tại.
+            </p>
+            <Terminal title="Terminal — ant-go auth whoami">
+              <div>
+                <span className="text-white/30 select-none">$ </span>
+                <span className="text-yellow-300">ant-go</span>
+                <span className="text-white"> auth whoami</span>
+              </div>
+              <div className="mt-3 space-y-1">
+                <div className="text-white/40">{"  "}Name:    <span className="text-white">Nguyen Van A</span></div>
+                <div className="text-white/40">{"  "}Email:   <span className="text-white">dev@example.com</span></div>
+                <div className="text-white/40">{"  "}Plan:    <span className="text-accent-light">Pro</span></div>
+                <div className="text-white/40">{"  "}Builds:  <span className="text-white">47 / unlimited</span></div>
+                <div className="text-white/40">{"  "}Expires: <span className="text-yellow-300">2026-05-01 10:30:00</span></div>
+              </div>
+            </Terminal>
+            <p className="text-white/25 text-xs mt-4">
+              Nếu chưa đăng nhập, lệnh sẽ hiện thông báo và hướng dẫn chạy <Code>ant-go auth login</Code>.
+            </p>
           </Section>
 
           {/* Footer */}
