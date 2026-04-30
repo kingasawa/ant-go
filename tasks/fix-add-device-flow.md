@@ -2,7 +2,9 @@
 
 **Status:** pending  
 **Priority:** high  
-**Created:** 2026-04-30
+**Created:** 2026-04-30  
+**Branch:** feature/fix-add-device-flow  
+**PR:** —
 
 ---
 
