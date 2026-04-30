@@ -45,6 +45,7 @@ const steps = [
 const plans = [
   {
     name: "Starter",
+    planKey: "starter",
     price: "$9",
     period: "/tháng",
     desc: "Phù hợp cho cá nhân và side project",
@@ -54,6 +55,7 @@ const plans = [
   },
   {
     name: "Pro",
+    planKey: "pro",
     price: "$29",
     period: "/tháng",
     desc: "Cho team đang phát triển sản phẩm",
@@ -63,6 +65,7 @@ const plans = [
   },
   {
     name: "Team",
+    planKey: "team",
     price: "$79",
     period: "/tháng",
     desc: "Cho team lớn, nhiều app",
@@ -343,6 +346,31 @@ export default function HomePage() {
   const { user } = useAuth();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+
+  async function handleSubscribe(planKey: string) {
+    if (planKey === "team") {
+      window.location.href = "mailto:support@antgo.work";
+      return;
+    }
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    setCheckoutLoading(planKey);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: planKey }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } finally {
+      setCheckoutLoading(null);
+    }
+  }
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { displayed: cliText, done: cliDone } = useTypewriter(CLI_TEXT);
   const [navVisible, setNavVisible] = useState(true);
@@ -543,17 +571,18 @@ export default function HomePage() {
                       </li>
                     ))}
                   </ul>
-                  <Link
-                    href="/login"
-                    className={`w-full text-center py-2.5 rounded-xl text-sm font-semibold transition ${
+                  <button
+                    onClick={() => handleSubscribe(plan.planKey)}
+                    disabled={checkoutLoading === plan.planKey}
+                    className={`w-full text-center py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-60 ${
                       plan.highlight
-                        ? "bg-accent hover:bg-accent text-accent-contrast"
+                        ? "bg-accent hover:opacity-90 text-accent-contrast"
                         : "hover:bg-white/10 text-white/80 hover:text-white"
                     }`}
                     style={plan.highlight ? {} : { border: "1px solid rgba(255,255,255,0.2)" }}
                   >
-                    {plan.cta}
-                  </Link>
+                    {checkoutLoading === plan.planKey ? "Đang xử lý..." : plan.cta}
+                  </button>
                 </div>
               ))}
             </div>

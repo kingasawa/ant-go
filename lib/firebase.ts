@@ -1,5 +1,5 @@
 // Firebase Web SDK config for ant-go
-// Project: eba-cli (same Firebase project as eas-clone)
+// Project: ant-go
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
