@@ -72,9 +72,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       ],
     },
     {
+      title: "XCODE CLOUD",
+      items: [
+        { href: `${base}/xcode-cloud`, label: "Info", Icon: HiOutlineCloud },
+      ],
+    },
+    {
       title: "CONFIG",
       items: [
-        { href: `${base}/xcode-cloud`, label: "Xcode Cloud", Icon: HiOutlineCloud },
         { href: `${base}/app-info`, label: "Settings", Icon: HiOutlineCog6Tooth },
       ],
     },
