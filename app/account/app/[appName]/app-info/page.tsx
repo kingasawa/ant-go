@@ -206,76 +206,77 @@ export default function AppInfoPage() {
           </div>
         )}
 
-        <div className="rounded-2xl overflow-hidden" style={GLASS}>
-          {/* Status row */}
-          <div className="flex items-center px-5 py-3.5 gap-4 border-b border-white/10">
-            <span className="w-32 text-sm text-white/50 flex-shrink-0">Trạng thái</span>
-            {isConnected ? (
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
-                <a
-                  href={`https://github.com/${app.githubRepo}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-medium text-white font-mono hover:underline"
-                >
-                  {app.githubRepo}
-                </a>
+        {isConnected ? (
+          /* ── Connected view ── */
+          <div className="rounded-2xl overflow-hidden" style={GLASS}>
+            <div className="flex items-center justify-between px-5 py-4 gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <FaGithub className="w-5 h-5 text-white/70 flex-shrink-0" />
+                <div className="min-w-0">
+                  <a
+                    href={`https://github.com/${app.githubRepo}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-white font-mono hover:underline truncate block"
+                  >
+                    {app.githubRepo}
+                  </a>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+                    <span className="text-xs text-green-400">Active</span>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-white/20 flex-shrink-0" />
-                <span className="text-sm text-white/40">Chưa kết nối</span>
+              <button
+                onClick={handleDisconnect}
+                disabled={connecting}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/20 text-red-400 hover:bg-red-500/30 transition disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+              >
+                {connecting ? "..." : "Disconnect"}
+              </button>
+            </div>
+            {connectError && (
+              <div className="px-5 pb-4">
+                <p className="text-xs text-red-400">{connectError}</p>
               </div>
             )}
           </div>
-
-          {/* Input row */}
-          <div className="px-5 py-4">
-            <label className="text-xs text-white/50 block mb-2">Repository URL</label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={repoInput}
-                onChange={(e) => { setRepoInput(e.target.value); setConnectError(null); }}
-                placeholder="https://github.com/acme/my-ios-app"
-                className="flex-1 bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/40 font-mono"
-              />
-              <button
-                onClick={handleConnect}
-                disabled={connecting || !isDirty || isInvalidUrl}
-                className="px-4 py-2 rounded-xl text-sm font-medium bg-accent/20 text-accent-light hover:bg-accent/30 transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-              >
-                {connecting ? "Đang xử lý..." : "Connect"}
-              </button>
-              {isConnected && (
+        ) : (
+          /* ── Connect form ── */
+          <div className="rounded-2xl overflow-hidden" style={GLASS}>
+            <div className="px-5 py-4">
+              <label className="text-xs text-white/50 block mb-2">Repository URL</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={repoInput}
+                  onChange={(e) => { setRepoInput(e.target.value); setConnectError(null); }}
+                  placeholder="https://github.com/acme/my-ios-app"
+                  className="flex-1 bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/40 font-mono"
+                />
                 <button
-                  onClick={handleDisconnect}
-                  disabled={connecting}
-                  className="px-4 py-2 rounded-xl text-sm font-medium bg-red-500/20 text-red-400 hover:bg-red-500/30 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleConnect}
+                  disabled={connecting || !isDirty || isInvalidUrl}
+                  className="px-4 py-2 rounded-xl text-sm font-medium bg-accent/20 text-accent-light hover:bg-accent/30 transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 >
-                  Disconnect
+                  {connecting ? "Đang xử lý..." : "Connect"}
                 </button>
-              )}
+              </div>
+              {isInvalidUrl
+                ? <p className="mt-2 text-xs text-red-400">URL không hợp lệ. Ví dụ: https://github.com/acme/my-app</p>
+                : <p className="mt-2 text-xs text-white/30">Paste URL của repo trên GitHub vào đây.</p>
+              }
+              {connectError && <p className="mt-2 text-xs text-red-400">{connectError}</p>}
             </div>
-
-            {isInvalidUrl
-              ? <p className="mt-2 text-xs text-red-400">URL không hợp lệ. Ví dụ: https://github.com/acme/my-app</p>
-              : <p className="mt-2 text-xs text-white/30">Paste URL của repo trên GitHub vào đây.</p>
-            }
-            {connectError && <p className="mt-2 text-xs text-red-400">{connectError}</p>}
+            <div className="px-5 py-3.5 border-t border-white/10 flex items-start gap-2">
+              <HiOutlineExclamationTriangle className="w-3.5 h-3.5 text-yellow-400/70 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-white/30 leading-relaxed">
+                <span className="text-white/50">Private repo:</span> Khi GitHub mở trang cài đặt, chọn{" "}
+                <span className="text-white/50">"Only select repositories"</span> và chọn đúng repo này.
+              </p>
+            </div>
           </div>
-
-          {/* Private repo note */}
-          <div className="px-5 py-3.5 border-t border-white/10 flex items-start gap-2">
-            <HiOutlineExclamationTriangle className="w-3.5 h-3.5 text-yellow-400/70 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-white/30 leading-relaxed">
-              <span className="text-white/50">Private repo:</span> Khi GitHub mở trang cài đặt, chọn{" "}
-              <span className="text-white/50">"Only select repositories"</span> và chọn đúng repo này. Nếu chọn{" "}
-              <span className="text-white/50">"All repositories"</span>, tất cả repo kể cả private sẽ được cấp quyền.
-            </p>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
