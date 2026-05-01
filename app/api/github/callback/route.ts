@@ -12,7 +12,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
-import { createSign } from "crypto";
+import { createSign, createPrivateKey } from "crypto";
 
 function createAppJwt(): string {
   const now = Math.floor(Date.now() / 1000);
@@ -21,9 +21,11 @@ function createAppJwt(): string {
   const header  = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
   const payload = b64url(JSON.stringify({ iat: now - 60, exp: now + 600, iss: process.env.GITHUB_APP_ID }));
   const signingInput = `${header}.${payload}`;
-  const sign = createSign("RSA-SHA256");
+  const rawPem    = (process.env.GITHUB_APP_PRIVATE_KEY ?? "").replace(/\\n/g, "\n");
+  const privateKey = createPrivateKey(rawPem);
+  const sign = createSign("sha256");
   sign.update(signingInput);
-  const sig = sign.sign(process.env.GITHUB_APP_PRIVATE_KEY!.replace(/\\n/g, "\n"), "base64")
+  const sig = sign.sign(privateKey, "base64")
     .replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
   return `${signingInput}.${sig}`;
 }
