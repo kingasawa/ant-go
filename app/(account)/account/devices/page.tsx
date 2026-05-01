@@ -50,12 +50,13 @@ function AddDeviceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Không tạo được enrollment");
 
-      setEnrollUrl(data.enrollUrl);
+      const landingUrl = `${window.location.origin}/enroll/${data.token}`;
+      setEnrollUrl(landingUrl);
       setEnrollToken(data.token);
 
       // Tạo QR code
       const QRCode = (await import("qrcode")).default;
-      const dataUrl = await QRCode.toDataURL(data.enrollUrl, { width: 220, margin: 2 });
+      const dataUrl = await QRCode.toDataURL(landingUrl, { width: 220, margin: 2 });
       setQrDataUrl(dataUrl);
       setStep("scanning");
 
