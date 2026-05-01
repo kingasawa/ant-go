@@ -1,16 +1,33 @@
 /**
  * POST /api/device-enroll/create
- * Body: { projectId: string }
+ * Body: { projectId?, source?, origin? }
  *
  * Creates a device enrollment session in Firestore.
  * Returns: { token, enrollUrl }
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminDb } from "@/lib/firebase-admin";
+import { getAdminDb, getAdminAuth } from "@/lib/firebase-admin";
+import { validateCliToken } from "@/lib/cli-auth.service";
 import { randomUUID } from "crypto";
 
+async function resolveUid(request: NextRequest): Promise<string | null> {
+  const token = request.headers.get("Authorization")?.replace("Bearer ", "").trim();
+  if (!token) return null;
+  try {
+    const decoded = await getAdminAuth().verifyIdToken(token);
+    return decoded.uid;
+  } catch {}
+  const session = await validateCliToken(token);
+  return session?.uid ?? null;
+}
+
 export async function POST(request: NextRequest) {
+  const uid = await resolveUid(request);
+  if (!uid) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await request.json().catch(() => ({}));
   const { projectId, source, origin } = body;
 
@@ -20,6 +37,7 @@ export async function POST(request: NextRequest) {
 
   const db = getAdminDb();
   await db.collection("device_enrollments").doc(token).set({
+    userId: uid,
     projectId: typeof projectId === "string" ? projectId.trim() : null,
     source: source ?? "cli",
     status: "pending",

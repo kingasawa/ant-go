@@ -83,7 +83,7 @@ function AddDeviceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
         if (pollRef.current) clearInterval(pollRef.current);
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         setPendingDevice({ udid: data.udid, deviceProduct: data.deviceProduct, deviceSerial: data.deviceSerial });
-        setDeviceName(data.deviceProduct ? formatProduct(data.deviceProduct) : "My iPhone");
+        setDeviceName(data.deviceProduct ? formatProduct(data.deviceProduct) : "iPhone");
         setStep("naming");
       } else if (data.status === "expired") {
         if (pollRef.current) clearInterval(pollRef.current);
@@ -208,13 +208,13 @@ function AddDeviceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div>
-                <p className="text-sm font-semibold text-green-300">iPhone đã xác nhận!</p>
+                <p className="text-sm font-semibold text-green-300">Device đã được thêm!</p>
                 <p className="text-xs text-white/50 font-mono mt-0.5">{pendingDevice.udid}</p>
               </div>
             </div>
 
             <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">
-              Tên thiết bị
+              Đặt tên thiết bị
             </label>
             <input
               type="text"
