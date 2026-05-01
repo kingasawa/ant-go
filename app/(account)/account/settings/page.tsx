@@ -8,7 +8,6 @@ import {
   HiOutlineCube, HiOutlineDocument, HiOutlineDocumentText, HiOutlineTrash,
   HiOutlineChevronRight, HiOutlineSun, HiOutlineMoon, HiOutlineComputerDesktop, HiOutlineSwatch,
 } from "react-icons/hi2";
-import { FaGithub } from "react-icons/fa";
 
 /* ─── Reusable iOS-style primitives ──────────────────────────────────────── */
 
@@ -171,7 +170,6 @@ export default function SettingsPage() {
         <Row icon={<HiOutlineCube className="w-5 h-5" />} label="Version" right={<span className="text-sm text-gray-400">1.0.0</span>} />
         <Row icon={<HiOutlineDocument className="w-5 h-5" />} label="Privacy Policy" onClick={() => {}} />
         <Row icon={<HiOutlineDocumentText className="w-5 h-5" />} label="Terms of Service" onClick={() => {}} />
-        <Row icon={<FaGithub className="w-5 h-5" />} label="GitHub Repository" onClick={() => window.open("https://github.com", "_blank")} />
       </Section>
 
       {/* Danger zone */}

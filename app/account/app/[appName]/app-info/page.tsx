@@ -7,15 +7,27 @@ import { useAuth } from "@/context/AuthContext";
 import { GLASS } from "@/lib/glass";
 import PageLoader from "@/app/components/PageLoader";
 import { FaGithub } from "react-icons/fa";
+import { HiOutlineDocumentDuplicate, HiOutlineCheck } from "react-icons/hi2";
 
 interface AppDoc {
   id: string;
   name: string;
-  scheme?: string;
-  bundleId?: string;
-  platform?: string;
   githubRepo?: string | null;
   createdAt?: { seconds: number } | null;
+}
+
+function parseGithubUrl(input: string): string | null {
+  const cleaned = input
+    .trim()
+    .replace(/^https?:\/\/github\.com\//i, "")
+    .replace(/^github\.com\//i, "")
+    .replace(/\.git$/, "")
+    .replace(/\/$/, "");
+  return /^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/.test(cleaned) ? cleaned : null;
+}
+
+function toDisplayUrl(repo: string) {
+  return `https://github.com/${repo}`;
 }
 
 export default function AppInfoPage() {
@@ -26,6 +38,7 @@ export default function AppInfoPage() {
   const [loading, setLoading] = useState(true);
 
   const [repoInput, setRepoInput] = useState("");
+  const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -42,7 +55,7 @@ export default function AppInfoPage() {
         const d = snap.docs[0];
         const data = { id: d.id, ...d.data() } as AppDoc;
         setApp(data);
-        setRepoInput(data.githubRepo ?? "");
+        setRepoInput(data.githubRepo ? toDisplayUrl(data.githubRepo) : "");
       }
       setLoading(false);
     });
@@ -68,7 +81,7 @@ export default function AppInfoPage() {
         setSaveError(data.error ?? "Có lỗi xảy ra");
       } else {
         setApp((prev) => (prev ? { ...prev, githubRepo: repoFullName } : prev));
-        setRepoInput(repoFullName ?? "");
+        setRepoInput(repoFullName ? toDisplayUrl(repoFullName) : "");
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 2000);
       }
@@ -84,9 +97,7 @@ export default function AppInfoPage() {
 
   const rows = [
     { label: "Name", value: app.name },
-    { label: "Scheme", value: app.scheme ?? "—" },
-    { label: "Bundle ID", value: app.bundleId ?? "—" },
-    { label: "Platform", value: app.platform ?? "—" },
+    { label: "App ID", value: app.id },
     {
       label: "Created",
       value: app.createdAt?.seconds
@@ -96,18 +107,36 @@ export default function AppInfoPage() {
   ];
 
   const isConnected = Boolean(app.githubRepo);
-  const isDirty = repoInput !== (app.githubRepo ?? "");
+  const parsedInput = parseGithubUrl(repoInput);
+  const isDirty = parsedInput !== (app.githubRepo ?? null);
+  const isInvalidUrl = repoInput.trim() !== "" && parsedInput === null;
 
   return (
     <div>
       <h1 className="text-xl font-bold text-white mb-1">App info</h1>
       <p className="text-sm text-white/50 mb-6">Thông tin chi tiết của app.</p>
 
-      <div className="rounded-2xl divide-y divide-white/10" style={GLASS}>
+      <div className="rounded-2xl divide-y divide-white/10 max-w-sm" style={GLASS}>
         {rows.map(({ label, value }) => (
           <div key={label} className="flex items-center px-5 py-3.5 gap-4">
             <span className="w-32 text-sm text-white/50 flex-shrink-0">{label}</span>
-            <span className="text-sm font-medium text-white font-mono">{value}</span>
+            <span className="text-sm font-medium text-white font-mono flex-1">{value}</span>
+            {label === "App ID" && (
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(value);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                className="flex items-center gap-1 text-white/30 hover:text-white/70 transition flex-shrink-0"
+              >
+                {copied ? (
+                  <HiOutlineCheck className="w-4 h-4 text-green-400" />
+                ) : (
+                  <HiOutlineDocumentDuplicate className="w-4 h-4" />
+                )}
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -148,7 +177,7 @@ export default function AppInfoPage() {
 
           {/* Input row */}
           <div className="px-5 py-4">
-            <label className="text-xs text-white/50 block mb-2">Repo (owner/repo)</label>
+            <label className="text-xs text-white/50 block mb-2">Repository URL</label>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -157,15 +186,15 @@ export default function AppInfoPage() {
                   setRepoInput(e.target.value);
                   setSaveError(null);
                 }}
-                placeholder="acme/my-ios-app"
+                placeholder="https://github.com/acme/my-ios-app"
                 className="flex-1 bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-white/40 font-mono"
               />
               <button
-                onClick={() => saveGithubRepo(repoInput.trim() || null)}
-                disabled={saving || !isDirty}
+                onClick={() => saveGithubRepo(parsedInput)}
+                disabled={saving || !isDirty || isInvalidUrl}
                 className="px-4 py-2 rounded-xl text-sm font-medium bg-accent/20 text-accent-light hover:bg-accent/30 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {saving ? "Đang lưu..." : saveSuccess ? "Đã lưu!" : "Lưu"}
+                {saving ? "Connecting..." : saveSuccess ? "Connected!" : "Connect"}
               </button>
               {isConnected && (
                 <button
@@ -177,6 +206,10 @@ export default function AppInfoPage() {
                 </button>
               )}
             </div>
+            {isInvalidUrl
+              ? <p className="mt-2 text-xs text-red-400">URL không hợp lệ. Ví dụ: https://github.com/acme/my-app</p>
+              : <p className="mt-2 text-xs text-white/30">Paste URL của repo trên GitHub vào đây.</p>
+            }
             {saveError && <p className="mt-2 text-xs text-red-400">{saveError}</p>}
           </div>
         </div>

@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { usePathname, useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import SidebarUserCard from "@/app/components/SidebarUserCard";
-import { HiOutlineChevronLeft, HiOutlineChartBar, HiOutlineCodeBracket, HiOutlineCube, HiOutlineBars3, HiOutlineChevronUpDown } from "react-icons/hi2";
+import { HiOutlineChevronLeft, HiOutlineChartBar, HiOutlineCodeBracket, HiOutlineCube, HiOutlineBars3, HiOutlineChevronUpDown, HiOutlineCog6Tooth } from "react-icons/hi2";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
@@ -71,11 +71,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         { href: `${base}/builds`, label: "Builds", Icon: HiOutlineCube },
       ],
     },
+    {
+      title: "CONFIG",
+      items: [
+        { href: `${base}/app-info`, label: "Settings", Icon: HiOutlineCog6Tooth },
+      ],
+    },
   ];
 
   // Derive current tab suffix (e.g. /builds) to switch app while keeping tab
   const tabSuffix = (() => {
-    const suffixes = ["/builds", "/workflows", "/usage"];
+    const suffixes = ["/builds", "/workflows", "/usage", "/app-info"];
     for (const s of suffixes) {
       if (pathname.startsWith(base + s)) return s;
     }
