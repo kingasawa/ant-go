@@ -7,6 +7,7 @@ export interface AppDoc {
   scheme: string;         // Xcode scheme name
   xcworkspace: string;    // e.g. MyApp.xcworkspace
   xcodeproj: string;      // e.g. MyApp.xcodeproj
+  githubRepo?: string | null; // "owner/repo" — mỗi app chỉ connect 1 repo
   createdAt?: { seconds: number } | null;
   updatedAt?: { seconds: number } | null;
 }
