@@ -155,26 +155,7 @@ export default function EnrollPage() {
               ))}
             </div>
 
-            {/* Open Settings button — works in Safari on iOS */}
-            <a
-              href="App-prefs:root=General&path=ManagedConfigurationList"
-              style={{
-                display: "block",
-                width: "100%",
-                padding: "16px",
-                borderRadius: 14,
-                background: "#fff",
-                color: "#111",
-                fontSize: 16,
-                fontWeight: 700,
-                textDecoration: "none",
-                boxSizing: "border-box",
-              }}
-            >
-              Mở Settings ngay
-            </a>
-
-            <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 12, marginTop: 14, lineHeight: 1.5 }}>
+            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, marginTop: 4, lineHeight: 1.6 }}>
               Sau khi cài đặt xong, trang đăng ký trên máy tính sẽ tự động cập nhật.
             </p>
           </>
