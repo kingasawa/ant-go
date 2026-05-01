@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { usePathname, useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import SidebarUserCard from "@/app/components/SidebarUserCard";
-import { HiOutlineChevronLeft, HiOutlineChartBar, HiOutlineCodeBracket, HiOutlineCube, HiOutlineBars3, HiOutlineChevronUpDown, HiOutlineCog6Tooth, HiOutlineCloud } from "react-icons/hi2";
+import { HiOutlineChevronLeft, HiOutlineChartBar, HiOutlineCodeBracket, HiOutlineCube, HiOutlineBars3, HiOutlineChevronUpDown, HiOutlineCog6Tooth, HiOutlineCloud, HiOutlinePaperAirplane } from "react-icons/hi2";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
@@ -69,6 +69,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       items: [
         { href: `${base}/workflows`, label: "Workflows", Icon: HiOutlineCodeBracket },
         { href: `${base}/builds`, label: "Builds", Icon: HiOutlineCube },
+        { href: `${base}/submission`, label: "Submission", Icon: HiOutlinePaperAirplane },
       ],
     },
     {
@@ -87,7 +88,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // Derive current tab suffix (e.g. /builds) to switch app while keeping tab
   const tabSuffix = (() => {
-    const suffixes = ["/builds", "/workflows", "/usage", "/xcode-cloud", "/app-info"];
+    const suffixes = ["/builds", "/workflows", "/usage", "/submission", "/xcode-cloud", "/app-info"];
     for (const s of suffixes) {
       if (pathname.startsWith(base + s)) return s;
     }
