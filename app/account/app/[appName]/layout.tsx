@@ -67,7 +67,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     {
       title: "DEVELOP",
       items: [
-        { href: `${base}/workflows`, label: "Workflows", Icon: HiOutlineCodeBracket },
         { href: `${base}/builds`, label: "Builds", Icon: HiOutlineCube },
         { href: `${base}/submission`, label: "Submission", Icon: HiOutlinePaperAirplane },
       ],
@@ -76,6 +75,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       title: "XCODE CLOUD",
       items: [
         { href: `${base}/xcode-cloud`, label: "Info", Icon: HiOutlineCloud },
+        { href: `${base}/workflows`, label: "Workflows", Icon: HiOutlineCodeBracket },
       ],
     },
     {
