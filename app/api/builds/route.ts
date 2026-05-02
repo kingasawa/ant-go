@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const { projectId, platform, autoSubmit } = body;
+  const { projectId, platform, autoSubmit, buildNumber } = body;
 
   if (!projectId || typeof projectId !== "string") {
     return NextResponse.json({ error: "projectId là bắt buộc" }, { status: 400 });
@@ -32,11 +32,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'platform phải là "ios" hoặc "android"' }, { status: 400 });
   }
 
+  const parsedBuildNumber =
+    typeof buildNumber === "number" && Number.isInteger(buildNumber) && buildNumber > 0
+      ? buildNumber
+      : undefined;
+
   try {
-    const { jobId, tarUrl, credsUrl } = await prepareBuild(projectId.trim(), platform, {
-      autoSubmit: autoSubmit === true,
-    });
-    return NextResponse.json({ jobId, tarUrl, credsUrl }, { status: 201 });
+    const { jobId, tarUrl, credsUrl, buildNumber: resolvedBuildNumber } = await prepareBuild(
+      projectId.trim(),
+      platform,
+      { autoSubmit: autoSubmit === true, buildNumber: parsedBuildNumber }
+    );
+    return NextResponse.json({ jobId, tarUrl, credsUrl, buildNumber: resolvedBuildNumber }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: err.status ?? 500 });
   }

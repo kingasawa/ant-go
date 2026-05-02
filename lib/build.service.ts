@@ -120,16 +120,37 @@ async function ensureProvisioningProfile(ctx: any, certId: string, bundleId: str
 export async function prepareBuild(
   projectId: string,
   platform: "ios" | "android",
-  options: { autoSubmit?: boolean } = {}
+  options: { autoSubmit?: boolean; buildNumber?: number } = {}
 ) {
   const db     = getAdminDb();
   const bucket = getAdminBucket();
 
-  const projectSnap = await db.collection("apps").doc(projectId).get();
+  const projectRef  = db.collection("apps").doc(projectId);
+  const projectSnap = await projectRef.get();
   if (!projectSnap.exists) {
     const err: any = new Error(`Project ID "${projectId}" không tồn tại`);
     err.status = 404;
     throw err;
+  }
+
+  // Resolve buildNumber: dùng từ ant.json nếu có, không thì auto-increment
+  let resolvedBuildNumber: number;
+  if (options.buildNumber != null && Number.isInteger(options.buildNumber) && options.buildNumber > 0) {
+    resolvedBuildNumber = options.buildNumber;
+    // Đồng bộ lastBuildNumber lên Firestore nếu số mới lớn hơn
+    const last = projectSnap.data()?.lastBuildNumber ?? 0;
+    if (resolvedBuildNumber > last) {
+      await projectRef.set({ lastBuildNumber: resolvedBuildNumber }, { merge: true });
+    }
+  } else {
+    // Auto-increment atomic
+    resolvedBuildNumber = await db.runTransaction(async (tx) => {
+      const snap = await tx.get(projectRef);
+      const last = snap.data()?.lastBuildNumber ?? 0;
+      const next = last + 1;
+      tx.update(projectRef, { lastBuildNumber: next });
+      return next;
+    });
   }
 
   const jobId    = Date.now().toString();
@@ -139,11 +160,12 @@ export async function prepareBuild(
   await db.collection(BUILDS_COLLECTION).doc(jobId).set({
     projectId,
     platform,
-    userId:     projectSnap.data()?.userId ?? null,
-    appName:    projectSnap.data()?.name   ?? null,
-    status:     "uploading",
-    step:       "uploading",
-    autoSubmit: options.autoSubmit ?? false,
+    userId:      projectSnap.data()?.userId ?? null,
+    appName:     projectSnap.data()?.name   ?? null,
+    status:      "uploading",
+    step:        "uploading",
+    autoSubmit:  options.autoSubmit ?? false,
+    buildNumber: resolvedBuildNumber,
     basePath,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -161,7 +183,7 @@ export async function prepareBuild(
     getUrl("credentials.json", "application/json"),
   ]);
 
-  return { jobId, tarUrl, credsUrl };
+  return { jobId, tarUrl, credsUrl, buildNumber: resolvedBuildNumber };
 }
 
 // ── withTimeout ───────────────────────────────────────────────────────────────

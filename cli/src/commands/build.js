@@ -93,9 +93,15 @@ function resolveAntJson(projectRoot, profileName) {
     process.exit(1);
   }
 
+  // buildNumber: nếu có trong ant.json thì dùng, không thì để null (server sẽ auto-increment)
+  const rawBN = profile.buildNumber;
+  const buildNumber =
+    typeof rawBN === 'number' && Number.isInteger(rawBN) && rawBN > 0 ? rawBN : null;
+
   return {
     distribution:      profile.distribution      || 'store',
     developmentClient: !!profile.developmentClient,
+    buildNumber,
   };
 }
 
@@ -310,7 +316,7 @@ async function runBuild(options) {
   // 1. Đọc ant.json + app.json
   const profileName   = options.profile || 'production';
   const profileConfig = resolveAntJson(projectRoot, profileName);
-  const { distribution, developmentClient } = profileConfig;
+  const { distribution, developmentClient, buildNumber: configBuildNumber } = profileConfig;
 
   const autoSubmit = !!options.autoSubmit;
 
@@ -328,6 +334,7 @@ async function runBuild(options) {
     `Project ID : ${projectInfo.projectId}`,
     `Bundle ID  : ${projectInfo.bundleId}`,
     `Profile    : ${profileName}  (${distribution}${developmentClient ? ', devClient' : ''})`,
+    `Build #    : ${configBuildNumber != null ? configBuildNumber : 'auto'}`,
     ...(autoSubmit ? ['Auto Submit: TestFlight'] : []),
   ]);
 
@@ -353,11 +360,17 @@ async function runBuild(options) {
   const spinner = ora('Đang tạo build job...').start();
   let jobId, tarUrl, credsUrl;
   try {
-    const res = await createBuild(client, { projectId: projectInfo.projectId, platform, autoSubmit });
+    const res = await createBuild(client, {
+      projectId: projectInfo.projectId,
+      platform,
+      autoSubmit,
+      ...(configBuildNumber != null && { buildNumber: configBuildNumber }),
+    });
     jobId    = res.jobId;
     tarUrl   = res.tarUrl;
     credsUrl = res.credsUrl;
-    spinner.succeed(`Job tạo thành công: ${chalk.bold(jobId)}`);
+    const resolvedBN = res.buildNumber;
+    spinner.succeed(`Job tạo thành công: ${chalk.bold(jobId)}  ·  Build #${chalk.cyan(resolvedBN)}`);
   } catch (err) {
     spinner.fail('Tạo build job thất bại');
     const msg = err.response?.data?.error ?? err.message;

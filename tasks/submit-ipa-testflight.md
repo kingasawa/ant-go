@@ -49,8 +49,8 @@ Dashboard                         Server                          Apple
 | `ipaUrl` | string | URL download IPA trên Firebase Storage |
 | `userId` | string | UID của user tạo submission |
 | `bundleId` | string | Bundle ID của app |
-| `version` | string | Version string (VD: `1.0.0`) |
-| `buildNumber` | string | Build number (VD: `42`) |
+| `version` | string | Version string đọc từ `app.json` (VD: `1.0.0`) |
+| `buildNumber` | number | Build number — lấy từ `builds/{buildId}.buildNumber` (đã auto-increment hoặc do user config trong `ant.json`) |
 | `status` | `pending` \| `uploading` \| `processing` \| `done` \| `failed` | Trạng thái |
 | `errorMessage` | string \| null | Thông báo lỗi nếu thất bại |
 | `testflightBuildId` | string \| null | Build ID trên Apple sau khi upload xong |
@@ -97,7 +97,7 @@ Body: { buildId: string }
 
 Logic:
 1. Xác thực user qua ID token
-2. Đọc `builds/{buildId}` → lấy `ipaUrl`, `bundleId`, `version`, `buildNumber`
+2. Đọc `builds/{buildId}` → lấy `ipaUrl`, `buildNumber` (đã có sẵn từ build pipeline); `bundleId` và `version` đọc từ `apps/{appName}`
 3. Kiểm tra build status phải là `success` và `ipaUrl` tồn tại
 4. Kiểm tra `users/{uid}/app_store_keys/{appName}` có key chưa → nếu chưa trả 422 với `{ error: "missing_asc_key" }`
 5. Tạo doc trong `submissions/{uuid}`:
