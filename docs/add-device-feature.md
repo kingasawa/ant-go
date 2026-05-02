@@ -15,8 +15,7 @@ Tính năng cho phép user đăng ký UDID của iPhone vào tài khoản Ant Go
 | Database | Firebase Firestore (Admin SDK cho server, không dùng client SDK) |
 | Auth | Firebase Auth ID Token + CLI token (dual auth) |
 | Profile signing | `node-forge` — CMS/PKCS#7 SignedData |
-| Certificate | Let's Encrypt (RSA 2048) via certbot HTTP-01 |
-| ACME challenge | Firestore-backed route `/.well-known/acme-challenge/[token]` |
+| Certificate | Self-signed RSA 2048, hết hạn 2036-04-29 |
 | Deploy | Google App Engine via Cloud Build trigger |
 | Secrets | Google Secret Manager (`PROFILE_SIGNING_CERT`, `PROFILE_SIGNING_KEY`) |
 | QR Code | `qrcode` npm package (client-side) |
@@ -202,36 +201,30 @@ Dashboard                iPhone (Safari)              Server
 
 Profile `.mobileconfig` phải được ký bằng CMS/PKCS#7 để iOS chấp nhận qua HTTPS.
 
-### Cách lấy certificate
+> **Lưu ý**: Dùng self-signed cert thay vì CA cert (Let's Encrypt). UX hoàn toàn giống nhau (iOS vẫn hiển thị cảnh báo "Unverified"), nhưng không cần renewal phức tạp — cert có thời hạn 10 năm.
+
+### Tạo certificate mới (khi cần renew)
 
 ```bash
-# Chạy certbot với Firestore-backed ACME hook
-certbot certonly \
-  --manual \
-  --preferred-challenges http \
-  --key-type rsa \
-  --cert-name antgo.work \
-  --manual-auth-hook "node scripts/acme-auth-hook.js" \
-  --manual-cleanup-hook "node scripts/acme-cleanup-hook.js" \
-  --config-dir /tmp/certbot/config \
-  --work-dir /tmp/certbot/work \
-  --logs-dir /tmp/certbot/logs \
-  -d antgo.work \
-  --agree-tos \
-  --email <email> \
-  --non-interactive
-```
+# Tạo self-signed RSA 2048 cert, hạn 10 năm
+openssl req -x509 -newkey rsa:2048 \
+  -keyout /tmp/profile-signing.key \
+  -out /tmp/profile-signing.crt \
+  -days 3650 \
+  -nodes \
+  -subj "/CN=antgo.work/O=Ant Go/C=VN"
 
-Hook `acme-auth-hook.js` ghi ACME token vào Firestore collection `acme_challenges/{token}`.
-Route `/.well-known/acme-challenge/[token]` đọc từ Firestore và serve cho Let's Encrypt.
+# Verify ngày hết hạn
+openssl x509 -in /tmp/profile-signing.crt -noout -dates
+```
 
 ### Lưu vào Secret Manager
 
 ```bash
 node -e "
 const fs = require('fs');
-const cert = fs.readFileSync('/tmp/certbot/config/live/antgo.work/fullchain.pem', 'utf8').replace(/\n/g, '\\\\n');
-const key  = fs.readFileSync('/tmp/certbot/config/live/antgo.work/privkey.pem',  'utf8').replace(/\n/g, '\\\\n');
+const cert = fs.readFileSync('/tmp/profile-signing.crt', 'utf8').replace(/\n/g, '\\\\n');
+const key  = fs.readFileSync('/tmp/profile-signing.key', 'utf8').replace(/\n/g, '\\\\n');
 fs.writeFileSync('/tmp/cert_value.txt', cert);
 fs.writeFileSync('/tmp/key_value.txt',  key);
 "
@@ -240,11 +233,11 @@ gcloud secrets versions add PROFILE_SIGNING_CERT --project=ant-go --data-file=/t
 gcloud secrets versions add PROFILE_SIGNING_KEY  --project=ant-go --data-file=/tmp/key_value.txt
 ```
 
-> **Lưu ý quan trọng**: Dùng `\n` literal (escaped), không dùng newline thật. YAML single-quoted string không cho phép newline thật.
+> **Lưu ý**: Dùng `\n` literal (escaped), không dùng newline thật. YAML single-quoted string không cho phép newline thật.
 
 ### Ngày hết hạn
 
-Certificate hiện tại hết hạn **2026-07-31**. Cần renew trước ngày đó bằng cách chạy lại lệnh certbot ở trên.
+Certificate hiện tại hết hạn **2036-04-29**. Không cần renewal trong ~10 năm.
 
 ---
 
@@ -264,5 +257,4 @@ Certificate hiện tại hết hạn **2026-07-31**. Cần renew trước ngày 
 
 ## 9. Hạn chế hiện tại
 
-- **Cảnh báo "chưa xác minh"**: iOS yêu cầu cert S/MIME hoặc Apple-issued để ký profile không có cảnh báo. Let's Encrypt chỉ cấp TLS cert. Người dùng cần bấm qua cảnh báo để hoàn tất. UDID vẫn được capture thành công.
-- **Cert hết hạn 2026-07-31**: Cần renew trước ngày đó (xem mục 7).
+- **Cảnh báo "chưa xác minh"**: iOS yêu cầu cert S/MIME hoặc Apple-issued để ký profile không có cảnh báo. Self-signed cert (cũng như Let's Encrypt) đều hiển thị cảnh báo "Unverified". Người dùng cần bấm qua cảnh báo để hoàn tất. UDID vẫn được capture thành công.

@@ -294,12 +294,28 @@ function AddDeviceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 
+interface Toast {
+  id: number;
+  message: string;
+  type: "success" | "error";
+}
+
+let toastCounter = 0;
+
 export default function DevicesPage() {
   const { user } = useAuth();
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [deletingUdid, setDeletingUdid] = useState<string | null>(null);
+  const [fadingUdids, setFadingUdids] = useState<Set<string>>(new Set());
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  function showToast(message: string, type: "success" | "error") {
+    const id = ++toastCounter;
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000);
+  }
 
   const fetchDevices = useCallback(async () => {
     if (!user) return;
@@ -328,10 +344,22 @@ export default function DevicesPage() {
     setDeletingUdid(udid);
     try {
       const idToken = await user.getIdToken();
-      await fetch(`/api/devices?udid=${encodeURIComponent(udid)}`, {
+      const res = await fetch(`/api/devices?udid=${encodeURIComponent(udid)}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${idToken}` },
       });
+      if (!res.ok) throw new Error("Xoá thất bại");
+
+      // Bắt đầu fadeout
+      setFadingUdids((prev) => new Set(prev).add(udid));
+      setTimeout(() => {
+        setDevices((prev) => prev.filter((d) => d.udid !== udid));
+        setFadingUdids((prev) => { const s = new Set(prev); s.delete(udid); return s; });
+      }, 400);
+
+      showToast("Đã xoá device thành công", "success");
+    } catch {
+      showToast("Xoá device thất bại. Vui lòng thử lại.", "error");
     } finally {
       setDeletingUdid(null);
     }
@@ -380,7 +408,14 @@ export default function DevicesPage() {
         ) : (
           <ul className="divide-y divide-white/8">
             {devices.map((device) => (
-              <li key={device.udid} className="flex items-center gap-4 px-5 py-4">
+              <li
+                key={device.udid}
+                className="flex items-center gap-4 px-5 py-4 transition-all duration-400"
+                style={{
+                  opacity: fadingUdids.has(device.udid) ? 0 : 1,
+                  transform: fadingUdids.has(device.udid) ? "translateX(16px)" : "translateX(0)",
+                }}
+              >
                 <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
                   <svg className="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3" />
@@ -447,6 +482,31 @@ export default function DevicesPage() {
           onAdded={() => { setShowModal(false); fetchDevices(); }}
         />
       )}
+
+      {/* Toasts */}
+      <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-50 pointer-events-none">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium text-white shadow-lg backdrop-blur-md border transition-all duration-300 ${
+              toast.type === "success"
+                ? "bg-green-500/20 border-green-400/30"
+                : "bg-red-500/20 border-red-400/30"
+            }`}
+          >
+            {toast.type === "success" ? (
+              <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            )}
+            {toast.message}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
