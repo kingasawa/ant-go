@@ -6,6 +6,7 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { GLASS } from "@/lib/glass";
 import PageLoader from "@/app/components/PageLoader";
+import AppStoreKeyModal from "@/app/components/AppStoreKeyModal";
 
 interface Build {
   id: string;
@@ -159,12 +160,14 @@ function BuildLogs({ buildId, isActive }: { buildId: string; isActive: boolean }
 }
 
 /* ─── Build Row ────────────────────────────────────────────────────────────── */
-const BuildRow = React.memo(function BuildRow({ build, onClick, checked, onCheck, removing }: {
+const BuildRow = React.memo(function BuildRow({ build, onClick, checked, onCheck, removing, onSubmit, submitting }: {
   build: Build;
   onClick: (b: Build) => void;
   checked: boolean;
   onCheck: (id: string, checked: boolean) => void;
   removing: boolean;
+  onSubmit?: (buildId: string) => void;
+  submitting?: boolean;
 }) {
   return (
     <tr
@@ -212,17 +215,35 @@ const BuildRow = React.memo(function BuildRow({ build, onClick, checked, onCheck
       </td>
       <td className="px-4 py-3 text-xs">
         {build.ipaUrl ? (
-          <a
-            href={build.ipaUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center justify-center text-accent hover:text-accent-light transition"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-          </a>
+          <div className="inline-flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            <a
+              href={build.ipaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center text-accent hover:text-accent-light transition"
+              title="Tải IPA"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+            </a>
+            {onSubmit && (
+              <button
+                onClick={() => onSubmit(build.id)}
+                disabled={submitting}
+                title="Submit to TestFlight"
+                className="inline-flex items-center justify-center text-blue-400 hover:text-blue-300 disabled:opacity-40 transition"
+              >
+                {submitting ? (
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-blue-400/40 border-t-blue-400 animate-spin" />
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                )}
+              </button>
+            )}
+          </div>
         ) : (
           <span className="text-white/25">—</span>
         )}
@@ -315,12 +336,37 @@ export default function AppBuildsPage() {
     router.push(`/account/app/${appName}/builds/${build.id}`);
   }, [router, appName]);
 
-  const [deleteTarget, setDeleteTarget]       = useState<Build | null>(null);
-  const [deleting, setDeleting]               = useState(false);
-  const [selectedIds, setSelectedIds]         = useState<Set<string>>(new Set());
-  const [bulkDeleting, setBulkDeleting]       = useState(false);
-  const [showBulkConfirm, setShowBulkConfirm] = useState(false);
-  const [removingIds, setRemovingIds]         = useState<Set<string>>(new Set());
+  const [deleteTarget, setDeleteTarget]             = useState<Build | null>(null);
+  const [deleting, setDeleting]                     = useState(false);
+  const [selectedIds, setSelectedIds]               = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting]             = useState(false);
+  const [showBulkConfirm, setShowBulkConfirm]       = useState(false);
+  const [removingIds, setRemovingIds]               = useState<Set<string>>(new Set());
+  const [submittingId, setSubmittingId]             = useState<string | null>(null);
+  const [showKeyModal, setShowKeyModal]             = useState(false);
+  const [submitPendingBuildId, setSubmitPendingBuildId] = useState<string | null>(null);
+
+  const handleSubmit = useCallback(async (buildId: string) => {
+    if (!user) return;
+    setSubmittingId(buildId);
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch(`/api/apps/${encodeURIComponent(appName)}/submissions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ buildId }),
+      });
+      const data = await res.json();
+      if (res.status === 422 && data.error === "missing_asc_key") {
+        setSubmitPendingBuildId(buildId);
+        setShowKeyModal(true);
+      } else if (res.ok) {
+        router.push(`/account/app/${appName}/submission`);
+      }
+    } finally {
+      setSubmittingId(null);
+    }
+  }, [user, appName, router]);
 
   // Reset selection khi đổi filter / trang
   useEffect(() => { setSelectedIds(new Set()); }, [statusFilter, page]);
@@ -490,6 +536,8 @@ export default function AppBuildsPage() {
                   checked={selectedIds.has(build.id)}
                   onCheck={handleCheck}
                   removing={removingIds.has(build.id)}
+                  onSubmit={build.status === "success" && build.ipaUrl ? handleSubmit : undefined}
+                  submitting={submittingId === build.id}
                 />
               ))}
             </tbody>
@@ -570,6 +618,22 @@ export default function AppBuildsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* AppStore Key Modal */}
+      {showKeyModal && (
+        <AppStoreKeyModal
+          appName={decodedName}
+          onClose={() => { setShowKeyModal(false); setSubmitPendingBuildId(null); }}
+          onSaved={() => {
+            setShowKeyModal(false);
+            if (submitPendingBuildId) {
+              const id = submitPendingBuildId;
+              setSubmitPendingBuildId(null);
+              handleSubmit(id);
+            }
+          }}
+        />
       )}
 
       {/* Delete confirm modal */}
