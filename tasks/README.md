@@ -87,15 +87,24 @@ Ví dụ những trường hợp phải hỏi trước:
 
 ### 6. Kiểm tra type và build trước khi push lên GCP
 
-**Bắt buộc** chạy lệnh sau trước khi commit bất kỳ code nào có thể ảnh hưởng đến build:
+**Bắt buộc** chạy cả hai lệnh sau trước khi commit:
 
 ```bash
-npx tsc --noEmit
+npx tsc --noEmit   # bắt lỗi TypeScript
+next build         # bắt lỗi routing, export, bundle — tsc không thấy được
 ```
 
-Chỉ được push và trigger Cloud Build khi lệnh trên **không có lỗi nào**.
+Chỉ được push và trigger Cloud Build khi **cả hai** không có lỗi.
 
-Các trường hợp đặc biệt cần kiểm tra:
+> `tsc --noEmit` không đủ — lỗi Next.js routing conflict (`different slug names`), invalid route exports, hay bundle errors sẽ không bị bắt bởi TypeScript. Chỉ `next build` mới phát hiện được.
+
+**Trước khi tạo route mới trong `app/api/`**, bắt buộc kiểm tra:
+```bash
+ls app/api/<parent-folder>/
+```
+Nếu folder cha đã có dynamic segment `[xxx]`, phải đặt route mới vào đúng `[xxx]` đó — không được tạo `[yyy]` mới cùng cấp.
+
+Các trường hợp đặc biệt khác cần kiểm tra:
 - Thêm `export` mới vào file trong `app/api/` — Next.js chỉ cho phép export `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS` và các config field (`dynamic`, `revalidate`...). Mọi named export khác sẽ khiến build fail.
 - Thêm package mới — kiểm tra package có hỗ trợ Next.js/Edge runtime không.
 - Sửa file liên quan đến Firestore Admin SDK — đảm bảo không import client-side SDK trong server route.
