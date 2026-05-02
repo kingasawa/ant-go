@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { GLASS } from "@/lib/glass";
 
@@ -303,28 +301,27 @@ export default function DevicesPage() {
   const [showModal, setShowModal] = useState(false);
   const [deletingUdid, setDeletingUdid] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchDevices = useCallback(async () => {
     if (!user) return;
-    const q = query(
-      collection(db, "users", user.uid, "devices"),
-      orderBy("addedAt", "desc")
-    );
-    const unsub = onSnapshot(q, (snap) => {
-      setDevices(snap.docs.map((d) => {
-        const data = d.data();
-        return {
-          udid: d.id,
-          name: data.name ?? null,
-          deviceProduct: data.deviceProduct ?? null,
-          deviceSerial: data.deviceSerial ?? null,
-          source: data.source ?? "dashboard",
-          addedAt: data.addedAt?.toDate?.()?.toISOString() ?? null,
-        };
-      }));
+    setLoading(true);
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/devices", {
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setDevices(data.devices ?? []);
+    } catch {
+      setDevices([]);
+    } finally {
       setLoading(false);
-    }, () => setLoading(false));
-    return unsub;
+    }
   }, [user]);
+
+  useEffect(() => {
+    fetchDevices();
+  }, [fetchDevices]);
 
   async function deleteDevice(udid: string) {
     if (!user) return;
@@ -447,7 +444,7 @@ export default function DevicesPage() {
       {showModal && (
         <AddDeviceModal
           onClose={() => setShowModal(false)}
-          onAdded={() => setShowModal(false)}
+          onAdded={() => { setShowModal(false); fetchDevices(); }}
         />
       )}
     </div>
