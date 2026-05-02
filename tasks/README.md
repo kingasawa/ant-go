@@ -9,7 +9,7 @@ Danh sách task và quy tắc làm việc cho Claude.
 | File | Mô tả | Status | PR |
 |---|---|---|---|
 | [fix-add-device-flow.md](fix-add-device-flow.md) | Sửa lại flow add device CLI + Dashboard | `done` | [#1](https://github.com/kingasawa/ant-go/pull/1) |
-| [submit-ipa-testflight.md](submit-ipa-testflight.md) | Submit IPA lên TestFlight từ dashboard | `pending` | — |
+| [submit-ipa-testflight.md](submit-ipa-testflight.md) | Submit IPA lên TestFlight từ dashboard | `done` | [#2](https://github.com/kingasawa/ant-go/pull/2) |
 
 **Status hợp lệ:** `pending` · `in_progress` · `done` · `blocked`
 
@@ -85,12 +85,44 @@ Ví dụ những trường hợp phải hỏi trước:
 
 ---
 
-### 6. Tạo PR khi hoàn thành
+### 6. Kiểm tra type và build trước khi push lên GCP
+
+**Bắt buộc** chạy lệnh sau trước khi commit bất kỳ code nào có thể ảnh hưởng đến build:
+
+```bash
+npx tsc --noEmit
+```
+
+Chỉ được push và trigger Cloud Build khi lệnh trên **không có lỗi nào**.
+
+Các trường hợp đặc biệt cần kiểm tra:
+- Thêm `export` mới vào file trong `app/api/` — Next.js chỉ cho phép export `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS` và các config field (`dynamic`, `revalidate`...). Mọi named export khác sẽ khiến build fail.
+- Thêm package mới — kiểm tra package có hỗ trợ Next.js/Edge runtime không.
+- Sửa file liên quan đến Firestore Admin SDK — đảm bảo không import client-side SDK trong server route.
+
+---
+
+### 7. Tạo PR khi hoàn thành
 
 1. Push branch lên remote.
 2. Tạo PR từ `feature/<tên-task>` vào `main`.
 3. Ghi URL PR vào dòng `**PR:**` trong file task.
 4. Cập nhật status thành `done` ở cả 2 nơi (README + file task).
+
+---
+
+### 8. Issue log — ghi lại lỗi đã gặp
+
+Mỗi khi có lỗi **build thất bại hoặc lỗi production**, phải ghi vào bảng bên dưới để tránh lặp lại ở các task sau.
+
+---
+
+## Issue Log
+
+| # | Task | Lỗi | Nguyên nhân | Cách khắc phục |
+|---|---|---|---|---|
+| 1 | submit-ipa-testflight | `"getAscKeyForUser" is not a valid Route export field` — Next.js build fail | Export function nội bộ (`getAscKeyForUser`) trực tiếp từ file route (`app/api/.../route.ts`). Next.js chỉ cho phép export HTTP methods từ route file. | Chuyển function ra file riêng trong `lib/` (`lib/asc-key.ts`) và import từ đó. **Quy tắc:** function nội bộ không được export từ route file. |
+| 2 | submit-ipa-testflight | Cloud Build fail: `Permission 'secretmanager.versions.access' denied` trên secret `ASC_ENCRYPTION_KEY` | Secret mới tạo trong Secret Manager không có IAM binding — Cloud Build service account không có quyền đọc. | Grant `roles/secretmanager.secretAccessor` cho `{projectNumber}@cloudbuild.gserviceaccount.com` VÀ `{project}@appspot.gserviceaccount.com`. **Quy tắc:** mỗi khi tạo secret mới trong Secret Manager, phải grant quyền cho cả 2 SA này ngay. |
 
 ---
 
