@@ -66,7 +66,7 @@ export async function GET(
 
   const body = signMobileconfig(mobileconfig);
 
-  return new NextResponse(body, {
+  return new NextResponse(new Uint8Array(body), {
     status: 200,
     headers: {
       "Content-Type": "application/x-apple-aspen-config",
