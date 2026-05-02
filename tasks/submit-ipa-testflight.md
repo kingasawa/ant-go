@@ -1,6 +1,6 @@
 # Task: Submit IPA lên TestFlight (App Store Connect)
 
-**Status:** pending  
+**Status:** done  
 **Priority:** high  
 **Created:** 2026-05-02  
 **Branch:** feature/submit-ipa-testflight  
@@ -72,14 +72,14 @@ Lưu App Store Connect API key của từng app (cần để upload lên Apple):
 
 ## Tiến độ
 
-- [ ] TASK-01 — API: `POST /api/apps/[appName]/submissions` — tạo submission & trigger job
-- [ ] TASK-02 — API: `GET /api/apps/[appName]/submissions` — danh sách + `GET .../[id]` status
-- [ ] TASK-03 — API: `POST /api/apps/[appName]/app-store-key` — lưu/đọc ASC API key
-- [ ] TASK-04 — Cloud Build: tạo `cloudbuild.submit.yaml` chạy Fastlane upload
-- [ ] TASK-05 — Dashboard: Submission page — danh sách + badge trạng thái
-- [ ] TASK-06 — Dashboard: nút "Submit to TestFlight" trên Builds page
-- [ ] TASK-07 — Dashboard: modal nhập App Store Connect API key
-- [ ] TASK-08 — Docs: cập nhật tài liệu
+- [x] TASK-01 — API: `POST /api/apps/[appName]/submissions` — tạo submission & trigger job
+- [x] TASK-02 — API: `GET /api/apps/[appName]/submissions` — danh sách + `GET .../[id]` status
+- [x] TASK-03 — API: `POST /api/apps/[appName]/app-store-key` — lưu/đọc ASC API key
+- [x] TASK-04 — Cloud Build: tạo `cloudbuild.submit.yaml` chạy Fastlane upload
+- [x] TASK-05 — Dashboard: Submission page — danh sách + badge trạng thái
+- [x] TASK-06 — Dashboard: nút "Submit to TestFlight" trên Builds page
+- [x] TASK-07 — Dashboard: modal nhập App Store Connect API key
+- [x] TASK-08 — Docs: cập nhật tài liệu
 
 ---
 

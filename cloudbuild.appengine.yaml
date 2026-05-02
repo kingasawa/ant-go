@@ -11,6 +11,7 @@ steps:
       - GITHUB_APP_WEBHOOK_SECRET
       - PROFILE_SIGNING_CERT
       - PROFILE_SIGNING_KEY
+      - ASC_ENCRYPTION_KEY
     args:
       - "-c"
       - |
@@ -31,6 +32,7 @@ steps:
           GITHUB_APP_WEBHOOK_SECRET: '$$GITHUB_APP_WEBHOOK_SECRET'
           PROFILE_SIGNING_CERT: '$$PROFILE_SIGNING_CERT'
           PROFILE_SIGNING_KEY: '$$PROFILE_SIGNING_KEY'
+          ASC_ENCRYPTION_KEY: '$$ASC_ENCRYPTION_KEY'
         EOF
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
@@ -50,6 +52,8 @@ availableSecrets:
       env: "PROFILE_SIGNING_CERT"
     - versionName: "projects/$PROJECT_ID/secrets/PROFILE_SIGNING_KEY/versions/latest"
       env: "PROFILE_SIGNING_KEY"
+    - versionName: "projects/$PROJECT_ID/secrets/ASC_ENCRYPTION_KEY/versions/latest"
+      env: "ASC_ENCRYPTION_KEY"
 
 substitutions:
   _NEXT_PUBLIC_FIREBASE_API_KEY: ""
