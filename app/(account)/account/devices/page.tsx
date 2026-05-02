@@ -310,6 +310,7 @@ export default function DevicesPage() {
   const [deletingUdid, setDeletingUdid] = useState<string | null>(null);
   const [fadingUdids, setFadingUdids] = useState<Set<string>>(new Set());
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [confirmDeleteUdid, setConfirmDeleteUdid] = useState<string | null>(null);
 
   function showToast(message: string, type: "success" | "error") {
     const id = ++toastCounter;
@@ -448,7 +449,7 @@ export default function DevicesPage() {
                     </span>
                   )}
                   <button
-                    onClick={() => deleteDevice(device.udid)}
+                    onClick={() => setConfirmDeleteUdid(device.udid)}
                     disabled={deletingUdid === device.udid}
                     className="text-white/30 hover:text-red-400 transition disabled:opacity-40"
                   >
@@ -481,6 +482,41 @@ export default function DevicesPage() {
           onClose={() => setShowModal(false)}
           onAdded={() => { setShowModal(false); fetchDevices(); }}
         />
+      )}
+
+      {/* Confirm Delete Dialog */}
+      {confirmDeleteUdid && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setConfirmDeleteUdid(null)} />
+          <div className="relative w-full max-w-xs rounded-2xl p-6 text-white z-10" style={GLASS}>
+            <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+            <h3 className="text-base font-bold text-white text-center mb-1">Xoá device?</h3>
+            <p className="text-sm text-white/50 text-center mb-1">
+              {devices.find((d) => d.udid === confirmDeleteUdid)?.name ?? "Device này"}
+            </p>
+            <p className="text-xs text-white/30 font-mono text-center truncate mb-5">
+              {confirmDeleteUdid}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmDeleteUdid(null)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white/70 bg-white/10 hover:bg-white/15 transition"
+              >
+                Huỷ
+              </button>
+              <button
+                onClick={() => { const u = confirmDeleteUdid; setConfirmDeleteUdid(null); deleteDevice(u); }}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-500/80 hover:bg-red-500 transition"
+              >
+                Xoá
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Toasts */}
