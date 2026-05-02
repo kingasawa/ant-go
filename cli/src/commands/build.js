@@ -93,15 +93,9 @@ function resolveAntJson(projectRoot, profileName) {
     process.exit(1);
   }
 
-  // buildNumber: nếu có trong ant.json thì dùng, không thì để null (server sẽ auto-increment)
-  const rawBN = profile.buildNumber;
-  const buildNumber =
-    typeof rawBN === 'number' && Number.isInteger(rawBN) && rawBN > 0 ? rawBN : null;
-
   return {
     distribution:      profile.distribution      || 'store',
     developmentClient: !!profile.developmentClient,
-    buildNumber,
   };
 }
 
@@ -147,7 +141,11 @@ function resolveProjectInfo(projectRoot) {
     process.exit(1);
   }
 
-  return { projectId: projectId.trim(), bundleId, schemeName, xcworkspace, xcodeproj };
+  // buildNumber: đọc từ expo.ios.buildNumber (đồng bộ EAS), nếu không có → null (server auto-increment)
+  const rawBN = appJson.expo?.ios?.buildNumber;
+  const buildNumber = rawBN != null && /^\d+$/.test(String(rawBN)) ? parseInt(String(rawBN), 10) : null;
+
+  return { projectId: projectId.trim(), bundleId, schemeName, xcworkspace, xcodeproj, buildNumber };
 }
 
 function findFile(dir, ext) {
@@ -316,7 +314,7 @@ async function runBuild(options) {
   // 1. Đọc ant.json + app.json
   const profileName   = options.profile || 'production';
   const profileConfig = resolveAntJson(projectRoot, profileName);
-  const { distribution, developmentClient, buildNumber: configBuildNumber } = profileConfig;
+  const { distribution, developmentClient } = profileConfig;
 
   const autoSubmit = !!options.autoSubmit;
 
@@ -329,6 +327,7 @@ async function runBuild(options) {
   }
 
   const projectInfo = resolveProjectInfo(projectRoot);
+  const { buildNumber: configBuildNumber } = projectInfo;
   printHeader([
     `Ant Go CLI : v${CLI_VERSION}`,
     `Project ID : ${projectInfo.projectId}`,
