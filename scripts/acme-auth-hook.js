@@ -32,7 +32,7 @@ if (!token || !validation) {
 
 (async () => {
   await db.collection("acme_challenges").doc(token).set({
-    value:     `${token}.${validation}`,
+    value:     validation,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
   console.log(`✓ Challenge set: ${token}`);
