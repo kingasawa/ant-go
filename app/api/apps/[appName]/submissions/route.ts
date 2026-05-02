@@ -9,7 +9,7 @@ import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { randomUUID } from "crypto";
 import { CloudBuildClient } from "@google-cloud/cloudbuild";
-import { getAscKeyForUser } from "../app-store-key/route";
+import { getAscKeyForUser } from "@/lib/asc-key";
 
 async function resolveUid(request: NextRequest): Promise<string | null> {
   const token = request.headers.get("Authorization")?.replace("Bearer ", "").trim();

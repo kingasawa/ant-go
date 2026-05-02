@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
-import { encryptAscKey, decryptAscKey } from "@/lib/asc-crypto";
+import { encryptAscKey } from "@/lib/asc-crypto";
 
 async function resolveUid(request: NextRequest): Promise<string | null> {
   const token = request.headers.get("Authorization")?.replace("Bearer ", "").trim();
@@ -89,15 +89,3 @@ export async function DELETE(
   return NextResponse.json({ ok: true });
 }
 
-/** Internal helper — used by submission API and Cloud Build scripts. Never exposed via HTTP. */
-export async function getAscKeyForUser(uid: string, appName: string): Promise<{
-  keyId: string;
-  issuerId: string;
-  privateKeyP8: string;
-} | null> {
-  const snap = await keyDocRef(uid, appName).get();
-  if (!snap.exists) return null;
-  const d = snap.data()!;
-  const privateKeyP8 = decryptAscKey(d.encryptedKey as string);
-  return { keyId: d.keyId as string, issuerId: d.issuerId as string, privateKeyP8 };
-}
