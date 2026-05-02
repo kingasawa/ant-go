@@ -24,12 +24,12 @@ async function resolveUid(request: NextRequest): Promise<string | null> {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ appName: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const uid = await resolveUid(request);
   if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { appName } = await params;
+  const { id: appName } = await params;
   const db = getAdminDb();
 
   const snap = await db.collection("submissions")
@@ -59,12 +59,12 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ appName: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const uid = await resolveUid(request);
   if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { appName } = await params;
+  const { id: appName } = await params;
   const body = await request.json().catch(() => ({}));
   const { buildId } = body;
 

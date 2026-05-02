@@ -31,12 +31,12 @@ function keyDocRef(uid: string, appName: string) {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ appName: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const uid = await resolveUid(request);
   if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { appName } = await params;
+  const { id: appName } = await params;
   const snap = await keyDocRef(uid, appName).get();
 
   if (!snap.exists) return NextResponse.json({ hasKey: false });
@@ -47,12 +47,12 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ appName: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const uid = await resolveUid(request);
   if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { appName } = await params;
+  const { id: appName } = await params;
   const body = await request.json().catch(() => ({}));
   const { keyId, issuerId, privateKeyP8 } = body;
 
@@ -79,12 +79,12 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ appName: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const uid = await resolveUid(request);
   if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { appName } = await params;
+  const { id: appName } = await params;
   await keyDocRef(uid, appName).delete();
   return NextResponse.json({ ok: true });
 }

@@ -19,7 +19,7 @@ async function resolveUid(request: NextRequest): Promise<string | null> {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ appName: string; submissionId: string }> }
+  { params }: { params: Promise<{ id: string; submissionId: string }> }
 ) {
   const uid = await resolveUid(request);
   if (!uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
