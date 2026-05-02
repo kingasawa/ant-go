@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { signMobileconfig } from "@/lib/profile-signing";
 import { randomUUID } from "crypto";
 
 export async function GET(
@@ -63,11 +64,13 @@ export async function GET(
 </dict>
 </plist>`;
 
-  return new NextResponse(mobileconfig, {
+  const body = signMobileconfig(mobileconfig);
+
+  return new NextResponse(body, {
     status: 200,
     headers: {
       "Content-Type": "application/x-apple-aspen-config",
-      "Content-Disposition": `attachment; filename="ant-go-enroll.mobileconfig"`,
+      "Content-Disposition": `inline; filename="ant-go-enroll.mobileconfig"`,
     },
   });
 }
