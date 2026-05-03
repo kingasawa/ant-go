@@ -120,35 +120,41 @@ submissions/
     completedAt:      Timestamp | null
 ```
 
-### `users/{uid}/app_store_keys/{appName}`
+### `users/{uid}/asc_credentials/default`
 
 ```
 users/
   {uid}/
-    app_store_keys/
-      {appName}/
-        keyId:          string     // Key ID (VD: "2X9R4HXF34")
-        issuerId:       string     // Issuer ID (UUID format)
-        privateKeyP8:   string     // Nội dung .p8 đã mã hoá AES-256-GCM
+    asc_credentials/
+      default/
+        encryptedKey:   string     // Nội dung .p8 đã mã hoá AES-256-GCM
+        keyId:          string | null
+        issuerId:       string | null
         updatedAt:      Timestamp
 ```
 
-`privateKeyP8` được lưu theo format: `iv_hex:authTag_hex:ciphertext_hex`.  
-`ASC_ENCRYPTION_KEY` (32 byte hex) được lưu trong Google Secret Manager và inject vào App Engine qua `env.yaml`.
+Lưu **theo user** (không theo app). Một user có 1 bộ credentials dùng cho tất cả apps.
+
+`encryptedKey` theo format: `iv_hex:authTag_hex:ciphertext_hex`.
+`ASC_ENCRYPTION_KEY` (32 byte hex) được lưu trong Google Secret Manager.
 
 ---
 
 ## API Endpoints
 
-### `GET /api/apps/{appName}/app-store-key`
-Trả `{ hasKey: boolean, keyId?: string, issuerId?: string }`. Không bao giờ trả private key.
+### `GET /api/user/asc-credentials`
+Trả `{ hasKey, keyId?, issuerId? }`. Không bao giờ trả private key.  
+**Auth**: Firebase ID Token hoặc CLI token.
 
-### `POST /api/apps/{appName}/app-store-key`
-Body: `{ keyId, issuerId, privateKeyP8 }`.  
-Mã hoá key rồi lưu vào Firestore. Trả `{ ok: true }`.
+### `POST /api/user/asc-credentials`
+Body: `{ privateKeyP8?, keyId?, issuerId? }` — partial update, merge.  
+**Auth**: Firebase ID Token hoặc CLI token.
 
-### `DELETE /api/apps/{appName}/app-store-key`
-Xoá key. Trả `{ ok: true }`.
+### `DELETE /api/user/asc-credentials`
+Xoá toàn bộ ASC credentials của user.
+
+### `GET /api/apps/{appName}/app-store-key` / `POST` / `DELETE`
+Backward-compat — proxy sang `asc_credentials`. Hoạt động như trước.
 
 ### `GET /api/apps/{appName}/submissions`
 Trả danh sách 20 submissions gần nhất của user cho app đó, sắp xếp theo `createdAt` desc.
@@ -158,7 +164,7 @@ Body: `{ buildId }`.
 
 Validation:
 - Build phải có `status === "success"` và `ipaUrl` tồn tại
-- Phải có App Store Connect key → nếu không trả `422 { error: "missing_asc_key" }`
+- User phải có ASC credentials đủ (hasKey + keyId + issuerId) → nếu không trả `422 { error: "missing_asc_key" }`
 
 Nếu hợp lệ: tạo submission doc → trigger Cloud Build → trả `{ submissionId }`.
 
@@ -176,7 +182,7 @@ Job chạy inline (không dùng pre-configured trigger), được tạo trực t
 1. **curl** — download IPA từ Firebase Storage signed URL vào `/workspace/app.ipa`
 2. **node:20-slim** — chạy `scripts/fetch-asc-key.js`:
    - Kết nối Firestore qua Firebase Admin SDK
-   - Đọc `users/{uid}/app_store_keys/{appName}`
+   - Đọc `users/{uid}/asc_credentials/default` (per-user)
    - Giải mã AES-256-GCM, ghi ra `/workspace/asc_key.json` (Fastlane format)
    - Cập nhật `submissions/{id}.status` → `"uploading"`
 3. **ruby:3.2-slim** — chạy Fastlane:
@@ -200,13 +206,26 @@ Nếu bước 3 hoặc 4 thất bại, Cloud Build không tự update status →
 
 ## App Store Connect API Key
 
-User cần tạo key tại [App Store Connect → Users and Access → Integrations](https://appstoreconnect.apple.com/access/integrations/api):
+### Cách 1: Tự động qua CLI (khuyến nghị)
 
-1. Nhấn **Generate API Key**
-2. Chọn role **Admin** hoặc **App Manager**
-3. Lưu lại **Key ID** và **Issuer ID**
-4. Download file **AuthKey_XXXXXX.p8** (chỉ download được 1 lần)
-5. Paste nội dung file vào modal "App Store Connect API Key" trên dashboard
+Sau khi `ant-go auth login` thành công, CLI hỏi setup ASC ngay:
+
+```bash
+ant-go auth login        # → hỏi setup ASC sau login
+ant-go configure-asc     # → hoặc setup riêng lẻ bất kỳ lúc nào
+```
+
+CLI tự động: đăng nhập Apple Developer → tạo key mới → download .p8 → lưu server theo user.
+
+### Cách 2: Thủ công qua Settings trên Dashboard
+
+**Settings → Apple Developer** → nhập Key ID và Issuer ID.  
+(Private key phải có qua CLI — không paste trên dashboard.)
+
+Lấy tại [App Store Connect → Users and Access → Integrations](https://appstoreconnect.apple.com/access/integrations/api):
+1. Nhấn **Generate API Key** → role **Admin** / **App Manager**
+2. Lưu **Key ID** và **Issuer ID** (UUID đầu trang)
+3. Download **AuthKey_XXXXXX.p8** (chỉ 1 lần)
 
 Fastlane JSON format (được tạo bởi `fetch-asc-key.js`):
 ```json

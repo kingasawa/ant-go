@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
  * fetch-asc-key.js — Cloud Build script
- * Đọc ASC key từ Firestore, decrypt và ghi ra JSON file format của Fastlane.
+ * Đọc ASC credentials từ Firestore (per-user), decrypt và ghi JSON format Fastlane.
  *
- * Usage: node scripts/fetch-asc-key.js <userId> <appName> <outputPath>
+ * Usage: node scripts/fetch-asc-key.js <userId> <outputPath>
  *
  * Output JSON format (Fastlane api_key_path):
  * { "key_id": "...", "issuer_id": "...", "key": "-----BEGIN PRIVATE KEY-----\n..." }
@@ -14,10 +14,10 @@ const fs    = require("fs");
 const path  = require("path");
 const { createDecipheriv } = require("crypto");
 
-const [,, userId, appName, outputPath] = process.argv;
+const [,, userId, outputPath] = process.argv;
 
-if (!userId || !appName || !outputPath) {
-  console.error("Usage: node fetch-asc-key.js <userId> <appName> <outputPath>");
+if (!userId || !outputPath) {
+  console.error("Usage: node fetch-asc-key.js <userId> <outputPath>");
   process.exit(1);
 }
 
@@ -48,17 +48,23 @@ function decryptAscKey(stored) {
 }
 
 (async () => {
+  // Đọc từ users/{uid}/asc_credentials/default (per-user, không theo app)
   const snap = await db
     .collection("users").doc(userId)
-    .collection("app_store_keys").doc(appName)
+    .collection("asc_credentials").doc("default")
     .get();
 
   if (!snap.exists) {
-    console.error(`No ASC key found for user=${userId} app=${appName}`);
+    console.error(`No ASC credentials found for user=${userId}`);
     process.exit(1);
   }
 
   const data = snap.data();
+  if (!data.encryptedKey || !data.keyId || !data.issuerId) {
+    console.error(`ASC credentials incomplete for user=${userId} — missing keyId or issuerId`);
+    process.exit(1);
+  }
+
   const privateKeyP8 = decryptAscKey(data.encryptedKey);
 
   // Fastlane expects key with literal \n (not real newlines) in JSON

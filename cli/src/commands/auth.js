@@ -75,6 +75,9 @@ async function emailLoginFlow() {
 
     spinner.succeed(`Đăng nhập thành công!`);
     printUserInfo(data);
+
+    // Gợi ý setup ASC credentials ngay sau login
+    await promptAscSetup(data.cliToken);
   } catch (err) {
     spinner.fail('Đăng nhập thất bại');
     const msg = err.response?.data?.error ?? err.message;
@@ -138,7 +141,8 @@ async function browserLoginFlow() {
       console.log(chalk.green('✓ Đăng nhập thành công!'));
       printUserInfo(session);
 
-      resolve();
+      // Gợi ý setup ASC credentials ngay sau login
+      promptAscSetup(session.token).then(resolve).catch(resolve);
     });
 
     server.listen(port, () => {
@@ -151,6 +155,47 @@ async function browserLoginFlow() {
 
     server.on('error', reject);
   });
+}
+
+// ── promptAscSetup ────────────────────────────────────────────────────────────
+// Được gọi sau khi đăng nhập thành công.
+// Kiểm tra xem user đã có ASC credentials chưa; nếu chưa → hỏi có muốn setup ngay không.
+
+async function promptAscSetup(token) {
+  try {
+    // Kiểm tra server xem user đã có credentials chưa
+    const { data } = await axios.get(`${API_URL}/api/user/asc-credentials`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (data.hasKey && data.keyId && data.issuerId) {
+      // Đã đủ credentials — không hỏi gì thêm
+      return;
+    }
+  } catch {
+    // Bỏ qua lỗi — tiếp tục hỏi
+  }
+
+  console.log('');
+  console.log(chalk.cyan('💡  Để submit IPA lên TestFlight, bạn cần cấu hình App Store Connect API Key.'));
+  if (process.stdout.isTTY) {
+    const { setup } = await inquirer.prompt([{
+      type:    'confirm',
+      name:    'setup',
+      message: 'Bạn muốn setup App Store Connect API Key ngay bây giờ không? (khuyến nghị)',
+      default: true,
+    }]);
+
+    if (setup) {
+      const { configureAsc } = require('./configure-asc');
+      await configureAsc({ token });
+    } else {
+      console.log(chalk.gray('  Bạn có thể setup sau bằng lệnh: ant-go configure-asc'));
+      console.log('');
+    }
+  } else {
+    console.log(chalk.gray('  Chạy: ant-go configure-asc'));
+    console.log('');
+  }
 }
 
 // ── logout ────────────────────────────────────────────────────────────────────

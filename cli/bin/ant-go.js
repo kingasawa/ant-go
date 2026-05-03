@@ -62,6 +62,15 @@ program
     await checkStatus(jobId);
   });
 
+// ── configure-asc ─────────────────────────────────────────────────────────────
+program
+  .command('configure-asc')
+  .description('Cấu hình App Store Connect API Key để submit TestFlight (lưu theo tài khoản)')
+  .action(async () => {
+    const { configureAsc } = require('../src/commands/configure-asc');
+    await configureAsc({});
+  });
+
 program.parse(process.argv);
 
 if (!process.argv.slice(2).length) {

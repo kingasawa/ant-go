@@ -6,7 +6,7 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { GLASS } from "@/lib/glass";
 import PageLoader from "@/app/components/PageLoader";
-import AppStoreKeyModal from "@/app/components/AppStoreKeyModal";
+import AscMissingPanel from "@/app/components/AscMissingPanel";
 
 interface Build {
   id: string;
@@ -343,11 +343,32 @@ export default function AppBuildsPage() {
   const [showBulkConfirm, setShowBulkConfirm]       = useState(false);
   const [removingIds, setRemovingIds]               = useState<Set<string>>(new Set());
   const [submittingId, setSubmittingId]             = useState<string | null>(null);
-  const [showKeyModal, setShowKeyModal]             = useState(false);
+  const [showAscPanel, setShowAscPanel]             = useState(false);
   const [submitPendingBuildId, setSubmitPendingBuildId] = useState<string | null>(null);
+  const [ascStatus, setAscStatus]                   = useState<{ hasKey: boolean; keyId: string | null; issuerId: string | null } | null>(null);
+
+  // Load ASC credentials status
+  useEffect(() => {
+    if (!user) return;
+    user.getIdToken().then((idToken) => {
+      fetch("/api/user/asc-credentials", { headers: { Authorization: `Bearer ${idToken}` } })
+        .then((r) => r.json())
+        .then((d) => setAscStatus({ hasKey: d.hasKey ?? false, keyId: d.keyId ?? null, issuerId: d.issuerId ?? null }))
+        .catch(() => setAscStatus({ hasKey: false, keyId: null, issuerId: null }));
+    });
+  }, [user]);
 
   const handleSubmit = useCallback(async (buildId: string) => {
     if (!user) return;
+
+    // Kiểm tra credentials trước khi gọi API
+    const asc = ascStatus ?? { hasKey: false, keyId: null, issuerId: null };
+    if (!asc.hasKey || !asc.keyId || !asc.issuerId) {
+      setSubmitPendingBuildId(buildId);
+      setShowAscPanel(true);
+      return;
+    }
+
     setSubmittingId(buildId);
     try {
       const idToken = await user.getIdToken();
@@ -359,14 +380,14 @@ export default function AppBuildsPage() {
       const data = await res.json();
       if (res.status === 422 && data.error === "missing_asc_key") {
         setSubmitPendingBuildId(buildId);
-        setShowKeyModal(true);
+        setShowAscPanel(true);
       } else if (res.ok) {
         router.push(`/account/app/${appName}/submission`);
       }
     } finally {
       setSubmittingId(null);
     }
-  }, [user, appName, router]);
+  }, [user, appName, router, ascStatus]);
 
   // Reset selection khi đổi filter / trang
   useEffect(() => { setSelectedIds(new Set()); }, [statusFilter, page]);
@@ -620,18 +641,26 @@ export default function AppBuildsPage() {
         </div>
       )}
 
-      {/* AppStore Key Modal */}
-      {showKeyModal && (
-        <AppStoreKeyModal
-          appName={decodedName}
-          onClose={() => { setShowKeyModal(false); setSubmitPendingBuildId(null); }}
+      {/* ASC Missing Panel (right drawer) */}
+      {showAscPanel && ascStatus && (
+        <AscMissingPanel
+          status={ascStatus}
+          onClose={() => { setShowAscPanel(false); setSubmitPendingBuildId(null); }}
           onSaved={() => {
-            setShowKeyModal(false);
-            if (submitPendingBuildId) {
-              const id = submitPendingBuildId;
-              setSubmitPendingBuildId(null);
-              handleSubmit(id);
-            }
+            setShowAscPanel(false);
+            // Refresh ASC status
+            user?.getIdToken().then((idToken) => {
+              fetch("/api/user/asc-credentials", { headers: { Authorization: `Bearer ${idToken}` } })
+                .then((r) => r.json())
+                .then((d) => {
+                  setAscStatus({ hasKey: d.hasKey ?? false, keyId: d.keyId ?? null, issuerId: d.issuerId ?? null });
+                  if (submitPendingBuildId) {
+                    const id = submitPendingBuildId;
+                    setSubmitPendingBuildId(null);
+                    handleSubmit(id);
+                  }
+                });
+            });
           }}
         />
       )}

@@ -1,4 +1,4 @@
-﻿"use client";
+﻿﻿"use client";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -7,6 +7,7 @@ import {
   HiOutlineBell, HiOutlineExclamationTriangle, HiOutlineUser, HiOutlineEnvelope, HiOutlineKey,
   HiOutlineCube, HiOutlineDocument, HiOutlineDocumentText, HiOutlineTrash,
   HiOutlineChevronRight, HiOutlineSun, HiOutlineMoon, HiOutlineComputerDesktop, HiOutlineSwatch,
+  HiOutlineCheckCircle, HiOutlinePencilSquare, HiOutlineXCircle,
 } from "react-icons/hi2";
 
 /* ─── Reusable iOS-style primitives ──────────────────────────────────────── */
@@ -122,6 +123,157 @@ function ThemePicker() {
   );
 }
 
+/* ─── Apple Developer Credentials ────────────────────────────────────────── */
+
+interface AscStatus {
+  hasKey: boolean;
+  keyId: string | null;
+  issuerId: string | null;
+}
+
+function AscCredentialsSection() {
+  const { user } = useAuth();
+  const [status, setStatus]     = useState<AscStatus | null>(null);
+  const [loading, setLoading]   = useState(true);
+  const [editing, setEditing]   = useState(false);
+  const [keyId, setKeyId]       = useState("");
+  const [issuerId, setIssuerId] = useState("");
+  const [saving, setSaving]     = useState(false);
+  const [saveOk, setSaveOk]     = useState(false);
+  const [error, setError]       = useState("");
+
+  async function loadStatus() {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const idToken = await user.getIdToken();
+      const res  = await fetch("/api/user/asc-credentials", { headers: { Authorization: `Bearer ${idToken}` } });
+      const data = await res.json();
+      setStatus({ hasKey: data.hasKey ?? false, keyId: data.keyId ?? null, issuerId: data.issuerId ?? null });
+      setKeyId(data.keyId ?? "");
+      setIssuerId(data.issuerId ?? "");
+    } catch { /* ignore */ } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { loadStatus(); }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleSave() {
+    if (!keyId.trim() || !issuerId.trim()) { setError("Key ID và Issuer ID là bắt buộc"); return; }
+    setSaving(true); setError("");
+    try {
+      const idToken = await user!.getIdToken();
+      const res = await fetch("/api/user/asc-credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ keyId: keyId.trim(), issuerId: issuerId.trim() }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error ?? "Lỗi không xác định");
+      setSaveOk(true);
+      setEditing(false);
+      await loadStatus();
+      setTimeout(() => setSaveOk(false), 2000);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Lỗi không xác định");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <Section label="Apple Developer">
+        <Row icon={<HiOutlineKey className="w-5 h-5" />} label="App Store Connect Key" sublabel="Đang tải..." />
+      </Section>
+    );
+  }
+
+  return (
+    <Section label="Apple Developer">
+      {/* p8 status — luôn hidden, chỉ hiện trạng thái */}
+      <Row
+        icon={<HiOutlineKey className="w-5 h-5" />}
+        label="Private Key (.p8)"
+        sublabel={status?.hasKey
+          ? "Đã cấu hình qua CLI"
+          : "Chưa có — chạy: ant-go auth login"}
+        right={
+          status?.hasKey
+            ? <HiOutlineCheckCircle className="w-5 h-5 text-green-400" />
+            : <HiOutlineXCircle className="w-5 h-5 text-amber-400" />
+        }
+      />
+
+      {/* Key ID */}
+      {editing ? (
+        <div className="px-4 py-3 space-y-3">
+          <div>
+            <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Key ID</label>
+            <input
+              value={keyId}
+              onChange={(e) => setKeyId(e.target.value)}
+              placeholder="VD: 2X9R4HXF34"
+              className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/50 font-mono"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Issuer ID</label>
+            <input
+              value={issuerId}
+              onChange={(e) => setIssuerId(e.target.value)}
+              placeholder="VD: 69a6de70-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/50 font-mono"
+            />
+          </div>
+          {error && <p className="text-red-400 text-xs">{error}</p>}
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setEditing(false); setError(""); setKeyId(status?.keyId ?? ""); setIssuerId(status?.issuerId ?? ""); }}
+              className="flex-1 py-2 rounded-xl text-sm font-semibold text-white/60 bg-white/10 hover:bg-white/15 transition"
+            >Huỷ</button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex-1 py-2 rounded-xl text-sm font-semibold bg-white text-gray-900 hover:bg-white/90 disabled:opacity-40 transition"
+            >{saving ? "Đang lưu..." : "Lưu"}</button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <Row
+            icon={<HiOutlineCube className="w-5 h-5" />}
+            label="Key ID"
+            sublabel={status?.keyId ?? "Chưa có"}
+            right={
+              <button onClick={() => setEditing(true)} className="text-white/40 hover:text-white transition">
+                <HiOutlinePencilSquare className="w-4 h-4" />
+              </button>
+            }
+          />
+          <Row
+            icon={<HiOutlineCube className="w-5 h-5" />}
+            label="Issuer ID"
+            sublabel={status?.issuerId ?? "Chưa có"}
+            right={
+              !editing && (
+                <button onClick={() => setEditing(true)} className="text-white/40 hover:text-white transition">
+                  <HiOutlinePencilSquare className="w-4 h-4" />
+                </button>
+              )
+            }
+          />
+        </>
+      )}
+      {saveOk && (
+        <div className="px-4 py-2 flex items-center gap-2 text-green-400 text-xs">
+          <HiOutlineCheckCircle className="w-4 h-4" /> Đã lưu thành công
+        </div>
+      )}
+    </Section>
+  );
+}
+
 /* ─── Page ────────────────────────────────────────────────────────────────── */
 
 export default function SettingsPage() {
@@ -157,6 +309,9 @@ export default function SettingsPage() {
           right={<Toggle enabled={buildAlerts} onToggle={() => setBuildAlerts((v) => !v)} />}
         />
       </Section>
+
+      {/* Apple Developer Credentials */}
+      <AscCredentialsSection />
 
       {/* Account */}
       <Section label="Account">

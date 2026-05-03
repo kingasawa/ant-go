@@ -9,7 +9,8 @@ import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { randomUUID } from "crypto";
 import { CloudBuildClient } from "@google-cloud/cloudbuild";
-import { getAscKeyForUser } from "@/lib/asc-key";
+import { getAscKeyForUser, isAscReady } from "@/lib/asc-key";
+import { validateCliToken } from "@/lib/cli-auth.service";
 
 async function resolveUid(request: NextRequest): Promise<string | null> {
   const token = request.headers.get("Authorization")?.replace("Bearer ", "").trim();
@@ -17,9 +18,9 @@ async function resolveUid(request: NextRequest): Promise<string | null> {
   try {
     const decoded = await getAdminAuth().verifyIdToken(token);
     return decoded.uid;
-  } catch {
-    return null;
-  }
+  } catch { /* not a Firebase ID token */ }
+  const session = await validateCliToken(token);
+  return session?.uid ?? null;
 }
 
 export async function GET(
@@ -99,8 +100,8 @@ export async function POST(
   const version  = appData?.version  ?? null;
 
   // Kiểm tra ASC key
-  const ascKey = await getAscKeyForUser(uid, appName);
-  if (!ascKey) {
+  const ascKey = await getAscKeyForUser(uid);
+  if (!isAscReady(ascKey)) {
     return NextResponse.json({ error: "missing_asc_key" }, { status: 422 });
   }
 
@@ -172,7 +173,7 @@ async function triggerSubmitJob({
             [
               "cd /workspace",
               "npm install firebase-admin --quiet --no-audit --no-fund --prefix /tmp/deps",
-              `NODE_PATH=/tmp/deps/node_modules node scripts/fetch-asc-key.js '${userId}' '${appName}' /workspace/asc_key.json`,
+              `NODE_PATH=/tmp/deps/node_modules node scripts/fetch-asc-key.js '${userId}' /workspace/asc_key.json`,
               `NODE_PATH=/tmp/deps/node_modules node scripts/update-submission-status.js '${submissionId}' uploading`,
             ].join(" && "),
           ],
