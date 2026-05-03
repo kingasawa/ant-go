@@ -10,7 +10,7 @@ Danh sách task và quy tắc làm việc cho Claude.
 |---|---|---|---|
 | [fix-add-device-flow.md](fix-add-device-flow.md) | Sửa lại flow add device CLI + Dashboard | `done` | [#1](https://github.com/kingasawa/ant-go/pull/1) |
 | [submit-ipa-testflight.md](submit-ipa-testflight.md) | Submit IPA lên TestFlight từ dashboard | `done` | [#2](https://github.com/kingasawa/ant-go/pull/2) |
-| [cli-asc-key-setup.md](cli-asc-key-setup.md) | CLI command lưu App Store Connect API Key | `in_progress` | — |
+| [cli-asc-key-setup.md](cli-asc-key-setup.md) | CLI command lưu App Store Connect API Key | `done` | — |
 
 **Status hợp lệ:** `pending` · `in_progress` · `done` · `blocked`
 

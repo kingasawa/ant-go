@@ -1,6 +1,6 @@
 # Task: CLI — Lưu App Store Connect API Key từ CLI
 
-**Status:** in_progress  
+**Status:** done  
 **Priority:** high  
 **Created:** 2026-05-03  
 **Branch:** feature/cli-asc-key-setup  
@@ -71,10 +71,10 @@ Có 2 hướng:
 - [x] TASK-02: Sửa `app/api/apps/[id]/app-store-key/route.ts` để hỗ trợ cả CLI token
 - [x] TASK-03: Tạo CLI command `ant-go configure-asc` trong `cli/src/commands/configure-asc.js`
 - [x] TASK-04: Đăng ký command `configure-asc` vào `cli/bin/ant-go.js`
-- [ ] TASK-05: Cập nhật tài liệu `/docs/submit-testflight-feature.md` và `cli/docs/`
-- [ ] TASK-06: Cập nhật `tasks/README.md` status
-- [ ] TASK-07: TypeScript check + next build
-- [ ] TASK-08: Commit + push + tạo PR
+- [x] TASK-05: Cập nhật tài liệu `/docs/submit-testflight-feature.md` và `cli/docs/`
+- [x] TASK-06: Cập nhật `tasks/README.md` status
+- [x] TASK-07: TypeScript check + next build
+- [x] TASK-08: Commit + push + tạo PR
 
 ---
 
