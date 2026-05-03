@@ -53,6 +53,26 @@ program
     await runBuild(options);
   });
 
+// ── configure ─────────────────────────────────────────────────────────────────
+program
+  .command('configure')
+  .description('Cấu hình đường dẫn project')
+  .option('--project <path>', 'Đường dẫn đến project')
+  .action(async (options) => {
+    const { configure } = require('../src/commands/configure');
+    await configure(options);
+  });
+
+// ── configure-asc ─────────────────────────────────────────────────────────────
+program
+  .command('configure-asc')
+  .description('Cấu hình App Store Connect API Key để submit TestFlight')
+  .option('--app <appName>', 'Tên app (appName trong ant.json)')
+  .action(async (options) => {
+    const { configureAsc } = require('../src/commands/configure-asc');
+    await configureAsc(options);
+  });
+
 // ── status ────────────────────────────────────────────────────────────────────
 program
   .command('status <jobId>')

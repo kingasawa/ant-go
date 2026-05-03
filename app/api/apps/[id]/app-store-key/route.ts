@@ -11,16 +11,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { encryptAscKey } from "@/lib/asc-crypto";
+import { validateCliToken } from "@/lib/cli-auth.service";
 
 async function resolveUid(request: NextRequest): Promise<string | null> {
   const token = request.headers.get("Authorization")?.replace("Bearer ", "").trim();
   if (!token) return null;
+
+  // Try Firebase ID Token first (dashboard)
   try {
     const decoded = await getAdminAuth().verifyIdToken(token);
     return decoded.uid;
   } catch {
-    return null;
+    // Not a Firebase ID token — fall through
   }
+
+  // Try CLI token (ant-go CLI)
+  const session = await validateCliToken(token);
+  if (session) return session.uid;
+
+  return null;
 }
 
 function keyDocRef(uid: string, appName: string) {

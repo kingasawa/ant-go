@@ -147,6 +147,8 @@ Trả `{ hasKey: boolean, keyId?: string, issuerId?: string }`. Không bao giờ
 Body: `{ keyId, issuerId, privateKeyP8 }`.  
 Mã hoá key rồi lưu vào Firestore. Trả `{ ok: true }`.
 
+**Auth**: Hỗ trợ cả **Firebase ID Token** (dashboard) và **CLI token** (`ant-go configure-asc`).
+
 ### `DELETE /api/apps/{appName}/app-store-key`
 Xoá key. Trả `{ ok: true }`.
 
@@ -202,7 +204,24 @@ Nếu bước 3 hoặc 4 thất bại, Cloud Build không tự update status →
 
 User cần tạo key tại [App Store Connect → Users and Access → Integrations](https://appstoreconnect.apple.com/access/integrations/api):
 
-1. Nhấn **Generate API Key**
+### Cách 1: Dùng CLI (khuyến nghị)
+
+```bash
+ant-go configure-asc --app <appName>
+```
+
+CLI sẽ:
+1. Đăng nhập Apple Developer Portal (Apple ID + password, hỗ trợ 2FA)
+2. Tự động tạo API key mới qua `@expo/apple-utils`
+3. Tự động download file .p8
+4. Lấy Issuer ID từ portal (hoặc hỏi user nếu không detect được)
+5. Gửi (keyId, issuerId, privateKeyP8) lên server — mã hoá + lưu Firestore
+
+Sau khi chạy lệnh này, dashboard **không còn hiện AppStoreKeyModal** khi submit TestFlight.
+
+### Cách 2: Nhập thủ công trên Dashboard
+
+1. Nhấn **Generate API Key** trên App Store Connect
 2. Chọn role **Admin** hoặc **App Manager**
 3. Lưu lại **Key ID** và **Issuer ID**
 4. Download file **AuthKey_XXXXXX.p8** (chỉ download được 1 lần)
