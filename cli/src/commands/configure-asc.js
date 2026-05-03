@@ -26,10 +26,11 @@ const { ensureToken }      = require('./auth');
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 /**
- * @param {{ token?: string }} opts
- *   token: CLI token đã có (từ auth.js sau login) — nếu không có sẽ gọi ensureToken()
+ * @param {{ token?: string, firstTime?: boolean }} opts
+ *   token:     CLI token đã có (từ auth.js sau login) — nếu không có sẽ gọi ensureToken()
+ *   firstTime: true → bỏ qua mọi prompt chọn lựa, tự động hoàn toàn
  */
-async function configureAsc({ token: existingToken } = {}) {
+async function configureAsc({ token: existingToken, firstTime = false } = {}) {
   console.log('');
   console.log(chalk.bold('🔑  Cấu hình App Store Connect API Key'));
   console.log(chalk.gray('   Key này đi theo tài khoản của bạn, dùng để submit IPA lên TestFlight.'));
@@ -38,60 +39,69 @@ async function configureAsc({ token: existingToken } = {}) {
   // 1. Đảm bảo đã đăng nhập ant-go
   const token = existingToken ?? await ensureToken();
 
-  // 2. Kiểm tra key đã có trên server chưa
-  try {
-    const { data } = await axios.get(`${API_URL}/api/user/asc-credentials`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (data.hasKey) {
-      const parts = [
-        data.keyId    ? `Key ID: ${data.keyId}`        : 'Key ID: chưa có',
-        data.issuerId ? `Issuer ID: ${data.issuerId}`  : 'Issuer ID: chưa có',
-        'Private Key: ✓',
-      ];
-      console.log(chalk.yellow(`⚠  Đã có App Store Connect credentials (${parts.join(' · ')}).`));
-      const { overwrite } = await inquirer.prompt([{
-        type:    'list',
-        name:    'overwrite',
-        message: 'Bạn muốn:',
-        choices: [
-          { name: 'Cập nhật mới',      value: true  },
-          { name: 'Giữ nguyên, thoát', value: false },
-        ],
-      }]);
-      if (!overwrite) {
-        console.log(chalk.gray('  Đã hủy.'));
-        console.log('');
-        return;
+  // 2. Kiểm tra key đã có — nếu firstTime thì bỏ qua prompt overwrite
+  if (!firstTime) {
+    try {
+      const { data } = await axios.get(`${API_URL}/api/user/asc-credentials`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (data.hasKey) {
+        const parts = [
+          data.keyId    ? `Key ID: ${data.keyId}`       : 'Key ID: chưa có',
+          data.issuerId ? `Issuer ID: ${data.issuerId}` : 'Issuer ID: chưa có',
+          'Private Key: ✓',
+        ];
+        console.log(chalk.yellow(`⚠  Đã có App Store Connect credentials (${parts.join(' · ')}).`));
+        const { overwrite } = await inquirer.prompt([{
+          type:    'list',
+          name:    'overwrite',
+          message: 'Bạn muốn:',
+          choices: [
+            { name: 'Cập nhật mới',      value: true  },
+            { name: 'Giữ nguyên, thoát', value: false },
+          ],
+        }]);
+        if (!overwrite) {
+          console.log(chalk.gray('  Đã hủy.'));
+          console.log('');
+          return;
+        }
       }
-    }
-  } catch { /* bỏ qua — tiếp tục */ }
+    } catch { /* bỏ qua — tiếp tục */ }
+  }
 
-  // 3. Chọn phương thức lấy key
-  console.log('');
-  const { method } = await inquirer.prompt([{
-    type:    'list',
-    name:    'method',
-    message: 'Cách cung cấp App Store Connect API Key:',
-    choices: [
-      { name: '🤖  Tự động — Đăng nhập Apple Developer, tạo key mới (khuyến nghị)', value: 'auto'   },
-      { name: '✍️   Thủ công — Nhập Key ID, Issuer ID và file .p8',                  value: 'manual' },
-    ],
-  }]);
-
+  // 3. Chọn phương thức — nếu firstTime thì dùng auto luôn
   let keyId, issuerId, privateKeyP8;
-  if (method === 'auto') {
-    ({ keyId, issuerId, privateKeyP8 } = await autoFetchKey());
+  if (firstTime) {
+    ({ keyId, issuerId, privateKeyP8 } = await autoFetchKey({ askIssuerId: false }));
   } else {
-    ({ keyId, issuerId, privateKeyP8 } = await manualInputKey());
+    console.log('');
+    const { method } = await inquirer.prompt([{
+      type:    'list',
+      name:    'method',
+      message: 'Cách cung cấp App Store Connect API Key:',
+      choices: [
+        { name: '🤖  Tự động — Đăng nhập Apple Developer, tạo key mới (khuyến nghị)', value: 'auto'   },
+        { name: '✍️   Thủ công — Nhập Key ID, Issuer ID và file .p8',                  value: 'manual' },
+      ],
+    }]);
+    if (method === 'auto') {
+      ({ keyId, issuerId, privateKeyP8 } = await autoFetchKey({ askIssuerId: true }));
+    } else {
+      ({ keyId, issuerId, privateKeyP8 } = await manualInputKey());
+    }
   }
 
   // 4. Gửi lên server (per-user endpoint)
   const saveSpinner = ora('Đang lưu App Store Connect credentials...').start();
   try {
+    const body = { privateKeyP8 };
+    if (keyId)    body.keyId    = keyId;
+    if (issuerId) body.issuerId = issuerId;
+
     await axios.post(
       `${API_URL}/api/user/asc-credentials`,
-      { keyId, issuerId, privateKeyP8 },
+      body,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     saveSpinner.succeed(chalk.green('App Store Connect credentials đã lưu thành công'));
@@ -100,18 +110,24 @@ async function configureAsc({ token: existingToken } = {}) {
     const msg = err.response?.data?.error ?? err.message;
     console.error(chalk.red(`  ✖  ${msg}`));
     console.log('');
-    process.exit(1);
+    if (!firstTime) process.exit(1);
+    return;
   }
 
   console.log('');
-  console.log(chalk.green('✓ Hoàn tất!'));
-  console.log(chalk.gray('  Dashboard sẽ không còn hỏi App Store Connect key khi submit TestFlight.'));
+  if (firstTime && !issuerId) {
+    console.log(chalk.green('✓ Private key đã lưu!'));
+    console.log(chalk.yellow('  ⚠  Issuer ID chưa được tự phát hiện.'));
+    console.log(chalk.gray('  Vào Settings → Apple Developer để nhập Issuer ID trước khi submit TestFlight.'));
+  } else {
+    console.log(chalk.green('✓ Hoàn tất! Dashboard sẽ không còn hỏi App Store Connect key khi submit TestFlight.'));
+  }
   console.log('');
 }
 
 // ─── Auto: đăng nhập Apple Developer, tạo key mới ────────────────────────────
 
-async function autoFetchKey() {
+async function autoFetchKey({ askIssuerId = true } = {}) {
   const { Auth, Teams, ApiKey, ApiKeyType } = require('@expo/apple-utils');
 
   console.log('');
@@ -207,8 +223,8 @@ async function autoFetchKey() {
     throw err;
   }
 
-  // Issuer ID — hỏi nếu không tự detect được
-  if (!issuerId) {
+  // Issuer ID — hỏi nếu không tự detect được (và askIssuerId = true)
+  if (!issuerId && askIssuerId) {
     console.log('');
     console.log(chalk.yellow('⚠  Không tự phát hiện được Issuer ID.'));
     console.log(chalk.gray('   Tìm tại: App Store Connect → Users and Access → Integrations → App Store Connect API'));
@@ -216,8 +232,10 @@ async function autoFetchKey() {
     console.log('');
     const { inputIssuerId } = await inquirer.prompt([{ type: 'input', name: 'inputIssuerId', message: 'Issuer ID (UUID):', validate: v => v.trim() ? true : 'Bắt buộc' }]);
     issuerId = inputIssuerId.trim();
-  } else {
+  } else if (issuerId) {
     console.log(chalk.green(`✔  Issuer ID: ${issuerId}`));
+  } else {
+    console.log(chalk.yellow('  ⚠  Issuer ID chưa phát hiện được — có thể nhập sau tại Settings → Apple Developer'));
   }
 
   return { keyId, issuerId, privateKeyP8 };

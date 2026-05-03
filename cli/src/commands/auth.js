@@ -187,7 +187,7 @@ async function promptAscSetup(token) {
 
     if (setup) {
       const { configureAsc } = require('./configure-asc');
-      await configureAsc({ token });
+      await configureAsc({ token, firstTime: true });
     } else {
       console.log(chalk.gray('  Bạn có thể setup sau bằng lệnh: ant-go configure-asc'));
       console.log('');
