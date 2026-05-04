@@ -16,6 +16,7 @@ const inquirer = require('inquirer');
 const axios    = require('axios');
 const qrcode   = require('qrcode-terminal');
 const { API_URL } = require('./config');
+const { t } = require('./i18n');
 
 const CACHE_DIR = path.join(os.homedir(), '.ant-go');
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 giờ
@@ -52,8 +53,8 @@ function clearCache(profileName) {
 // Returns { udid, deviceProduct, deviceSerial }
 async function enrollDevice(projectId) {
   console.log('');
-  console.log(chalk.cyan('📱  Đăng ký device mới'));
-  console.log(chalk.gray('   iPhone sẽ tự động gửi UDID khi quét mã QR bên dưới'));
+  console.log(chalk.cyan(t('enrollNewDevice')));
+  console.log(chalk.gray(t('enrollQRHint')));
   console.log('');
 
   let token, enrollUrl;
@@ -62,16 +63,16 @@ async function enrollDevice(projectId) {
     token     = res.data.token;
     enrollUrl = res.data.enrollUrl;
   } catch (err) {
-    throw new Error('Không tạo được enrollment session: ' + (err.response?.data?.error || err.message));
+    throw new Error(t('enrollCreateFailed', err.response?.data?.error || err.message));
   }
 
-  console.log(chalk.bold('Quét QR code bằng Camera app trên iPhone:'));
+  console.log(chalk.bold(t('enrollQRScan')));
   console.log('');
   await new Promise(resolve => qrcode.generate(enrollUrl, { small: true }, resolve));
   console.log('');
-  console.log(chalk.gray('Hoặc mở URL: ') + chalk.underline(enrollUrl));
+  console.log(chalk.gray(t('enrollOrOpen')) + chalk.underline(enrollUrl));
   console.log('');
-  console.log(chalk.yellow('Đang chờ iPhone xác nhận...'));
+  console.log(chalk.yellow(t('enrollWaiting')));
 
   const POLL_INTERVAL = 3000;
   const TIMEOUT       = 10 * 60 * 1000;
@@ -84,21 +85,21 @@ async function enrollDevice(projectId) {
       const res = await axios.get(`${API_URL}/api/device-enroll/${token}/status`);
       const { status, udid, deviceProduct, deviceSerial } = res.data;
       if (status === 'registered' && udid) {
-        spinner.succeed(chalk.green(`Device đã xác nhận: ${deviceProduct || udid}  (${udid})`));
+        spinner.succeed(chalk.green(t('enrollConfirmed', deviceProduct || udid, udid)));
         return { udid, deviceProduct: deviceProduct || null, deviceSerial: deviceSerial || null };
       }
       if (status === 'expired') {
-        spinner.fail('Enrollment đã hết hạn (10 phút)');
+        spinner.fail(t('enrollExpired'));
         throw new Error('Device enrollment timeout');
       }
       const remaining = Math.ceil((deadline - Date.now()) / 1000 / 60);
-      spinner.text = `Chờ iPhone quét QR... (còn ${remaining} phút)`;
+      spinner.text = t('enrollPolling', remaining);
     } catch (err) {
       if (err.message === 'Device enrollment timeout') throw err;
     }
   }
 
-  spinner.fail('Hết thời gian chờ (10 phút)');
+  spinner.fail(t('enrollTimeout'));
   throw new Error('Device enrollment timeout');
 }
 
@@ -123,7 +124,7 @@ async function ensureAscKey(authCtx, teamId) {
       const existingKeys = await ApiKey.getAsync(authCtx) ?? [];
       const still = existingKeys.find(k => k.id === cached.keyId);
       if (still) {
-        console.log(chalk.green(`✔  ASC API Key (cached): ${cached.keyId}`));
+        console.log(chalk.green(t('ascKeyCached', cached.keyId)));
         return cached;
       }
       // Key bị revoke trên Apple → xoá cache, tạo mới
@@ -135,7 +136,7 @@ async function ensureAscKey(authCtx, teamId) {
   }
 
   // 3. Tạo key mới
-  const spinner = ora('Đang tạo App Store Connect API Key...').start();
+  const spinner = ora(t('ascKeyCreating')).start();
   try {
     const newKey = await ApiKey.createAsync(authCtx, {
       nickname:       'ant-go',
@@ -156,13 +157,13 @@ async function ensureAscKey(authCtx, teamId) {
 
     if (!issuerId) {
       spinner.stop();
-      console.log(chalk.yellow('\n⚠  Không tự lấy được Issuer ID.'));
-      console.log(chalk.gray('   Tìm tại: App Store Connect → Users & Access → Integrations → App Store Connect API'));
+      console.log(chalk.yellow('\n' + t('ascKeyNoIssuer')));
+      console.log(chalk.gray(t('ascKeyIssuerHint')));
       const { inputIssuerId } = await inquirer.prompt([{
         type:     'input',
         name:     'inputIssuerId',
-        message:  'Issuer ID (UUID):',
-        validate: v => v.trim() ? true : 'Bắt buộc',
+        message:  t('ascKeyIssuerLabel'),
+        validate: v => v.trim() ? true : t('appleRequired'),
       }]);
       issuerId = inputIssuerId.trim();
       spinner.start();
@@ -171,11 +172,11 @@ async function ensureAscKey(authCtx, teamId) {
     const result = { keyId: newKey.id, issuerId, privateKeyP8, _savedAt: Date.now() };
     fs.mkdirSync(CACHE_DIR, { recursive: true });
     fs.writeFileSync(cacheFile, JSON.stringify(result, null, 2), { mode: 0o600 });
-    spinner.succeed(`ASC API Key tạo thành công: ${newKey.id}`);
+    spinner.succeed(t('ascKeyCreated', newKey.id));
     return result;
 
   } catch (err) {
-    spinner.warn(`Không lấy được ASC API Key: ${err.message}`);
+    spinner.warn(t('ascKeyFailed', err.message));
     return null;
   }
 }
@@ -184,18 +185,17 @@ async function ensureAscKey(authCtx, teamId) {
 // Hiển thị danh sách device đã có + option thêm mới.
 // Returns: string[] — mảng các UDID được chọn
 async function selectDevices(existingDevices, projectId, apiClient) {
-  const { saveDevice } = require('../api');
   const devices = [...existingDevices];
 
   // Nếu chưa có device nào → đi thẳng vào enrollment
   if (devices.length === 0) {
-    console.log(chalk.gray('   Chưa có device nào — tiến hành đăng ký device mới.'));
+    console.log(chalk.gray('   ' + t('appleDevicesNone')));
     const enrolled = await enrollDevice(projectId);
     const { deviceName } = await inquirer.prompt([{
       type:    'input',
       name:    'deviceName',
-      message: 'Tên device (để nhận ra sau này):',
-      default: 'My iPhone',
+      message: t('appleDeviceName'),
+      default: t('appleDeviceDefault'),
     }]);
     await apiClient.post('/api/devices', {
       udid:          enrolled.udid,
@@ -216,31 +216,29 @@ async function selectDevices(existingDevices, projectId, apiClient) {
         checked: false,
       })),
       new inquirer.Separator('─────────────────────────────────────────'),
-      { name: chalk.cyan('＋ Thêm device mới'), value: '__new__' },
+      { name: chalk.cyan(t('appleDevicesAddNew')), value: '__new__' },
     ];
 
     console.log('');
     const { selected } = await inquirer.prompt([{
       type:    'checkbox',
       name:    'selected',
-      message: '📱  Chọn device để build (Space = chọn/bỏ, Enter = xác nhận):',
+      message: t('appleDevicesLabel'),
       choices,
-      validate: v => v.length > 0 ? true : 'Phải chọn ít nhất 1 device.',
+      validate: v => v.length > 0 ? true : t('appleDevicesMustSelect'),
     }]);
 
-    if (!selected.includes('__new__')) {
-      return selected;
-    }
+    if (!selected.includes('__new__')) return selected;
 
     // Thêm device mới → enroll → lưu Firestore → quay lại chọn
     const enrolled = await enrollDevice(projectId);
     const { deviceName } = await inquirer.prompt([{
       type:    'input',
       name:    'deviceName',
-      message: 'Tên device (để nhận ra sau này):',
-      default: 'My iPhone',
+      message: t('appleDeviceName'),
+      default: t('appleDeviceDefault'),
     }]);
-    const saveSpinner = require('ora')('Đang lưu device...').start();
+    const saveSpinner = require('ora')(t('appleDeviceSaving')).start();
     try {
       await apiClient.post('/api/devices', {
         udid:          enrolled.udid,
@@ -249,18 +247,12 @@ async function selectDevices(existingDevices, projectId, apiClient) {
         deviceSerial:  enrolled.deviceSerial,
         source:        'cli',
       });
-      saveSpinner.succeed(`Đã lưu: ${deviceName}`);
+      saveSpinner.succeed(t('appleDeviceSaved', deviceName));
     } catch (err) {
-      saveSpinner.fail('Không lưu được device: ' + (err.response?.data?.error || err.message));
+      saveSpinner.fail(t('appleDeviceSaveFailed', err.response?.data?.error || err.message));
     }
 
-    // Thêm vào danh sách và vào lại vòng chọn
-    devices.push({
-      udid:          enrolled.udid,
-      name:          deviceName,
-      deviceProduct: enrolled.deviceProduct,
-      deviceSerial:  enrolled.deviceSerial,
-    });
+    devices.push({ udid: enrolled.udid, name: deviceName, deviceProduct: enrolled.deviceProduct, deviceSerial: enrolled.deviceSerial });
   }
 }
 
@@ -285,18 +277,16 @@ async function ensureAppleCreds(projectInfo, {
         const teamId = cached.teamId || '';
         const cachedUdids = cached.udids ?? (cached.udid ? [cached.udid] : []);
         const udidHint = distribution === 'internal' && cachedUdids.length > 0
-          ? `  Devices: ${cachedUdids.length}`
-          : '';
-        const label = [email, teamId ? `(${teamId})` : '', udidHint]
-          .filter(Boolean).join('   ');
+          ? `  Devices: ${cachedUdids.length}` : '';
+        const label = [email, teamId ? `(${teamId})` : '', udidHint].filter(Boolean).join('   ');
         console.log('');
         const { useCache } = await inquirer.prompt([{
           type:    'list',
           name:    'useCache',
-          message: 'Đăng nhập tài khoản Apple Developer',
+          message: t('appleLoginPrompt'),
           choices: [
-            { name: `Đăng nhập  tài khoản ${label}`, value: true },
-            { name: 'Đăng nhập tài khoản khác',      value: false },
+            { name: t('appleUseCache', label), value: true },
+            { name: t('appleLoginOther'),       value: false },
           ],
         }]);
         if (useCache) return { ...cached, ...projectInfo };
@@ -306,19 +296,11 @@ async function ensureAppleCreds(projectInfo, {
   }
 
   const {
-    Auth,
-    Teams,
-    Certificate,
-    CertificateType,
-    createCertificateAndP12Async,
-    BundleId,
-    Profile,
-    ProfileType,
-    Device,
+    Auth, Teams, Certificate, CertificateType,
+    createCertificateAndP12Async, BundleId, Profile, ProfileType, Device,
   } = require('@expo/apple-utils');
 
   console.log('');
-  const { t } = require('./i18n');
   console.log(chalk.yellow.bold(t('appleCredsLogin')));
   console.log('');
 
@@ -327,19 +309,20 @@ async function ensureAppleCreds(projectInfo, {
     {
       type:     'input',
       name:     'appleId',
-      message:  'Apple ID (email):',
-      validate: v => v.trim() ? true : 'Bắt buộc',
+      message:  t('appleIdLabel'),
+      validate: v => v.trim() ? true : t('appleRequired'),
     },
     {
       type:     'password',
       name:     'password',
-      message:  'App-Specific Password (appleid.apple.com):',
-      validate: v => v.trim() ? true : 'Bắt buộc',
+      message:  t('applePasswordLabel'),
+      mask:     '•',
+      validate: v => v.trim() ? true : t('appleRequired'),
     },
   ]);
 
   console.log('');
-  const loginSpinner = require('ora')('Đang đăng nhập Apple Developer...').start();
+  const loginSpinner = require('ora')(t('appleLoggingIn')).start();
 
   let authCtx, teamId;
   try {
@@ -353,26 +336,26 @@ async function ensureAppleCreds(projectInfo, {
         const { code } = await inquirer.prompt([{
           type:     'input',
           name:     'code',
-          message:  '🔐 Nhập mã 2FA từ iPhone/Mac của bạn:',
-          validate: v => /^\d{6}$/.test(v.trim()) ? true : 'Mã 6 chữ số',
+          message:  t('apple2FA'),
+          validate: v => /^\d{6}$/.test(v.trim()) ? true : t('apple2FACode'),
         }]);
-        loginSpinner.start('Đang xác thực 2FA...');
+        loginSpinner.start(t('apple2FAVerifying'));
         return code.trim();
       },
     });
     authCtx = result.context ?? result;
-    loginSpinner.succeed('Đăng nhập thành công');
+    loginSpinner.succeed(t('appleLoginSuccess'));
   } catch (err) {
-    loginSpinner.fail('Đăng nhập thất bại: ' + err.message);
+    loginSpinner.fail(t('appleLoginFailed', err.message));
     throw err;
   }
 
   // ── Team selection ───────────────────────────────────────────────────────────
-  const teamSpinner = require('ora')('Đang lấy thông tin team...').start();
+  const teamSpinner = require('ora')(t('appleLoadingTeam')).start();
   try {
     const teams = await Teams.getTeamsAsync(authCtx);
     teamSpinner.stop();
-    if (!teams || teams.length === 0) throw new Error('Không tìm thấy Apple Developer team nào');
+    if (!teams || teams.length === 0) throw new Error(t('appleNoTeam'));
 
     if (teams.length === 1) {
       teamId = teams[0].teamId;
@@ -381,14 +364,14 @@ async function ensureAppleCreds(projectInfo, {
       const { selectedTeam } = await inquirer.prompt([{
         type:    'list',
         name:    'selectedTeam',
-        message: 'Chọn Apple Developer Team:',
-        choices: teams.map(t => ({ name: `${t.name} (${t.teamId}) — ${t.type}`, value: t.teamId })),
+        message: t('appleSelectTeam'),
+        choices: teams.map(tm => ({ name: `${tm.name} (${tm.teamId}) — ${tm.type}`, value: tm.teamId })),
       }]);
       teamId = selectedTeam;
     }
     await Teams.selectTeamAsync(authCtx, { teamId });
   } catch (err) {
-    teamSpinner.fail('Không lấy được thông tin team: ' + err.message);
+    teamSpinner.fail(t('appleTeamFailed', err.message));
     throw err;
   }
 
@@ -406,7 +389,7 @@ async function ensureAppleCreds(projectInfo, {
 
     // Đồng bộ từng UDID lên Apple Developer Portal
     const appleDevicesAll = await Device.getAsync(authCtx, {});
-    const syncSpinner = require('ora')(`Đang đồng bộ ${selectedUdids.length} device(s) lên Apple Developer...`).start();
+    const syncSpinner = require('ora')(t('appleDeviceSyncing', selectedUdids.length)).start();
     try {
       for (const udid of selectedUdids) {
         const existing = appleDevicesAll.find(
@@ -417,16 +400,14 @@ async function ensureAppleCreds(projectInfo, {
         } else {
           const deviceEntry = userDevices.find(d => d.udid === udid);
           const newDevice = await Device.createAsync(authCtx, {
-            name:     deviceEntry?.name || 'My iPhone',
-            udid,
-            platform: 'IOS',
+            name: deviceEntry?.name || t('appleDeviceDefault'), udid, platform: 'IOS',
           });
           deviceIds.push(newDevice.id);
         }
       }
-      syncSpinner.succeed(`Đã đồng bộ ${deviceIds.length} device(s) lên Apple Developer`);
+      syncSpinner.succeed(t('appleDeviceSynced', deviceIds.length));
     } catch (err) {
-      syncSpinner.fail('Lỗi khi đồng bộ devices: ' + err.message);
+      syncSpinner.fail(t('appleDeviceSyncFailed', err.message));
       throw err;
     }
   }
@@ -434,7 +415,7 @@ async function ensureAppleCreds(projectInfo, {
   // ── Certificate ──────────────────────────────────────────────────────────────
   const certType   = distribution === 'internal' ? CertificateType.DEVELOPMENT : CertificateType.DISTRIBUTION;
   const certLabel  = distribution === 'internal' ? 'Development' : 'Distribution';
-  const certSpinner = require('ora')(`Đang lấy ${certLabel} Certificate...`).start();
+  const certSpinner = require('ora')(t('certLoading', certLabel)).start();
   let p12Base64, p12Password, certId;
   let createdNewCert = false;
   try {
@@ -445,8 +426,7 @@ async function ensureAppleCreds(projectInfo, {
     if (existing.length > 0) {
       certId = existing[0].id;
       const result = await createCertificateAndP12Async(authCtx, {
-        certificateType: certType,
-        reuseExistingCertificate: true,
+        certificateType: certType, reuseExistingCertificate: true,
       }).catch(() => null);
       if (result) {
         p12Base64   = result.certificateP12;
@@ -461,7 +441,7 @@ async function ensureAppleCreds(projectInfo, {
         p12Password   = newResult.password ?? '';
         createdNewCert = true;
       }
-      certSpinner.succeed(`${certLabel} Certificate (reused): ${certId}`);
+      certSpinner.succeed(t('certReused', certLabel, certId));
     } else {
       const result = await createCertificateAndP12Async(authCtx, { certificateType: certType });
       const certsAfter = await Certificate.getAsync(authCtx, { query: { filter: { certificateType: [certType] } } });
@@ -470,22 +450,22 @@ async function ensureAppleCreds(projectInfo, {
       p12Base64     = result.certificateP12;
       p12Password   = result.password ?? '';
       createdNewCert = true;
-      certSpinner.succeed(`${certLabel} Certificate (new): ${certId}`);
+      certSpinner.succeed(t('certNew', certLabel, certId));
     }
   } catch (err) {
-    certSpinner.fail(`Lỗi ${certLabel} cert: ` + err.message);
+    certSpinner.fail(t('certFailed', certLabel, err.message));
     throw err;
   }
 
   // ── Provisioning Profile ─────────────────────────────────────────────────────
   const profileType  = distribution === 'internal' ? ProfileType.IOS_APP_DEVELOPMENT : ProfileType.IOS_APP_STORE;
   const profileLabel = distribution === 'internal' ? 'Development' : 'App Store';
-  const profileSpinner = require('ora')(`Đang lấy ${profileLabel} Provisioning Profile...`).start();
+  const profileSpinner = require('ora')(t('profileLoading', profileLabel)).start();
   let mobileprovisionBase64;
   try {
     const allBundleIds = await BundleId.getAsync(authCtx, {});
     const bundleIdObj  = allBundleIds.find(b => b.attributes?.identifier === projectInfo.bundleId);
-    if (!bundleIdObj) throw new Error(`App ID "${projectInfo.bundleId}" không tồn tại trên Apple Developer`);
+    if (!bundleIdObj) throw new Error(t('profileNoBundleId', projectInfo.bundleId));
 
     const allProfiles = await Profile.getAsync(authCtx, {
       query: { filter: { profileType: [profileType] } },
@@ -500,42 +480,39 @@ async function ensureAppleCreds(projectInfo, {
       const profileCertIds = (existingProfile.attributes?.certificates ?? []).map(c => c.id);
       if (profileCertIds.includes(certId)) {
         profile = existingProfile;
-        profileSpinner.text = `Reusing existing ${profileLabel} profile...`;
+        profileSpinner.text = t('profileReusing', profileLabel);
       } else {
-        profileSpinner.text = 'Profile không khớp cert → đang tạo lại...';
+        profileSpinner.text = t('profileCertMismatch');
         await Profile.deleteAsync(authCtx, { id: existingProfile.id });
       }
     } else if (existingProfile) {
       profileSpinner.text = refreshProfile
-        ? 'Capabilities thay đổi → đang tạo lại profile...'
-        : createdNewCert ? 'Cert mới → đang tạo lại profile...' : 'Profile không hợp lệ → đang tạo lại...';
+        ? t('profileCapChanged')
+        : createdNewCert ? t('profileNewCert') : t('profileInvalid');
       await Profile.deleteAsync(authCtx, { id: existingProfile.id });
     }
 
     if (!profile) {
       const profileName_ = `${profileLabel} ${new Date().toISOString().slice(0, 10)}`;
       profile = await Profile.createAsync(authCtx, {
-        bundleId:     bundleIdObj.id,
-        certificates: [certId],
-        devices:      deviceIds,
-        name:         profileName_,
-        profileType,
+        bundleId: bundleIdObj.id, certificates: [certId],
+        devices: deviceIds, name: profileName_, profileType,
       });
     }
 
     const fresh = await Profile.infoAsync(authCtx, { id: profile.id });
     const data  = fresh.attributes?.profileContent ?? profile.attributes?.profileContent;
-    if (!data) throw new Error('Profile không có nội dung');
+    if (!data) throw new Error(t('profileNoContent'));
     mobileprovisionBase64 = typeof data === 'string' ? data : Buffer.from(data).toString('base64');
-    profileSpinner.succeed(`${profileLabel} Provisioning Profile OK`);
+    profileSpinner.succeed(t('profileOK', profileLabel));
   } catch (err) {
-    profileSpinner.fail(`Lỗi ${profileLabel} profile: ` + err.message);
+    profileSpinner.fail(t('profileFailed', profileLabel, err.message));
     throw err;
   }
 
   const creds = { appleId: appleId.trim(), p12Base64, p12Password, mobileprovisionBase64, teamId, udids: selectedUdids, ascKey };
   saveCache(creds, profileName);
-  console.log(chalk.green('✔  Credentials đã cache tại: ') + chalk.gray(getCacheFile(profileName)));
+  console.log(chalk.green(t('credsCached', getCacheFile(profileName))));
   console.log('');
 
   return { ...creds, ...projectInfo };
