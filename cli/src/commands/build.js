@@ -390,7 +390,21 @@ async function runBuild(options) {
   } catch (err) {
     spinner.fail('Tạo build job thất bại');
     const msg = err.response?.data?.error ?? err.message;
-    logger.error(msg);
+    const status = err.response?.status;
+
+    if (status === 404 && msg?.includes('không tồn tại')) {
+      console.log('');
+      console.log(chalk.red(`  ✖  Project ID "${projectInfo.projectId}" không tồn tại trên hệ thống.`));
+      console.log('');
+      console.log(chalk.yellow('  Hãy kiểm tra lại projectId trong app.json:'));
+      console.log(`     expo.extra.ant.projectId = "${projectInfo.projectId}"`);
+      console.log('');
+      console.log(`  Tạo project tại: ${chalk.cyan('https://antgo.work/account/apps')}`);
+      console.log(`  Sau đó copy Project ID vào app.json.`);
+    } else {
+      logger.error(tError(msg));
+    }
+    console.log('');
     process.exit(1);
   }
 
