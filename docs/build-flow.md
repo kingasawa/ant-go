@@ -34,7 +34,8 @@ CLI                         Dashboard (Next.js)             Mac Build Server
 | File | Vai trò |
 |---|---|
 | `cli/src/commands/build.js` | Entry point lệnh `ant-go build` |
-| `cli/src/apple-creds.js` | Thu thập Apple credentials (cert + provisioning profile) |
+| `cli/src/apple-creds.js` | Thu thập Apple credentials (cert + provisioning profile + ASC API Key) |
+| `app/api/user/asc-key/route.ts` | `POST /api/user/asc-key` — CLI token auth, encrypt + lưu ASC key vào Firestore |
 | `cli/src/api.js` | Axios client gọi API |
 | `app/api/builds/route.ts` | `POST /api/builds` — tạo job + sinh signed URL |
 | `lib/build.service.ts` | Logic `prepareBuild()` + `startBuild()` |
@@ -152,10 +153,17 @@ Ngay sau khi nhận response, nếu `platform === 'ios'` và `creds.ascKey` có 
 ```
 POST /api/user/asc-key
 Authorization: Bearer <cliToken>
-Body: { appName, keyId, issuerId, privateKeyP8 }
+Body: { teamId, keyId, issuerId, privateKeyP8 }
 ```
 
-Server mã hoá `privateKeyP8` bằng AES-256-GCM rồi upsert vào `users/{uid}/app_store_keys/{appName}` — đúng chỗ mà luồng submit TestFlight đọc. Từ đây user không cần setup ASC key thủ công trên dashboard nữa.
+Server mã hoá `privateKeyP8` bằng AES-256-GCM rồi upsert vào `users/{uid}/asc_keys/{teamId}`.  
+Key được lưu theo **Apple Developer Team** (không phải per-app) vì key tạo với `allAppsVisible: true` — dùng được cho mọi app trong cùng team.
+
+Luồng submit TestFlight tra cứu key theo thứ tự:
+1. `users/{uid}/asc_keys/{teamId}` — CLI auto-upload ← ưu tiên
+2. `users/{uid}/app_store_keys/{appName}` — dashboard manual setup ← fallback backward compat
+
+Từ đây user không cần setup ASC key thủ công trên dashboard nữa.
 
 ---
 

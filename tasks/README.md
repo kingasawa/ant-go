@@ -86,6 +86,37 @@ Ví dụ những trường hợp phải hỏi trước:
 
 ---
 
+### 5a. Liệt kê tài liệu cần sửa khi tạo task
+
+**Bắt buộc** khi tạo file task mới: liệt kê rõ tất cả tài liệu sẽ bị ảnh hưởng trong section riêng **"Tài liệu cần cập nhật"**, bao gồm:
+
+- Các file `.md` trong `/docs` mô tả flow liên quan
+- **`app/docs/page.tsx`** — trang docs công khai (nếu tính năng thay đổi hành vi của CLI hoặc Dashboard hiển thị với user)
+- Các file trong `cli/docs/` nếu liên quan đến CLI
+
+Ví dụ format trong file task:
+
+```markdown
+## Tài liệu cần cập nhật sau khi hoàn thành
+
+- [ ] `docs/build-flow.md` — cập nhật bước 2 (ASC key collection) và bước 3 (appName response)
+- [ ] `docs/submit-testflight-feature.md` — cập nhật Firestore schema và Cloud Build step
+- [ ] `app/docs/page.tsx` — thêm bước ASC key vào terminal demo, di chuyển note --auto-submit
+```
+
+---
+
+### 5b. Đảm bảo tài liệu đã được sửa trước khi đóng task
+
+Trước khi chuyển status sang `done`, bắt buộc:
+
+1. **Review lại toàn bộ danh sách "Tài liệu cần cập nhật"** trong file task.
+2. **Đánh dấu `[x]`** từng mục khi đã sửa xong.
+3. **`app/docs/page.tsx` phải được kiểm tra** — xem terminal demo, options list, và các mô tả có còn khớp với hành vi thực tế của code mới không.
+4. Nếu phát hiện tài liệu nào bị sai so với code mới (dù không nằm trong danh sách) → sửa luôn và ghi chú vào Issue Log nếu cần.
+
+---
+
 ### 6. Kiểm tra type và build trước khi push lên GCP
 
 **Bắt buộc** chạy cả hai lệnh sau trước khi commit:

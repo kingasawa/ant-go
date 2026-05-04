@@ -120,20 +120,39 @@ submissions/
     completedAt:      Timestamp | null
 ```
 
-### `users/{uid}/app_store_keys/{appName}`
+### `users/{uid}/asc_keys/{teamId}` ← per Apple Developer Team (CLI tự động upload)
+
+```
+users/
+  {uid}/
+    asc_keys/
+      {teamId}/              // Apple Developer Team ID (VD: "A1B2C3D4E5")
+        keyId:      string   // Key ID (VD: "2X9R4HXF34")
+        issuerId:   string   // Issuer ID (UUID format)
+        encryptedKey: string // Nội dung .p8 đã mã hoá AES-256-GCM
+        updatedAt:  Timestamp
+```
+
+Key này được CLI tự động tạo và upload trong lúc `ant-go build` với `distribution: store`.
+Vì key có `allAppsVisible: true` nên dùng được cho mọi app trong cùng Apple Developer Team.
+
+### `users/{uid}/app_store_keys/{appName}` ← per app (dashboard manual, backward compat)
 
 ```
 users/
   {uid}/
     app_store_keys/
       {appName}/
-        keyId:          string     // Key ID (VD: "2X9R4HXF34")
-        issuerId:       string     // Issuer ID (UUID format)
-        privateKeyP8:   string     // Nội dung .p8 đã mã hoá AES-256-GCM
-        updatedAt:      Timestamp
+        keyId:        string   // Key ID (VD: "2X9R4HXF34")
+        issuerId:     string   // Issuer ID (UUID format)
+        encryptedKey: string   // Nội dung .p8 đã mã hoá AES-256-GCM
+        updatedAt:    Timestamp
 ```
 
-`privateKeyP8` được lưu theo format: `iv_hex:authTag_hex:ciphertext_hex`.  
+Key này do user nhập thủ công qua **AppStoreKeyModal** trên dashboard.
+Được giữ lại để backward compat với user đã setup trước khi có CLI auto-collect.
+
+`encryptedKey` được lưu theo format: `iv_hex:authTag_hex:ciphertext_hex`.  
 `ASC_ENCRYPTION_KEY` (32 byte hex) được lưu trong Google Secret Manager và inject vào App Engine qua `env.yaml`.
 
 ---
@@ -176,7 +195,9 @@ Job chạy inline (không dùng pre-configured trigger), được tạo trực t
 1. **curl** — download IPA từ Firebase Storage signed URL vào `/workspace/app.ipa`
 2. **node:20-slim** — chạy `scripts/fetch-asc-key.js`:
    - Kết nối Firestore qua Firebase Admin SDK
-   - Đọc `users/{uid}/app_store_keys/{appName}`
+   - Tìm key theo thứ tự ưu tiên:
+     1. `users/{uid}/asc_keys/{teamId}` — CLI tự động upload (per Apple Developer Team)
+     2. `users/{uid}/app_store_keys/{appName}` — dashboard manual setup (backward compat)
    - Giải mã AES-256-GCM, ghi ra `/workspace/asc_key.json` (Fastlane format)
    - Cập nhật `submissions/{id}.status` → `"uploading"`
 3. **ruby:3.2-slim** — chạy Fastlane:
@@ -200,7 +221,9 @@ Nếu bước 3 hoặc 4 thất bại, Cloud Build không tự update status →
 
 ## App Store Connect API Key
 
-User cần tạo key tại [App Store Connect → Users and Access → Integrations](https://appstoreconnect.apple.com/access/integrations/api):
+> **Với CLI `ant-go build` (`distribution: store`):** Key được tạo và upload tự động trong lúc build — user **không cần setup thủ công** ở bước dưới. Xem [`docs/apple-utils-asc-key.md`](./apple-utils-asc-key.md).
+
+Nếu cần setup thủ công (user không dùng CLI, hoặc muốn override key), tạo key tại [App Store Connect → Users and Access → Integrations](https://appstoreconnect.apple.com/access/integrations/api):
 
 1. Nhấn **Generate API Key**
 2. Chọn role **Admin** hoặc **App Manager**
