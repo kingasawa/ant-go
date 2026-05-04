@@ -333,7 +333,6 @@ async function runBuild(options) {
   const projectInfo = resolveProjectInfo(projectRoot);
   const { buildNumber: configBuildNumber } = projectInfo;
   printHeader([
-    `Ant Go CLI : v${CLI_VERSION}`,
     `Project ID : ${projectInfo.projectId}`,
     `Bundle ID  : ${projectInfo.bundleId}`,
     `Profile    : ${profileName}  (${distribution}${developmentClient ? ', devClient' : ''})`,
