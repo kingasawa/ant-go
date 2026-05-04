@@ -98,8 +98,9 @@ export async function POST(
   const bundleId = appData?.bundleId ?? buildData.bundleId ?? null;
   const version  = appData?.version  ?? null;
 
-  // Kiểm tra ASC key
-  const ascKey = await getAscKeyForUser(uid, appName);
+  // Kiểm tra ASC key — thử per-team trước, fallback per-app
+  const teamId = buildData.teamId ?? null;
+  const ascKey = await getAscKeyForUser(uid, { teamId, appName });
   if (!ascKey) {
     return NextResponse.json({ error: "missing_asc_key" }, { status: 422 });
   }
@@ -124,7 +125,7 @@ export async function POST(
 
   // Trigger Cloud Build job
   try {
-    await triggerSubmitJob({ submissionId, ipaUrl: buildData.ipaUrl as string, appName, userId: uid });
+    await triggerSubmitJob({ submissionId, ipaUrl: buildData.ipaUrl as string, appName, userId: uid, teamId: teamId ?? "" });
   } catch (err: any) {
     // Nếu Cloud Build lỗi, cập nhật submission về failed
     await db.collection("submissions").doc(submissionId).update({
@@ -143,11 +144,13 @@ async function triggerSubmitJob({
   ipaUrl,
   appName,
   userId,
+  teamId,
 }: {
   submissionId: string;
   ipaUrl: string;
   appName: string;
   userId: string;
+  teamId: string;
 }) {
   const projectId = process.env.GOOGLE_CLOUD_PROJECT || "ant-go";
   const client = new CloudBuildClient();
@@ -172,7 +175,7 @@ async function triggerSubmitJob({
             [
               "cd /workspace",
               "npm install firebase-admin --quiet --no-audit --no-fund --prefix /tmp/deps",
-              `NODE_PATH=/tmp/deps/node_modules node scripts/fetch-asc-key.js '${userId}' '${appName}' /workspace/asc_key.json`,
+              `NODE_PATH=/tmp/deps/node_modules node scripts/fetch-asc-key.js '${userId}' '${teamId}' '${appName}' /workspace/asc_key.json`,
               `NODE_PATH=/tmp/deps/node_modules node scripts/update-submission-status.js '${submissionId}' uploading`,
             ].join(" && "),
           ],

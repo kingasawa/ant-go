@@ -1,11 +1,10 @@
 /**
  * POST /api/user/asc-key
  * Auth: CLI token (Bearer)
- * Body: { appName, keyId, issuerId, privateKeyP8 }
+ * Body: { teamId, keyId, issuerId, privateKeyP8 }
  *
- * Lưu ASC API Key vào users/{uid}/app_store_keys/{appName}
- * — cùng path mà submission flow đọc (lib/asc-key.ts).
- * Được gọi tự động từ CLI sau bước lấy Apple credentials.
+ * Lưu ASC API Key vào users/{uid}/asc_keys/{teamId}
+ * Key gắn với Apple Developer Team — dùng được cho tất cả app trong team đó.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -25,11 +24,11 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const { appName, keyId, issuerId, privateKeyP8 } = body;
+  const { teamId, keyId, issuerId, privateKeyP8 } = body;
 
-  if (!appName?.trim() || !keyId?.trim() || !issuerId?.trim() || !privateKeyP8?.trim()) {
+  if (!teamId?.trim() || !keyId?.trim() || !issuerId?.trim() || !privateKeyP8?.trim()) {
     return NextResponse.json(
-      { error: "appName, keyId, issuerId và privateKeyP8 là bắt buộc" },
+      { error: "teamId, keyId, issuerId và privateKeyP8 là bắt buộc" },
       { status: 400 }
     );
   }
@@ -45,7 +44,7 @@ export async function POST(request: NextRequest) {
 
   await getAdminDb()
     .collection("users").doc(session.uid)
-    .collection("app_store_keys").doc(appName.trim())
+    .collection("asc_keys").doc(teamId.trim())
     .set({
       keyId:        keyId.trim(),
       issuerId:     issuerId.trim(),
@@ -55,4 +54,3 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ ok: true });
 }
-

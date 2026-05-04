@@ -44,10 +44,10 @@ async function saveDevice(client, { udid, name, deviceProduct, deviceSerial }) {
   return data;
 }
 
-// Upload ASC API Key lên dashboard (per-user, per-app)
-async function uploadAscKey(client, { appName, keyId, issuerId, privateKeyP8 }) {
+// Upload ASC API Key lên dashboard (per-user, per-team)
+async function uploadAscKey(client, { teamId, keyId, issuerId, privateKeyP8 }) {
   const { data } = await client.post('/api/user/asc-key', {
-    appName,
+    teamId,
     keyId,
     issuerId,
     privateKeyP8,

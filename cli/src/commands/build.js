@@ -364,6 +364,7 @@ async function runBuild(options) {
       platform,
       autoSubmit,
       ...(configBuildNumber != null && { buildNumber: configBuildNumber }),
+      ...(creds?.teamId     && { teamId: creds.teamId }),
     });
     jobId    = res.jobId;
     tarUrl   = res.tarUrl;
@@ -372,11 +373,11 @@ async function runBuild(options) {
     const appName    = res.appName ?? null;
     spinner.succeed(`Job tạo thành công: ${chalk.bold(jobId)}  ·  Build #${chalk.cyan(resolvedBN)}`);
 
-    // Upload ASC API Key lên dashboard (best-effort, không block build)
-    if (platform === 'ios' && creds?.ascKey && appName) {
+    // Upload ASC key lên dashboard (best-effort, không block build)
+    if (platform === 'ios' && creds?.ascKey && creds?.teamId) {
       const { keyId, issuerId, privateKeyP8 } = creds.ascKey;
       try {
-        await uploadAscKey(client, { appName, keyId, issuerId, privateKeyP8 });
+        await uploadAscKey(client, { teamId: creds.teamId, keyId, issuerId, privateKeyP8 });
         console.log(chalk.green('✔  ASC API Key đã lưu vào dashboard'));
       } catch (err) {
         console.log(chalk.yellow('⚠  Không lưu được ASC API Key: ') + chalk.gray(err.response?.data?.error ?? err.message));

@@ -3,7 +3,11 @@
  * fetch-asc-key.js — Cloud Build script
  * Đọc ASC key từ Firestore, decrypt và ghi ra JSON file format của Fastlane.
  *
- * Usage: node scripts/fetch-asc-key.js <userId> <appName> <outputPath>
+ * Usage: node scripts/fetch-asc-key.js <userId> <teamId> <appName> <outputPath>
+ *
+ * Tìm key theo thứ tự:
+ *   1. users/{userId}/asc_keys/{teamId}       ← per-team (CLI tự động upload)
+ *   2. users/{userId}/app_store_keys/{appName} ← per-app  (dashboard manual, backward compat)
  *
  * Output JSON format (Fastlane api_key_path):
  * { "key_id": "...", "issuer_id": "...", "key": "-----BEGIN PRIVATE KEY-----\n..." }
@@ -14,10 +18,10 @@ const fs    = require("fs");
 const path  = require("path");
 const { createDecipheriv } = require("crypto");
 
-const [,, userId, appName, outputPath] = process.argv;
+const [,, userId, teamId, appName, outputPath] = process.argv;
 
-if (!userId || !appName || !outputPath) {
-  console.error("Usage: node fetch-asc-key.js <userId> <appName> <outputPath>");
+if (!userId || !outputPath) {
+  console.error("Usage: node fetch-asc-key.js <userId> <teamId> <appName> <outputPath>");
   process.exit(1);
 }
 
@@ -48,17 +52,38 @@ function decryptAscKey(stored) {
 }
 
 (async () => {
-  const snap = await db
-    .collection("users").doc(userId)
-    .collection("app_store_keys").doc(appName)
-    .get();
+  let data = null;
+  let source = "";
 
-  if (!snap.exists) {
-    console.error(`No ASC key found for user=${userId} app=${appName}`);
+  // 1. Thử path mới: per-team
+  if (teamId && teamId !== "''") {
+    const snap = await db
+      .collection("users").doc(userId)
+      .collection("asc_keys").doc(teamId)
+      .get();
+    if (snap.exists) {
+      data   = snap.data();
+      source = `asc_keys/${teamId}`;
+    }
+  }
+
+  // 2. Fallback: path cũ per-app
+  if (!data && appName && appName !== "''") {
+    const snap = await db
+      .collection("users").doc(userId)
+      .collection("app_store_keys").doc(appName)
+      .get();
+    if (snap.exists) {
+      data   = snap.data();
+      source = `app_store_keys/${appName}`;
+    }
+  }
+
+  if (!data) {
+    console.error(`No ASC key found for user=${userId} (tried teamId=${teamId}, appName=${appName})`);
     process.exit(1);
   }
 
-  const data = snap.data();
   const privateKeyP8 = decryptAscKey(data.encryptedKey);
 
   // Fastlane expects key with literal \n (not real newlines) in JSON
@@ -69,6 +94,6 @@ function decryptAscKey(stored) {
   };
 
   fs.writeFileSync(outputPath, JSON.stringify(fastlaneKey, null, 2));
-  console.log(`✓ ASC key written to ${outputPath} (key_id=${data.keyId})`);
+  console.log(`✓ ASC key written to ${outputPath} (key_id=${data.keyId}, source=${source})`);
   process.exit(0);
 })();

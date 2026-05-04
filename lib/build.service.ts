@@ -120,7 +120,7 @@ async function ensureProvisioningProfile(ctx: any, certId: string, bundleId: str
 export async function prepareBuild(
   projectId: string,
   platform: "ios" | "android",
-  options: { autoSubmit?: boolean; buildNumber?: number } = {}
+  options: { autoSubmit?: boolean; buildNumber?: number; teamId?: string } = {}
 ) {
   const db     = getAdminDb();
   const bucket = getAdminBucket();
@@ -165,6 +165,7 @@ export async function prepareBuild(
     status:      "uploading",
     step:        "uploading",
     autoSubmit:  options.autoSubmit ?? false,
+    teamId:      options.teamId ?? null,
     buildNumber: resolvedBuildNumber,
     basePath,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
