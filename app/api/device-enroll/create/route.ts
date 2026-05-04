@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL
     || (typeof origin === "string" && origin.startsWith("http") ? origin : null)
     || (() => { const u = new URL(request.url); return `${u.protocol}//${u.host}`; })();
-  const enrollUrl = `${baseUrl}/api/device-enroll/${token}/profile`;
+  const enrollUrl = `${baseUrl}/enroll/${token}`;
 
   return NextResponse.json({ token, enrollUrl }, { status: 201 });
 }
