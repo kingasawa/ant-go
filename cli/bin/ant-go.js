@@ -110,6 +110,7 @@ set
     setLang(lang);
     console.log('');
     console.log(chalk.green(`  ${t('langSet', lang)}`));
+    console.log(chalk.gray(`  ${t('firstRunLangHint')}`));
     console.log('');
   });
 

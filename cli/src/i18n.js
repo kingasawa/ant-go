@@ -200,8 +200,8 @@ const MESSAGES = {
     en: 'Full documentation at:',
   },
   firstRunLangHint: {
-    vi: '💡  Muốn dùng CLI bằng tiếng Anh? Chạy: ant set lang en',
-    en: '💡  Prefer Vietnamese? Run: ant set lang vi',
+    vi: '💡  Prefer English? Run: ant set lang en',
+    en: '💡  Muốn dùng CLI bằng tiếng Việt? Chạy: ant set lang vi',
   },
 };
 
