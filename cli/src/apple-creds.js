@@ -261,12 +261,13 @@ async function selectDevices(existingDevices, projectId, apiClient) {
 
 // ── Public entry ──────────────────────────────────────────────────────────────
 async function ensureAppleCreds(projectInfo, {
-  force          = false,
-  refreshProfile = false,
-  distribution   = 'store',
-  profileName    = 'production',
-  userDevices    = [],
-  apiClient      = null,
+  force              = false,
+  refreshProfile     = false,
+  distribution       = 'store',
+  profileName        = 'production',
+  userDevices        = [],
+  apiClient          = null,
+  _preselectedUdids  = null,   // internal use: skip selectDevices when already chosen
 } = {}) {
 
   // ── Cache check ─────────────────────────────────────────────────────────────
@@ -276,8 +277,8 @@ async function ensureAppleCreds(projectInfo, {
       if (!cached.appleId) {
         clearCache(profileName);
       } else {
-        const email  = cached.appleId;
-        const teamId = cached.teamId || '';
+        const email   = cached.appleId;
+        const teamId  = cached.teamId || '';
         const cachedUdids = cached.udids ?? (cached.udid ? [cached.udid] : []);
         const udidHint = distribution === 'internal' && cachedUdids.length > 0
           ? `  Devices: ${cachedUdids.length}` : '';
@@ -292,7 +293,32 @@ async function ensureAppleCreds(projectInfo, {
             { name: t('appleLoginOther'),       value: false },
           ],
         }]);
-        if (useCache) return { ...cached, ...projectInfo };
+
+        if (useCache) {
+          // internal: luôn hỏi chọn device, dù dùng cache
+          if (distribution === 'internal') {
+            const selectedUdids = await selectDevices(userDevices, projectInfo.projectId, apiClient);
+            const sameDevices = selectedUdids.length === cachedUdids.length
+              && selectedUdids.every(u => cachedUdids.includes(u));
+
+            if (sameDevices) {
+              // Devices không đổi → dùng cache luôn
+              return { ...cached, udids: selectedUdids, ...projectInfo };
+            } else {
+              // Devices thay đổi → cần tạo lại provisioning profile
+              // Clear cache rồi chạy lại với force=true, bỏ qua bước chọn device
+              clearCache(profileName);
+              return await ensureAppleCreds(projectInfo, {
+                force: true, refreshProfile: true,
+                distribution, profileName,
+                userDevices: selectedUdids.map(u => ({ udid: u })),
+                apiClient,
+                _preselectedUdids: selectedUdids,
+              });
+            }
+          }
+          return { ...cached, ...projectInfo };
+        }
         clearCache(profileName);
       }
     }
@@ -388,7 +414,7 @@ async function ensureAppleCreds(projectInfo, {
   let selectedUdids = [];
   let deviceIds     = [];
   if (distribution === 'internal') {
-    selectedUdids = await selectDevices(userDevices, projectInfo.projectId, apiClient);
+    selectedUdids = _preselectedUdids ?? await selectDevices(userDevices, projectInfo.projectId, apiClient);
 
     // Đồng bộ từng UDID lên Apple Developer Portal
     const appleDevicesAll = await Device.getAsync(authCtx, {});
