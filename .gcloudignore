@@ -6,7 +6,7 @@
 # !.next
 
 # Loại trừ thêm
-cli/
+/cli/
 *.md
 !README.md
 .env.local
