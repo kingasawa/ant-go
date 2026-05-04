@@ -20,22 +20,23 @@ ant auth login
 ant auth login --browser
 ```
 
-### 2. Add configuration to `app.json`
+### 2. Add `projectId` to `app.json`
+
+Get your Project ID from [antgo.work](https://antgo.work) after creating a project.
 
 ```json
 {
   "expo": {
     "extra": {
       "ant": {
-        "projectId": "your-project-id",
-        "bundleId": "com.example.myapp",
-        "schemeName": "MyApp",
-        "xcworkspace": "MyApp.xcworkspace"
+        "projectId": "your-project-id"
       }
     }
   }
 }
 ```
+
+> The CLI automatically detects `bundleId`, `schemeName`, and `xcworkspace` from your project files. No extra configuration needed.
 
 ### 3. Build
 
