@@ -68,7 +68,10 @@ async function enrollDevice(projectId, apiClient) {
 
   console.log(chalk.bold(t('enrollQRScan')));
   console.log('');
-  await new Promise(resolve => qrcode.generate(enrollUrl, { small: true }, resolve));
+  await new Promise(resolve => qrcode.generate(enrollUrl, { small: true }, (qr) => {
+    console.log(qr);
+    resolve();
+  }));
   console.log('');
   console.log(chalk.gray(t('enrollOrOpen')) + chalk.underline(enrollUrl));
   console.log('');
