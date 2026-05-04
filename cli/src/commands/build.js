@@ -277,9 +277,12 @@ async function runBuild(options) {
   let userInfo;
   try {
     userInfo = await fetchUserInfo(client);
+    const creditsDisplay = userInfo.planCredits === -1
+      ? 'Unlimited'
+      : `${userInfo.credits.toFixed ? userInfo.credits.toFixed(1) : userInfo.credits}/${userInfo.planCredits}`;
     infoSpinner.succeed(
       `Plan: ${chalk.cyan(userInfo.plan)}  ·  ` +
-      `Builds còn lại: ${chalk.bold(userInfo.freeBuildsRemaining)}`
+      `Credits còn lại: ${chalk.bold(creditsDisplay)}`
     );
   } catch (err) {
     infoSpinner.fail('Không tải được thông tin tài khoản');
@@ -287,11 +290,11 @@ async function runBuild(options) {
     process.exit(1);
   }
 
-  // Kiểm tra quota
-  if (userInfo.plan === 'free' && userInfo.freeBuildsRemaining <= 0) {
+  // Kiểm tra quota (server cũng check, nhưng CLI check trước để UX tốt hơn)
+  if (userInfo.planCredits !== -1 && (userInfo.credits ?? 0) <= 0) {
     console.log('');
-    console.log(chalk.red('✖  Bạn đã hết lượt build miễn phí.'));
-    console.log(chalk.gray('   Nâng cấp tại: https://antgo.work/account/billing'));
+    console.log(chalk.red('✖  Bạn đã hết credit build.'));
+    console.log(chalk.gray('   Nâng cấp plan hoặc chờ reset đầu tháng tại: https://antgo.work/account/billing'));
     console.log('');
     process.exit(1);
   }

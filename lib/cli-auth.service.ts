@@ -7,7 +7,8 @@ export interface CliSession {
   photoURL: string | null;
   plan: string;
   builds: number;
-  freeBuildsRemaining: number;
+  credits: number;
+  planCredits: number;
 }
 
 export async function validateCliToken(token: string | null | undefined): Promise<CliSession | null> {
@@ -31,6 +32,7 @@ export async function validateCliToken(token: string | null | undefined): Promis
     photoURL: data.photoURL ?? null,
     plan: data.plan ?? "free",
     builds: data.builds ?? 0,
-    freeBuildsRemaining: data.freeBuildsRemaining ?? 10,
+    credits: data.credits ?? 0,
+    planCredits: data.planCredits ?? 15,
   };
 }

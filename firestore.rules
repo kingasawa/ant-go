@@ -17,6 +17,11 @@ service cloud.firestore {
       match /app_store_keys/{appName} {
         allow read, write: if false;
       }
+
+      // Credit history — chỉ Admin SDK
+      match /creditHistory/{histId} {
+        allow read, write: if false;
+      }
     }
 
     // ── Builds ────────────────────────────────────────────────────────────────

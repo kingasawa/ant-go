@@ -132,7 +132,7 @@ export default function DashboardPage() {
         <StatCard label="Total Builds"  value={builds.length}  sub="Tất cả thời gian"  href="/account/builds"  bgIcon={<BgBuilds />} />
         <StatCard label="Apps"          value={apps.length}    sub="Đã tạo"             href="/account/apps"    bgIcon={<BgApps />} />
         <StatCard label="Success Rate"  value={`${successRate}%`} sub={`${successCount} thành công`}            bgIcon={<BgSuccess />} />
-        <StatCard label="Plan"          value={profile?.plan ? profile.plan.charAt(0).toUpperCase() + profile.plan.slice(1) : "—"} sub={`${profile?.freeBuildsRemaining ?? "—"} free credits còn lại`} href="/account/billing" bgIcon={<BgPlan />} />
+        <StatCard label="Plan"          value={profile?.plan ? profile.plan.charAt(0).toUpperCase() + profile.plan.slice(1) : "—"} sub={(profile as any)?.planCredits === -1 ? "Unlimited credits" : `${(profile as any)?.credits ?? "—"} credits còn lại`} href="/account/usage" bgIcon={<BgPlan />} />
       </div>
 
       {/* Build status breakdown + Recent builds */}
@@ -159,21 +159,34 @@ export default function DashboardPage() {
                 </div>
             ))}
           </div>
-          {/* Free credit bar */}
-          {profile && (
-            <div className="mt-5 pt-4 border-t border-white/15">
-              <div className="flex justify-between mb-1.5">
-                <span className="text-xs text-white/50">Free credits</span>
-                <span className="text-xs text-white/50">{10 - profile.freeBuildsRemaining}/10 used</span>
+          {/* Credit bar */}
+          {profile && (() => {
+            const p = profile as any;
+            const credits: number = p.credits ?? 0;
+            const planCredits: number = p.planCredits ?? 15;
+            const isUnlimited = planCredits === -1;
+            const used = isUnlimited ? 0 : planCredits - credits;
+            const pct = isUnlimited ? 0 : Math.max(0, Math.min(100, (used / planCredits) * 100));
+            const low = !isUnlimited && credits / planCredits < 0.2;
+            return (
+              <div className="mt-5 pt-4 border-t border-white/15">
+                <div className="flex justify-between mb-1.5">
+                  <span className="text-xs text-white/50">Build Credits</span>
+                  <span className="text-xs text-white/50">
+                    {isUnlimited ? "Unlimited" : `${credits.toFixed(1)} / ${planCredits} còn lại`}
+                  </span>
+                </div>
+                {!isUnlimited && (
+                  <div className="w-full bg-white/10 rounded-full h-1.5">
+                    <div
+                      className={`h-1.5 rounded-full ${low ? "bg-red-400" : credits / planCredits < 0.5 ? "bg-yellow-400" : "bg-accent-light"}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                )}
               </div>
-              <div className="w-full bg-white/10 rounded-full h-1.5">
-                <div
-                  className={`h-1.5 rounded-full ${profile.freeBuildsRemaining <= 2 ? "bg-red-400" : profile.freeBuildsRemaining <= 5 ? "bg-yellow-400" : "bg-accent-light"}`}
-                  style={{ width: `${((10 - profile.freeBuildsRemaining) / 10) * 100}%` }}
-                />
-              </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
 
         {/* Recent builds */}

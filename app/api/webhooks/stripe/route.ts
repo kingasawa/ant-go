@@ -12,6 +12,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { PLAN_CREDITS } from "@/lib/createUserProfile";
+import { nextMonthFirstDay } from "@/lib/credit.service";
 
 export async function POST(request: NextRequest) {
   const sig = request.headers.get("stripe-signature");
@@ -47,12 +49,16 @@ export async function POST(request: NextRequest) {
 
       const customerId = typeof session.customer === "string" ? session.customer : null;
       const subId = typeof session.subscription === "string" ? session.subscription : null;
+      const planCredits = PLAN_CREDITS[plan] ?? 15;
 
       await db.collection("users").doc(uid).update({
         plan,
         planStatus: "active",
         stripeCustomerId: customerId,
         stripeSubscriptionId: subId,
+        credits: planCredits,
+        planCredits,
+        creditsResetAt: nextMonthFirstDay(),
         updatedAt: new Date(),
       });
       break;
@@ -65,11 +71,16 @@ export async function POST(request: NextRequest) {
 
       const priceId = sub.items.data[0]?.price.id ?? "";
       const plan = planByPrice[priceId] ?? "free";
+      const newPlan = sub.status === "active" ? plan : "free";
+      const planCredits = PLAN_CREDITS[newPlan] ?? 15;
 
       await db.collection("users").doc(uid).update({
-        plan: sub.status === "active" ? plan : "free",
+        plan: newPlan,
         planStatus: sub.status,
         stripeSubscriptionId: sub.id,
+        planCredits,
+        credits: planCredits,
+        creditsResetAt: nextMonthFirstDay(),
         updatedAt: new Date(),
       });
       break;
@@ -84,6 +95,9 @@ export async function POST(request: NextRequest) {
         plan: "free",
         planStatus: "canceled",
         stripeSubscriptionId: null,
+        planCredits: PLAN_CREDITS.free,
+        credits: PLAN_CREDITS.free,
+        creditsResetAt: nextMonthFirstDay(),
         updatedAt: new Date(),
       });
       break;
