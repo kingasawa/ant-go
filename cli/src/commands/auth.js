@@ -81,6 +81,9 @@ async function emailLoginFlow() {
     const msg = err.response?.data?.error ?? err.message;
     console.error(chalk.red(`  ✖  ${msg}`));
     console.log('');
+    console.log(chalk.yellow("  Don't have an account yet?"));
+    console.log(`  Register at: ${chalk.cyan('https://antgo.work/register')}`);
+    console.log('');
     process.exit(1);
   }
 }
