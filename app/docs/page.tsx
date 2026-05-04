@@ -391,6 +391,7 @@ export default function DocPage() {
               </div>
               <div className="mt-3 space-y-1">
                 <div className="text-green-400">✔ Job tạo thành công: <span className="text-accent-light">abc123xyz</span></div>
+                <div className="text-white/40">{"  "}Plan: <span className="text-accent-light">free</span>{"  ·  "}Credits còn lại: <span className="text-white">12/15</span></div>
                 <div className="text-green-400">✔ ASC API Key đã lưu vào dashboard</div>
                 <div className="text-green-400">✔ Project đã nén: <span className="text-white">12.4 MB</span></div>
                 <div className="text-green-400">✔ Upload ios.tar.gz hoàn tất</div>
@@ -731,8 +732,8 @@ export default function DocPage() {
               <div className="mt-3 space-y-1">
                 <div className="text-white/40">{"  "}Name:    <span className="text-white">Nguyen Van A</span></div>
                 <div className="text-white/40">{"  "}Email:   <span className="text-white">dev@example.com</span></div>
-                <div className="text-white/40">{"  "}Plan:    <span className="text-accent-light">Pro</span></div>
-                <div className="text-white/40">{"  "}Builds:  <span className="text-white">47 / unlimited</span></div>
+                <div className="text-white/40">{"  "}Plan:    <span className="text-accent-light">free</span></div>
+                <div className="text-white/40">{"  "}Credits: <span className="text-white">12/15</span></div>
                 <div className="text-white/40">{"  "}Expires: <span className="text-yellow-300">2026-05-01 10:30:00</span></div>
               </div>
             </Terminal>
