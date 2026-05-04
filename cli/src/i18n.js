@@ -370,7 +370,7 @@ const MESSAGES = {
   ascKeyCreated:     { vi: (id) => `ASC API Key tạo thành công: ${id}`, en: (id) => `ASC API Key created: ${id}` },
   ascKeyFailed:      { vi: (msg) => `Không lấy được ASC API Key: ${msg}`, en: (msg) => `Failed to get ASC API Key: ${msg}` },
   ascKeyNoIssuer:    { vi: '⚠  Không tự lấy được Issuer ID.', en: '⚠  Could not auto-fetch Issuer ID.' },
-  ascKeyIssuerHint:  { vi: '   Tìm tại: App Store Connect → Users & Access → Integrations → App Store Connect API', en: '   Find it at: App Store Connect → Users & Access → Integrations → App Store Connect API' },
+  ascKeyIssuerHint:  { vi: '   Tìm tại: https://appstoreconnect.apple.com/access/integrations/api', en: '   Find it at: https://appstoreconnect.apple.com/access/integrations/api' },
   ascKeyIssuerLabel: { vi: 'Issuer ID (UUID):', en: 'Issuer ID (UUID):' },
   ascKeyCached:      { vi: (id) => `✔  ASC API Key (cached): ${id}`, en: (id) => `✔  ASC API Key (cached): ${id}` },
   certLoading:       { vi: (label) => `Đang lấy ${label} Certificate...`, en: (label) => `Fetching ${label} Certificate...` },
