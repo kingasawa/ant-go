@@ -102,6 +102,84 @@ async function enrollDevice(projectId) {
   throw new Error('Device enrollment timeout');
 }
 
+// ── ASC API Key (App Store Connect) ──────────────────────────────────────────
+// Dùng cùng Apple Developer Portal session (authCtx) đã có sau khi login để
+// tạo + download ASC API Key (.p8). Cache tại ~/.ant-go/asc-key-{teamId}.json
+// (không có TTL vì key không tự hết hạn).
+async function ensureAscKey(authCtx, teamId) {
+  const { ApiKey, ApiKeyType } = require('@expo/apple-utils');
+  const ora = require('ora');
+  const cacheFile = path.join(CACHE_DIR, `asc-key-${teamId}.json`);
+
+  // 1. Đọc cache
+  let cached = null;
+  if (fs.existsSync(cacheFile)) {
+    try { cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8')); } catch {}
+  }
+
+  // 2. Nếu có cache → verify key còn tồn tại trên Apple
+  if (cached?.keyId && cached?.privateKeyP8) {
+    try {
+      const existingKeys = await ApiKey.getAsync(authCtx) ?? [];
+      const still = existingKeys.find(k => k.id === cached.keyId);
+      if (still) {
+        console.log(chalk.green(`✔  ASC API Key (cached): ${cached.keyId}`));
+        return cached;
+      }
+      // Key bị revoke trên Apple → xoá cache, tạo mới
+      fs.unlinkSync(cacheFile);
+    } catch {
+      // Không verify được (mạng / quyền) → dùng cache
+      return cached;
+    }
+  }
+
+  // 3. Tạo key mới
+  const spinner = ora('Đang tạo App Store Connect API Key...').start();
+  try {
+    const newKey = await ApiKey.createAsync(authCtx, {
+      nickname:       'ant-go',
+      roles:          ['ADMIN'],
+      allAppsVisible: true,
+      keyType:        ApiKeyType.PUBLIC_API,
+    });
+
+    const privateKeyP8 = await newKey.downloadAsync();
+    if (!privateKeyP8) throw new Error('Download .p8 trả về rỗng');
+
+    // 4. Lấy issuerId từ provider info
+    let issuerId = null;
+    try {
+      const keys = await ApiKey.getAsync(authCtx) ?? [];
+      issuerId = keys[0]?.attributes?.provider?.id ?? null;
+    } catch {}
+
+    if (!issuerId) {
+      spinner.stop();
+      console.log(chalk.yellow('\n⚠  Không tự lấy được Issuer ID.'));
+      console.log(chalk.gray('   Tìm tại: App Store Connect → Users & Access → Integrations → App Store Connect API'));
+      const { inputIssuerId } = await inquirer.prompt([{
+        type:     'input',
+        name:     'inputIssuerId',
+        message:  'Issuer ID (UUID):',
+        validate: v => v.trim() ? true : 'Bắt buộc',
+      }]);
+      issuerId = inputIssuerId.trim();
+      spinner.start();
+    }
+
+    const result = { keyId: newKey.id, issuerId, privateKeyP8, _savedAt: Date.now() };
+    fs.mkdirSync(CACHE_DIR, { recursive: true });
+    fs.writeFileSync(cacheFile, JSON.stringify(result, null, 2), { mode: 0o600 });
+    spinner.succeed(`ASC API Key tạo thành công: ${newKey.id}`);
+    return result;
+
+  } catch (err) {
+    spinner.warn(`Không lấy được ASC API Key: ${err.message}`);
+    return null;
+  }
+}
+
 // ── Multi-select device UI ────────────────────────────────────────────────────
 // Hiển thị danh sách device đã có + option thêm mới.
 // Returns: string[] — mảng các UDID được chọn
@@ -313,6 +391,12 @@ async function ensureAppleCreds(projectInfo, {
     throw err;
   }
 
+  // ── ASC API Key (chỉ store distribution) ────────────────────────────────────
+  let ascKey = null;
+  if (distribution === 'store') {
+    ascKey = await ensureAscKey(authCtx, teamId);
+  }
+
   // ── Device selection + enrollment (internal only) ────────────────────────────
   let selectedUdids = [];
   let deviceIds     = [];
@@ -448,7 +532,7 @@ async function ensureAppleCreds(projectInfo, {
     throw err;
   }
 
-  const creds = { appleId: appleId.trim(), p12Base64, p12Password, mobileprovisionBase64, teamId, udids: selectedUdids };
+  const creds = { appleId: appleId.trim(), p12Base64, p12Password, mobileprovisionBase64, teamId, udids: selectedUdids, ascKey };
   saveCache(creds, profileName);
   console.log(chalk.green('✔  Credentials đã cache tại: ') + chalk.gray(getCacheFile(profileName)));
   console.log('');
@@ -456,4 +540,4 @@ async function ensureAppleCreds(projectInfo, {
   return { ...creds, ...projectInfo };
 }
 
-module.exports = { ensureAppleCreds, loadCache, clearCache, getCacheFile };
+module.exports = { ensureAppleCreds, ensureAscKey, loadCache, clearCache, getCacheFile };

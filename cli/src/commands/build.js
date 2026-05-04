@@ -24,7 +24,7 @@ const CLI_VERSION = '1.0';
 
 const { API_URL, loadConfig }          = require('../config');
 const { ensureToken }                  = require('./auth');
-const { createClient, createBuild, getBuildStatus, fetchUserInfo } = require('../api');
+const { createClient, createBuild, getBuildStatus, fetchUserInfo, uploadAscKey } = require('../api');
 const { ensureAppleCreds }             = require('../apple-creds');
 const logger = require('../logger');
 
@@ -369,7 +369,19 @@ async function runBuild(options) {
     tarUrl   = res.tarUrl;
     credsUrl = res.credsUrl;
     const resolvedBN = res.buildNumber;
+    const appName    = res.appName ?? null;
     spinner.succeed(`Job tạo thành công: ${chalk.bold(jobId)}  ·  Build #${chalk.cyan(resolvedBN)}`);
+
+    // Upload ASC API Key lên dashboard (best-effort, không block build)
+    if (platform === 'ios' && creds?.ascKey && appName) {
+      const { keyId, issuerId, privateKeyP8 } = creds.ascKey;
+      try {
+        await uploadAscKey(client, { appName, keyId, issuerId, privateKeyP8 });
+        console.log(chalk.green('✔  ASC API Key đã lưu vào dashboard'));
+      } catch (err) {
+        console.log(chalk.yellow('⚠  Không lưu được ASC API Key: ') + chalk.gray(err.response?.data?.error ?? err.message));
+      }
+    }
   } catch (err) {
     spinner.fail('Tạo build job thất bại');
     const msg = err.response?.data?.error ?? err.message;

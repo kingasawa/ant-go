@@ -183,7 +183,7 @@ export async function prepareBuild(
     getUrl("credentials.json", "application/json"),
   ]);
 
-  return { jobId, tarUrl, credsUrl, buildNumber: resolvedBuildNumber };
+  return { jobId, tarUrl, credsUrl, buildNumber: resolvedBuildNumber, appName: projectSnap.data()?.name ?? null };
 }
 
 // ── withTimeout ───────────────────────────────────────────────────────────────
