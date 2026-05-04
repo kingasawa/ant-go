@@ -11,7 +11,7 @@ const ora     = require('ora');
 const inquirer = require('inquirer');
 
 const { API_URL, getAuth, setAuth, clearAuth, isLoggedIn } = require('../config');
-const { t } = require('../i18n');
+const { t, tError } = require('../i18n');
 
 // ── login ─────────────────────────────────────────────────────────────────────
 
@@ -72,8 +72,8 @@ async function emailLoginFlow() {
     printUserInfo(data);
   } catch (err) {
     spinner.fail(t('loginFailed'));
-    const msg = err.response?.data?.error ?? err.message;
-    console.error(chalk.red(`  ✖  ${msg}`));
+    const raw = err.response?.data?.error ?? err.message;
+    console.error(chalk.red(`  ✖  ${tError(raw)}`));
     console.log('');
     console.log(chalk.yellow(`  ${t('loginNoAccount')}`));
     console.log(`  ${t('loginRegisterAt')} ${chalk.cyan('https://antgo.work/register')}`);

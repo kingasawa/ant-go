@@ -176,7 +176,37 @@ const MESSAGES = {
     en: '  Run: npm install -g ant-go@latest to upgrade',
   },
 
-  // ── set lang ────────────────────────────────────────────────────────────────
+  // ── server error codes ───────────────────────────────────────────────────────
+  serverError: {
+    EMAIL_NOT_FOUND: {
+      vi: 'Không tìm thấy tài khoản với email này.',
+      en: 'No account found with this email.',
+    },
+    INVALID_PASSWORD: {
+      vi: 'Mật khẩu không đúng.',
+      en: 'Incorrect password.',
+    },
+    INVALID_EMAIL: {
+      vi: 'Email không hợp lệ.',
+      en: 'Invalid email address.',
+    },
+    USER_DISABLED: {
+      vi: 'Tài khoản đã bị vô hiệu hóa.',
+      en: 'This account has been disabled.',
+    },
+    TOO_MANY_ATTEMPTS_TRY_LATER: {
+      vi: 'Quá nhiều lần thử. Vui lòng thử lại sau.',
+      en: 'Too many attempts. Please try again later.',
+    },
+    INVALID_LOGIN_CREDENTIALS: {
+      vi: 'Email hoặc mật khẩu không đúng.',
+      en: 'Incorrect email or password.',
+    },
+  },
+  loginFailedDefault: {
+    vi: 'Đăng nhập thất bại. Kiểm tra lại email và mật khẩu.',
+    en: 'Login failed. Please check your email and password.',
+  },
   langSet: {
     vi: (lang) => `✓ Ngôn ngữ đã đổi sang: ${lang === 'vi' ? 'Tiếng Việt' : 'English'}`,
     en: (lang) => `✓ Language set to: ${lang === 'vi' ? 'Tiếng Việt' : 'English'}`,
@@ -222,5 +252,25 @@ function t(key, ...args) {
   return typeof val === 'function' ? val(...args) : val;
 }
 
-module.exports = { t, getLang, MESSAGES };
+// Translate server error — match by code embedded in message or use raw message
+function tError(serverMessage) {
+  const lang = getLang();
+  const errors = MESSAGES.serverError;
+  // Try to find a matching error code in the server message
+  for (const [code, translations] of Object.entries(errors)) {
+    if (serverMessage?.includes(code) || serverMessage === translations['vi'] || serverMessage === translations['en']) {
+      return translations[lang] ?? translations['vi'];
+    }
+  }
+  // Vietnamese messages from server — translate known ones
+  const viMessages = Object.values(errors).map(e => e['vi']);
+  const idx = viMessages.indexOf(serverMessage);
+  if (idx !== -1) {
+    const code = Object.keys(errors)[idx];
+    return errors[code][lang] ?? serverMessage;
+  }
+  return serverMessage;
+}
+
+module.exports = { t, tError, getLang, MESSAGES };
 
