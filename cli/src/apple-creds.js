@@ -51,7 +51,7 @@ function clearCache(profileName) {
 
 // ── Device enrollment via .mobileconfig ──────────────────────────────────────
 // Returns { udid, deviceProduct, deviceSerial }
-async function enrollDevice(projectId) {
+async function enrollDevice(projectId, apiClient) {
   console.log('');
   console.log(chalk.cyan(t('enrollNewDevice')));
   console.log(chalk.gray(t('enrollQRHint')));
@@ -59,7 +59,7 @@ async function enrollDevice(projectId) {
 
   let token, enrollUrl;
   try {
-    const res = await axios.post(`${API_URL}/api/device-enroll/create`, { projectId });
+    const res = await apiClient.post(`/api/device-enroll/create`, { projectId });
     token     = res.data.token;
     enrollUrl = res.data.enrollUrl;
   } catch (err) {
@@ -82,7 +82,7 @@ async function enrollDevice(projectId) {
   while (Date.now() < deadline) {
     await new Promise(r => setTimeout(r, POLL_INTERVAL));
     try {
-      const res = await axios.get(`${API_URL}/api/device-enroll/${token}/status`);
+      const res = await apiClient.get(`/api/device-enroll/${token}/status`);
       const { status, udid, deviceProduct, deviceSerial } = res.data;
       if (status === 'registered' && udid) {
         spinner.succeed(chalk.green(t('enrollConfirmed', deviceProduct || udid, udid)));
@@ -190,7 +190,7 @@ async function selectDevices(existingDevices, projectId, apiClient) {
   // Nếu chưa có device nào → đi thẳng vào enrollment
   if (devices.length === 0) {
     console.log(chalk.gray('   ' + t('appleDevicesNone')));
-    const enrolled = await enrollDevice(projectId);
+    const enrolled = await enrollDevice(projectId, apiClient);
     const { deviceName } = await inquirer.prompt([{
       type:    'input',
       name:    'deviceName',
@@ -231,7 +231,7 @@ async function selectDevices(existingDevices, projectId, apiClient) {
     if (!selected.includes('__new__')) return selected;
 
     // Thêm device mới → enroll → lưu Firestore → quay lại chọn
-    const enrolled = await enrollDevice(projectId);
+    const enrolled = await enrollDevice(projectId, apiClient);
     const { deviceName } = await inquirer.prompt([{
       type:    'input',
       name:    'deviceName',
