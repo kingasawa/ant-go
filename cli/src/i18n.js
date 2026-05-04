@@ -521,9 +521,9 @@ const MESSAGES = {
 function getLang() {
   try {
     const cfg = loadConfig();
-    return cfg.lang === 'en' ? 'en' : 'vi';
+    return cfg.lang === 'vi' ? 'vi' : 'en';
   } catch {
-    return 'vi';
+    return 'en';
   }
 }
 

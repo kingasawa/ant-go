@@ -50,7 +50,7 @@ function isLoggedIn() {
 }
 
 function getLang() {
-  return loadConfig().lang === 'en' ? 'en' : 'vi';
+  return loadConfig().lang === 'vi' ? 'vi' : 'en';
 }
 
 function setLang(lang) {
