@@ -83,10 +83,16 @@ CLI gọi `ensureAppleCreds()` trong `apple-creds.js`:
 2. **Nếu không có cache** → hỏi Apple ID + App-Specific Password qua prompt.
 3. **Login Apple** qua `@expo/apple-utils` `Auth.loginAsync()` — hỗ trợ 2FA.
 4. **Chọn Team** nếu account có nhiều team.
-5. **UDID enrollment** (chỉ `distribution: internal`) → qua QR code / `.mobileconfig` (xem [device-enrollment-flow.md](./device-enrollment-flow.md)) → đăng ký UDID lên Apple Developer Portal.
-6. **Distribution/Development Certificate** → reuse nếu có, tạo mới nếu chưa có → export `.p12`.
-7. **Provisioning Profile** → reuse nếu còn ACTIVE và khớp cert, tạo lại nếu không.
-8. **Lưu cache** kết quả vào `~/.ant-go/creds-{profileName}.json`.
+5. **ASC API Key** (chỉ `distribution: store`) → gọi `ensureAscKey(authCtx, teamId)`:
+   - Kiểm tra cache tại `~/.ant-go/asc-key-{teamId}.json`
+   - Nếu có cache → verify key còn trên Apple qua `ApiKey.getAsync()` → dùng lại nếu còn
+   - Nếu không → `ApiKey.createAsync()` + `downloadAsync()` để tạo key mới và lấy file `.p8` ngay lập tức
+   - Cache kết quả, trả về `{ keyId, issuerId, privateKeyP8 }`
+   - Xem thêm: [`docs/apple-utils-asc-key.md`](./apple-utils-asc-key.md)
+6. **UDID enrollment** (chỉ `distribution: internal`) → qua QR code / `.mobileconfig` (xem [device-enrollment-flow.md](./device-enrollment-flow.md)) → đăng ký UDID lên Apple Developer Portal.
+7. **Distribution/Development Certificate** → reuse nếu có, tạo mới nếu chưa có → export `.p12`.
+8. **Provisioning Profile** → reuse nếu còn ACTIVE và khớp cert, tạo lại nếu không.
+9. **Lưu cache** kết quả vào `~/.ant-go/creds-{profileName}.json` (bao gồm cả `ascKey`).
 
 Kết quả trả về:
 ```json
@@ -100,9 +106,16 @@ Kết quả trả về:
   "schemeName": "MyApp",
   "xcworkspace": "MyApp.xcworkspace",
   "xcodeproj": "MyApp.xcodeproj",
-  "distribution": "store"
+  "distribution": "store",
+  "ascKey": {
+    "keyId": "XXXXXXXXXX",
+    "issuerId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "privateKeyP8": "-----BEGIN PRIVATE KEY-----\n..."
+  }
 }
 ```
+
+> `ascKey` chỉ có khi `distribution === 'store'`. Với `internal` distribution, `ascKey` là `null`.
 
 ---
 
@@ -132,7 +145,17 @@ Body: { projectId, platform, autoSubmit }
    - Tạo 2 **GCS Signed URL** (write, hết hạn sau 30 phút):
      - `builds/{jobId}/ios.tar.gz` (hoặc `android.tar.gz`)
      - `builds/{jobId}/credentials.json`
-3. Trả về: `{ jobId, tarUrl, credsUrl }`
+3. Trả về: `{ jobId, tarUrl, credsUrl, buildNumber, appName }`
+
+Ngay sau khi nhận response, nếu `platform === 'ios'` và `creds.ascKey` có giá trị, CLI thực hiện thêm bước upload ASC key (best-effort, non-blocking):
+
+```
+POST /api/user/asc-key
+Authorization: Bearer <cliToken>
+Body: { appName, keyId, issuerId, privateKeyP8 }
+```
+
+Server mã hoá `privateKeyP8` bằng AES-256-GCM rồi upsert vào `users/{uid}/app_store_keys/{appName}` — đúng chỗ mà luồng submit TestFlight đọc. Từ đây user không cần setup ASC key thủ công trên dashboard nữa.
 
 ---
 
@@ -182,6 +205,83 @@ Gọi `startBuild(id)` **async (không block response)**:
 3. Nếu thiếu → cập nhật `status = "failed"`, ghi `errorMessage`.
 
 CLI nhận response `{ ok: true }`, in URL theo dõi và **thoát ngay** — không poll thêm.
+
+---
+
+### Flag `--auto-submit` — Luồng end-to-end
+
+#### CLI (validation trước khi gửi)
+
+Khi user chạy `ant-go build --platform ios --auto-submit`:
+
+1. **Validate profile**: CLI kiểm tra `distribution` của profile đang dùng. Nếu không phải `store` → báo lỗi và thoát ngay:
+   ```
+   ✖  --auto-submit chỉ dùng được với distribution: store
+      Profile "production" đang dùng distribution: internal
+   ```
+2. **In header**: Nếu hợp lệ, header build sẽ hiện thêm dòng `Auto Submit: TestFlight`.
+3. **Gửi lên server**: `autoSubmit: true` được đính kèm trong body của `POST /api/builds`.
+4. **Thông báo sau khi gửi**: CLI in thêm dòng:
+   ```
+   ✈  Auto Submit: bật — IPA sẽ tự động được gửi lên TestFlight sau khi build xong.
+   ```
+
+#### Server — Lưu flag vào Firestore
+
+`POST /api/builds` → `prepareBuild()` lưu `autoSubmit: true/false` vào document `builds/{jobId}` ngay khi tạo job.
+
+#### Dashboard — Hiển thị indicator
+
+Trang build detail đọc field `autoSubmit` từ Firestore. Khi `autoSubmit === true`:
+- Header hiển thị badge **"✈ Auto Submit"** bên cạnh status badge.
+- Tab **Info** hiển thị thêm dòng `Auto Submit: TestFlight` trong bảng thông tin.
+
+#### Sau khi build thành công — Trigger submission tự động
+
+Khi Mac build server cập nhật `status = "success"` trên Firestore build doc, dashboard lắng nghe `onSnapshot` và phát hiện `autoSubmit === true`:
+
+1. Dashboard tự động gọi:
+   ```
+   POST /api/apps/{appName}/submissions
+   { buildId }
+   ```
+2. Nếu user **chưa có App Store Connect key** → API trả về `422 { error: "missing_asc_key" }`:
+   - Dashboard hiển thị modal **AppStoreKeyModal** yêu cầu user nhập Key ID + Issuer ID + file `.p8`.
+   - Sau khi user lưu key, dashboard tự retry `POST /submissions`.
+3. Nếu đã có key → submission được tạo ngay, dashboard chuyển sang submission page để theo dõi tiến trình.
+
+> **Lưu ý:** Auto-submit chỉ trigger **một lần** sau khi `status` chuyển sang `"success"`. Dashboard dùng `useRef` để track xem đã trigger chưa, tránh gọi lại khi component re-render.
+
+#### Tóm tắt luồng `--auto-submit`
+
+```
+CLI                          Dashboard                     Cloud Build (Submit)
+ │                               │                               │
+ ├── validate distribution=store │                               │
+ ├── POST /api/builds            │                               │
+ │   { autoSubmit: true }        │                               │
+ │                               │ builds/{id}.autoSubmit=true   │
+ │   ... build diễn ra bình thường ...                           │
+ │                               │                               │
+ │                               │ onSnapshot: status="success"  │
+ │                               │ + autoSubmit=true             │
+ │                               │                               │
+ │                               ├── POST /api/apps/{app}/submissions
+ │                               │   { buildId }                 │
+ │                               │                               │
+ │                               │ (nếu thiếu ASC key)           │
+ │                               ├── Hiện AppStoreKeyModal        │
+ │                               │   → user nhập key             │
+ │                               │   → retry POST /submissions   │
+ │                               │                               │
+ │                               │◄── { submissionId }           │
+ │                               │                               │
+ │                               │              ── trigger Cloud Build job ──►
+ │                               │                               │
+ │                               │◄── poll submissions/{id} ─────┤
+ │                               │    pending → uploading        │
+ │                               │    → processing → done/failed │
+```
 
 ---
 

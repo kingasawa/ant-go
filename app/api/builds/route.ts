@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const { projectId, platform, autoSubmit, buildNumber } = body;
+  const { projectId, platform, autoSubmit, buildNumber, teamId } = body;
 
   if (!projectId || typeof projectId !== "string") {
     return NextResponse.json({ error: "projectId là bắt buộc" }, { status: 400 });
@@ -38,12 +38,12 @@ export async function POST(request: NextRequest) {
       : undefined;
 
   try {
-    const { jobId, tarUrl, credsUrl, buildNumber: resolvedBuildNumber } = await prepareBuild(
+    const { jobId, tarUrl, credsUrl, buildNumber: resolvedBuildNumber, appName } = await prepareBuild(
       projectId.trim(),
       platform,
-      { autoSubmit: autoSubmit === true, buildNumber: parsedBuildNumber }
+      { autoSubmit: autoSubmit === true, buildNumber: parsedBuildNumber, teamId: typeof teamId === "string" ? teamId : undefined }
     );
-    return NextResponse.json({ jobId, tarUrl, credsUrl, buildNumber: resolvedBuildNumber }, { status: 201 });
+    return NextResponse.json({ jobId, tarUrl, credsUrl, buildNumber: resolvedBuildNumber, appName }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: err.status ?? 500 });
   }
