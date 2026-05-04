@@ -7,7 +7,7 @@ const { createClient, getBuildStatus } = require('../api');
 const { watchBuild }                   = require('./build');
 const logger = require('../logger');
 const chalk  = require('chalk');
-const { t }  = require('../i18n');
+const { t, tError } = require('../i18n');
 
 async function checkStatus(jobId, options) {
   const client = createClient(API_URL);
@@ -16,7 +16,7 @@ async function checkStatus(jobId, options) {
   try {
     data = await getBuildStatus(client, jobId);
   } catch (err) {
-    logger.error(err.response?.data?.message ?? err.message);
+    logger.error(tError(err.response?.data?.message ?? err.response?.data?.error ?? err.message));
     process.exit(1);
   }
 

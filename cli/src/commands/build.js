@@ -27,7 +27,7 @@ const { ensureToken }                  = require('./auth');
 const { createClient, createBuild, getBuildStatus, fetchUserInfo, uploadAscKey } = require('../api');
 const { ensureAppleCreds }             = require('../apple-creds');
 const logger = require('../logger');
-const { t }  = require('../i18n');
+const { t, tError } = require('../i18n');
 
 const STEP_LABELS = {
   uploading:      '☁️  CLI đang upload project...',

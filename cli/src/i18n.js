@@ -177,31 +177,71 @@ const MESSAGES = {
   },
 
   // ── server error codes ───────────────────────────────────────────────────────
+  // Firebase auth error codes
   serverError: {
-    EMAIL_NOT_FOUND: {
-      vi: 'Không tìm thấy tài khoản với email này.',
-      en: 'No account found with this email.',
+    EMAIL_NOT_FOUND:              { vi: 'Không tìm thấy tài khoản với email này.',      en: 'No account found with this email.' },
+    INVALID_PASSWORD:             { vi: 'Mật khẩu không đúng.',                         en: 'Incorrect password.' },
+    INVALID_EMAIL:                { vi: 'Email không hợp lệ.',                           en: 'Invalid email address.' },
+    USER_DISABLED:                { vi: 'Tài khoản đã bị vô hiệu hóa.',                 en: 'This account has been disabled.' },
+    TOO_MANY_ATTEMPTS_TRY_LATER:  { vi: 'Quá nhiều lần thử. Vui lòng thử lại sau.',     en: 'Too many attempts. Please try again later.' },
+    INVALID_LOGIN_CREDENTIALS:    { vi: 'Email hoặc mật khẩu không đúng.',              en: 'Incorrect email or password.' },
+    // Auth / token
+    'Chưa đăng nhập. Chạy: ant auth login':         { vi: 'Bạn chưa đăng nhập.',                          en: 'You are not logged in.' },
+    'Chưa đăng nhập. Chạy: ant-go auth login':       { vi: 'Bạn chưa đăng nhập.',                          en: 'You are not logged in.' },
+    'Missing Authorization header':                   { vi: 'Thiếu Authorization header.',                  en: 'Missing Authorization header.' },
+    'Token không hợp lệ hoặc đã hết hạn':            { vi: 'Token không hợp lệ hoặc đã hết hạn.',         en: 'Token is invalid or expired.' },
+    'Token không hợp lệ':                            { vi: 'Token không hợp lệ.',                          en: 'Invalid token.' },
+    'Token không tồn tại':                           { vi: 'Token không tồn tại.',                         en: 'Token not found.' },
+    'Token đã hết hạn':                              { vi: 'Token đã hết hạn.',                            en: 'Token has expired.' },
+    'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.': { vi: 'Phiên đăng nhập đã hết hạn.',          en: 'Session expired. Please login again.' },
+    'Không thể xác thực token':                      { vi: 'Không thể xác thực token.',                   en: 'Failed to verify token.' },
+    'Không thể xác thực token mới':                  { vi: 'Không thể xác thực token mới.',               en: 'Failed to verify new token.' },
+    'Email và password là bắt buộc':                 { vi: 'Email và password là bắt buộc.',               en: 'Email and password are required.' },
+    'refreshToken là bắt buộc':                      { vi: 'refreshToken là bắt buộc.',                   en: 'refreshToken is required.' },
+    'idToken là bắt buộc':                           { vi: 'idToken là bắt buộc.',                        en: 'idToken is required.' },
+    // Build
+    'Build job not found':                           { vi: 'Không tìm thấy build job.',                   en: 'Build job not found.' },
+    'Build not found':                               { vi: 'Không tìm thấy build.',                       en: 'Build not found.' },
+    'Build không tồn tại':                           { vi: 'Build không tồn tại.',                        en: 'Build not found.' },
+    'Build ID is required':                          { vi: 'Thiếu Build ID.',                              en: 'Build ID is required.' },
+    'Build chưa có IPA':                             { vi: 'Build chưa có IPA.',                          en: 'Build has no IPA yet.' },
+    'Build has no userId':                           { vi: 'Build không có userId.',                      en: 'Build has no userId.' },
+    'Chỉ có thể submit build đã thành công':         { vi: 'Chỉ có thể submit build đã thành công.',     en: 'Only successful builds can be submitted.' },
+    'Không thể khởi động upload job':                { vi: 'Không thể khởi động upload job.',             en: 'Failed to start upload job.' },
+    'buildId là bắt buộc':                           { vi: 'buildId là bắt buộc.',                       en: 'buildId is required.' },
+    'ids is required':                               { vi: 'Thiếu danh sách ids.',                        en: 'ids is required.' },
+    'Log file not available for this build':         { vi: 'Log chưa có cho build này.',                  en: 'Log file not available for this build.' },
+    // Credits / plan
+    'Hết credit. Nâng cấp plan hoặc chờ reset đầu tháng tại antgo.work/account/billing': {
+      vi: 'Hết credit. Nâng cấp plan tại antgo.work/account/billing.',
+      en: 'Out of credits. Upgrade your plan at antgo.work/account/billing.',
     },
-    INVALID_PASSWORD: {
-      vi: 'Mật khẩu không đúng.',
-      en: 'Incorrect password.',
-    },
-    INVALID_EMAIL: {
-      vi: 'Email không hợp lệ.',
-      en: 'Invalid email address.',
-    },
-    USER_DISABLED: {
-      vi: 'Tài khoản đã bị vô hiệu hóa.',
-      en: 'This account has been disabled.',
-    },
-    TOO_MANY_ATTEMPTS_TRY_LATER: {
-      vi: 'Quá nhiều lần thử. Vui lòng thử lại sau.',
-      en: 'Too many attempts. Please try again later.',
-    },
-    INVALID_LOGIN_CREDENTIALS: {
-      vi: 'Email hoặc mật khẩu không đúng.',
-      en: 'Incorrect email or password.',
-    },
+    'Invalid plan':                                  { vi: 'Plan không hợp lệ.',                         en: 'Invalid plan.' },
+    // App
+    'App not found or forbidden':                    { vi: 'Không tìm thấy app hoặc không có quyền truy cập.', en: 'App not found or access denied.' },
+    'App not found':                                 { vi: 'Không tìm thấy app.',                        en: 'App not found.' },
+    'name là bắt buộc':                              { vi: 'Tên app là bắt buộc.',                       en: 'App name is required.' },
+    'projectId là bắt buộc':                         { vi: 'projectId là bắt buộc.',                     en: 'projectId is required.' },
+    // Device
+    'udid là bắt buộc':                              { vi: 'udid là bắt buộc.',                          en: 'udid is required.' },
+    // ASC key
+    'keyId, issuerId và privateKeyP8 là bắt buộc':  { vi: 'keyId, issuerId và privateKeyP8 là bắt buộc.', en: 'keyId, issuerId and privateKeyP8 are required.' },
+    'teamId, keyId, issuerId và privateKeyP8 là bắt buộc': { vi: 'teamId, keyId, issuerId và privateKeyP8 là bắt buộc.', en: 'teamId, keyId, issuerId and privateKeyP8 are required.' },
+    'privateKeyP8 không hợp lệ — phải là nội dung file .p8': { vi: 'privateKeyP8 không hợp lệ — phải là nội dung file .p8.', en: 'privateKeyP8 is invalid — must be the contents of a .p8 file.' },
+    'missing_asc_key':                               { vi: 'Thiếu App Store Connect API Key.',            en: 'Missing App Store Connect API Key.' },
+    // General
+    'Unauthorized':                                  { vi: 'Không có quyền truy cập.',                   en: 'Unauthorized.' },
+    'Forbidden':                                     { vi: 'Bị từ chối truy cập.',                       en: 'Access forbidden.' },
+    'Không tìm thấy':                                { vi: 'Không tìm thấy.',                            en: 'Not found.' },
+    'Invalid JSON body':                             { vi: 'Body JSON không hợp lệ.',                    en: 'Invalid JSON body.' },
+    'Invalid signature':                             { vi: 'Chữ ký không hợp lệ.',                       en: 'Invalid signature.' },
+    'Missing signature':                             { vi: 'Thiếu chữ ký.',                              en: 'Missing signature.' },
+    'Server misconfigured':                          { vi: 'Lỗi cấu hình server.',                       en: 'Server misconfigured.' },
+    'No billing account found':                      { vi: 'Không tìm thấy tài khoản thanh toán.',       en: 'No billing account found.' },
+    'durationMs phải là số dương':                   { vi: 'durationMs phải là số dương.',               en: 'durationMs must be a positive number.' },
+    'repoFullName phải có định dạng owner/repo':     { vi: 'repoFullName phải có định dạng owner/repo.', en: 'repoFullName must be in the format owner/repo.' },
+    'antgoAppId and repoFullName are required':      { vi: 'Thiếu antgoAppId hoặc repoFullName.',        en: 'antgoAppId and repoFullName are required.' },
+    'GITHUB_APP_SLUG chưa được cấu hình':            { vi: 'GITHUB_APP_SLUG chưa được cấu hình.',        en: 'GITHUB_APP_SLUG is not configured.' },
   },
   loginFailedDefault: {
     vi: 'Đăng nhập thất bại. Kiểm tra lại email và mật khẩu.',
@@ -252,23 +292,25 @@ function t(key, ...args) {
   return typeof val === 'function' ? val(...args) : val;
 }
 
-// Translate server error — match by code embedded in message or use raw message
+// Translate server error message — supports Firebase error codes and Vietnamese strings
 function tError(serverMessage) {
+  if (!serverMessage) return serverMessage;
   const lang = getLang();
   const errors = MESSAGES.serverError;
-  // Try to find a matching error code in the server message
+
+  // 1. Direct key match (Firebase error codes or exact Vietnamese strings)
+  if (errors[serverMessage]) {
+    return errors[serverMessage][lang] ?? errors[serverMessage]['vi'];
+  }
+
+  // 2. Firebase error code embedded in message (e.g. "INVALID_LOGIN_CREDENTIALS : ...")
   for (const [code, translations] of Object.entries(errors)) {
-    if (serverMessage?.includes(code) || serverMessage === translations['vi'] || serverMessage === translations['en']) {
+    if (serverMessage.includes(code)) {
       return translations[lang] ?? translations['vi'];
     }
   }
-  // Vietnamese messages from server — translate known ones
-  const viMessages = Object.values(errors).map(e => e['vi']);
-  const idx = viMessages.indexOf(serverMessage);
-  if (idx !== -1) {
-    const code = Object.keys(errors)[idx];
-    return errors[code][lang] ?? serverMessage;
-  }
+
+  // 3. No match — return raw server message as-is
   return serverMessage;
 }
 
