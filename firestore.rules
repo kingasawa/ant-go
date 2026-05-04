@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Users ─────────────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // ASC API Keys (per Apple Developer Team) — CLI auto-upload
+      // Chỉ Admin SDK (server-side) được đọc/ghi — client không có quyền trực tiếp
+      match /asc_keys/{teamId} {
+        allow read, write: if false;
+      }
+
+      // App Store Keys (per app) — dashboard manual setup, backward compat
+      // Chỉ Admin SDK (server-side) được đọc/ghi
+      match /app_store_keys/{appName} {
+        allow read, write: if false;
+      }
+    }
+
+    // ── Builds ────────────────────────────────────────────────────────────────
+    match /builds/{buildId} {
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        exists(/databases/$(database)/documents/apps/$(resource.data.projectId)) &&
+        get(/databases/$(database)/documents/apps/$(resource.data.projectId)).data.userId == request.auth.uid
+      );
+      allow create: if request.auth != null;
+      allow update, delete: if false;
+
+      match /logs/{logId} {
+        allow read: if request.auth != null;
+      }
+    }
+
+    // ── Apps ──────────────────────────────────────────────────────────────────
+    match /apps/{appId} {
+      allow read, delete: if request.auth != null
+                          && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null
+                    && resource.data.userId == request.auth.uid;
+    }
+
+  }
+}
+
