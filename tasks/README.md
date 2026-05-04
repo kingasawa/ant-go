@@ -144,6 +144,43 @@ Các trường hợp đặc biệt khác cần kiểm tra:
 
 ---
 
+### 6b. Biến môi trường mới — checklist bắt buộc
+
+**Bất cứ khi nào task thêm biến môi trường mới** (dù là secret hay plain value), phải hoàn thành **toàn bộ** checklist sau trước khi đóng task:
+
+#### Nếu là **secret** (API key, password, token, ...):
+
+```
+[ ] 1. Tạo secret trong GCP Secret Manager:
+        gcloud secrets create <TÊN> --project=<PROJECT> --data-file=-
+
+[ ] 2. Grant secretAccessor cho CẢ HAI service account:
+        - {projectNumber}@cloudbuild.gserviceaccount.com
+        - {project}@appspot.gserviceaccount.com
+
+[ ] 3. Thêm vào cloudbuild.appengine.yaml — ĐỦ 3 CHỖ:
+        a) secretEnv: (trong step generate env.yaml)
+        b) env.yaml heredoc: KEY: '$$KEY'
+        c) availableSecrets.secretManager: versionName + env
+
+[ ] 4. Thêm vào env.yaml local (để dev + deploy thủ công):
+        KEY: "value"
+```
+
+#### Nếu là **plain value** (public config, feature flag, ...):
+
+```
+[ ] 1. Thêm vào cloudbuild.appengine.yaml — 2 CHỖ:
+        a) substitutions: _KEY: "value"
+        b) env.yaml heredoc: KEY: "${_KEY}"
+
+[ ] 2. Thêm vào env.yaml local.
+```
+
+> **Lý do phải đủ 3 chỗ với secret:** `secretEnv` khai báo secret được inject vào step, `availableSecrets` link tới Secret Manager, env.yaml heredoc ghi giá trị vào file để App Engine đọc. Thiếu bất kỳ chỗ nào → Cloud Build fail hoặc App Engine không có biến.
+
+---
+
 ### 7. Tạo PR khi hoàn thành
 
 1. Push branch lên remote.
@@ -166,6 +203,7 @@ Mỗi khi có lỗi **build thất bại hoặc lỗi production**, phải ghi v
 | 1 | submit-ipa-testflight | `"getAscKeyForUser" is not a valid Route export field` — Next.js build fail | Export function nội bộ (`getAscKeyForUser`) trực tiếp từ file route (`app/api/.../route.ts`). Next.js chỉ cho phép export HTTP methods từ route file. | Chuyển function ra file riêng trong `lib/` (`lib/asc-key.ts`) và import từ đó. **Quy tắc:** function nội bộ không được export từ route file. |
 | 2 | submit-ipa-testflight | Cloud Build fail: `Permission 'secretmanager.versions.access' denied` trên secret `ASC_ENCRYPTION_KEY` | Secret mới tạo trong Secret Manager không có IAM binding — Cloud Build service account không có quyền đọc. | Grant `roles/secretmanager.secretAccessor` cho `{projectNumber}@cloudbuild.gserviceaccount.com` VÀ `{project}@appspot.gserviceaccount.com`. **Quy tắc:** mỗi khi tạo secret mới trong Secret Manager, phải grant quyền cho cả 2 SA này ngay. |
 | 3 | submit-ipa-testflight | Site 500: `You cannot use different slug names for the same dynamic path ('appName' !== 'id')` — crash toàn bộ app | Tạo `app/api/apps/[appName]/` trong khi đã có `app/api/apps/[id]/`. Next.js không cho phép hai dynamic segment khác tên ở cùng cấp. | Đặt tất cả route con vào cùng một tên segment. **Quy tắc:** trước khi tạo route mới trong `app/api/`, kiểm tra xem folder cha đã có dynamic segment `[xxx]` nào chưa — phải dùng đúng tên đó. |
+| 4 | credit-system | `INTERNAL_BUILD_SECRET` và `CRON_SECRET` thiếu trong `cloudbuild.appengine.yaml` — Cloud Build deploy xong nhưng App Engine không có 2 biến này | Task tạo secret mới nhưng không cập nhật `cloudbuild.appengine.yaml` (thiếu cả 3 chỗ: `secretEnv`, heredoc, `availableSecrets`) và không tạo secret trong Secret Manager | Bổ sung **Rule 6b** — checklist bắt buộc mỗi khi task thêm biến môi trường mới. Mọi secret phải: tạo trong Secret Manager → grant IAM → thêm đủ 3 chỗ trong `cloudbuild.appengine.yaml` → thêm vào `env.yaml` local. |
 
 ---
 
