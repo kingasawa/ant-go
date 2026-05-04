@@ -11,7 +11,7 @@ npm install -g ant-go
 ## Upgrading
 
 ```bash
-npm install -g ant-go
+npm install -g ant-go@latest
 ```
 
 To check your current version:

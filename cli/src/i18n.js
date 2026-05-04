@@ -172,8 +172,8 @@ const MESSAGES = {
     en: (cur, lat) => `  Update available: ${cur} → ${lat}`,
   },
   updateRun: {
-    vi: '  Chạy: npm install -g ant-go để cập nhật',
-    en: '  Run: npm install -g ant-go to upgrade',
+    vi: '  Chạy: npm install -g ant-go@latest để cập nhật',
+    en: '  Run: npm install -g ant-go@latest to upgrade',
   },
 
   // ── set lang ────────────────────────────────────────────────────────────────
