@@ -69,6 +69,7 @@ Trước khi bắt đầu bất kỳ subtask nào:
 1. Đọc các file liên quan để hiểu luồng hiện tại.
 2. Nếu phát hiện phần nào **có thể ảnh hưởng lớn** đến tính năng đang hoạt động → liệt kê rõ và **chờ xác nhận** trước khi tiếp tục.
 3. Không tự ý sửa ngoài phạm vi subtask đang làm.
+4. **Nếu task có biến môi trường mới** → đọc `cloudbuild.appengine.yaml` ngay lập tức, đối chiếu từng biến, và làm đủ checklist Rule 6b **trong cùng subtask** — không để sang bước sau.
 
 Ví dụ những trường hợp phải hỏi trước:
 - Thay đổi schema Firestore đang có data thật
@@ -94,6 +95,25 @@ Ví dụ những trường hợp phải hỏi trước:
 - Các file `.md` trong `/docs` mô tả flow liên quan
 - **`app/docs/page.tsx`** — trang docs công khai (nếu tính năng thay đổi hành vi của CLI hoặc Dashboard hiển thị với user)
 - Các file trong `cli/docs/` nếu liên quan đến CLI
+
+**Bắt buộc** khi tạo file task mới: nếu task thêm biến môi trường, phải có section **"Biến môi trường"** với checkbox subtask rõ ràng:
+
+```markdown
+## Biến môi trường cần thêm
+
+| Biến | Loại | Dùng ở | Ghi chú |
+|---|---|---|---|
+| `FOO_SECRET` | secret | Dashboard | Bảo vệ endpoint X |
+
+### Checklist deploy (bắt buộc hoàn thành trước khi đóng task)
+
+- [ ] Tạo secret `FOO_SECRET` trong Secret Manager
+- [ ] Grant secretAccessor cho cloudbuild SA + appspot SA
+- [ ] Thêm vào `cloudbuild.appengine.yaml` — đủ 3 chỗ (secretEnv, heredoc, availableSecrets)
+- [ ] Thêm vào `env.yaml` local
+```
+
+> Checklist này là **subtask thật**, không phải ghi chú. Phải đánh dấu `[x]` từng dòng khi làm xong, không được mark subtask env var là `done` nếu checklist này chưa xong.
 
 Ví dụ format trong file task:
 
