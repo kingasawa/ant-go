@@ -297,16 +297,39 @@ CLI                          Dashboard                     Cloud Build (Submit)
 
 Mac build server (chạy ngoài Next.js) poll Firestore để tìm job có `status = "pending"`:
 
-1. Nhận job → cập nhật `status = "in_progress"`, `step = "initialising"`.
+1. Nhận job → cập nhật `status = "in_progress"`, `step = "initialising"`, `startedAt = now`.
 2. Download `ios.tar.gz` + `credentials.json` từ GCS.
 3. Giải nén, chạy build (Fastlane + Xcode). Trong quá trình build:
    - Ghi log theo từng bước vào Firestore subcollection `builds/{jobId}/logs/{seq}` (mỗi doc có `seq`, `step`, `lines[]`).
    - Cập nhật `step` theo tiến trình: `downloading` → `extracting` → `npm_install` → `setup_certs` → `bundle_install` → `fastlane_build` → `uploading_ipa`.
    - Cập nhật `lastHeartbeat` định kỳ để dashboard phát hiện nếu server crash.
-4. **Kết thúc thành công:**
-   - Upload IPA lên GCS.
-   - Upload `build.log` lên GCS.
-   - Cập nhật Firestore:
+4. **Kết thúc (thành công hoặc thất bại):**
+   - Upload IPA + `build.log` lên GCS (nếu thành công).
+   - **Không** tự ghi `status` vào Firestore — thay vào đó gọi:
+     ```
+     POST /api/builds/{jobId}/complete
+     x-internal-secret: <INTERNAL_BUILD_SECRET>
+     { "status": "success" | "failed", "durationMs": <số ms> }
+     ```
+   - Dashboard API sẽ cập nhật Firestore và trừ credit của user.
+
+### Bước 7b — Dashboard ghi nhận kết quả + trừ credit
+
+Endpoint `POST /api/builds/:id/complete` (auth bằng `INTERNAL_BUILD_SECRET`):
+
+1. Validate secret header.
+2. Đọc `builds/{id}` → lấy `userId`.
+3. Cập nhật Firestore `builds/{id}`:
+   ```
+   status:      "success" | "failed"
+   completedAt: serverTimestamp()
+   durationMs:  <số ms từ Mac server>
+   ```
+4. Gọi `deductCredit(userId, buildId, status, durationMs)` — Firestore transaction:
+   - Tính credit cần trừ: `success → -1`, `failed < 3min → -0.2`, `failed ≥ 3min → -0.4`
+   - Enterprise (`planCredits === -1`) → không trừ
+   - Ghi vào `users/{uid}/creditHistory/{auto-id}`
+   - Cập nhật `users/{uid}.credits`
      ```
      status:      "success"
      step:        "done"
@@ -349,13 +372,24 @@ builds/{jobId}
   buildLogUrl:  string | null
   manifestUrl:  string | null      ← internal distribution only
   errorMessage: string | null
-  lastHeartbeat: timestamp          ← cập nhật bởi Mac server khi in_progress
-  createdAt, updatedAt, startedAt, completedAt
+  startedAt:    timestamp          ← Mac server ghi khi nhận job (in_progress)
+  completedAt:  timestamp          ← Dashboard ghi sau khi Mac server báo xong
+  durationMs:   number             ← Dashboard tính từ Mac server báo
+  lastHeartbeat: timestamp         ← cập nhật bởi Mac server khi in_progress
+  createdAt, updatedAt
 
 builds/{jobId}/logs/{seq}
   seq:   number   ← thứ tự log, dùng để sort
   step:  string   ← bước hiện tại khi ghi log
   lines: string[] ← mảng các dòng text
+
+users/{uid}/creditHistory/{auto-id}
+  buildId:       string
+  amount:        number   ← âm: -1 | -0.2 | -0.4
+  reason:        "success" | "failed_fast" | "failed_slow"
+  balanceBefore: number
+  balanceAfter:  number
+  createdAt:     timestamp
 ```
 
 ---

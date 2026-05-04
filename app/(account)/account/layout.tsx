@@ -4,13 +4,14 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import SidebarUserCard from "@/app/components/SidebarUserCard";
-import { HiOutlineSquares2X2, HiOutlineDevicePhoneMobile, HiOutlineDeviceTablet, HiOutlineUser, HiOutlineCog6Tooth, HiOutlineCreditCard, HiOutlineBars3, HiMiniDevicePhoneMobile } from "react-icons/hi2";
+import { HiOutlineSquares2X2, HiOutlineDevicePhoneMobile, HiOutlineDeviceTablet, HiOutlineUser, HiOutlineCog6Tooth, HiOutlineCreditCard, HiOutlineBars3, HiMiniDevicePhoneMobile, HiOutlineChartBar } from "react-icons/hi2";
 import { AiOutlineAppstoreAdd } from "react-icons/ai";
 
 const navItems = [
 	{ href: "/account/overview", label: "Overview", Icon: HiOutlineSquares2X2 },
 	{ href: "/account/apps",     label: "Apps",     Icon: AiOutlineAppstoreAdd },
 	{ href: "/account/devices",  label: "Devices",  Icon: HiMiniDevicePhoneMobile },
+	{ href: "/account/usage",    label: "Usage",    Icon: HiOutlineChartBar },
 	{ href: "/account/profile",  label: "Profile",  Icon: HiOutlineUser },
 	{ href: "/account/settings", label: "Settings", Icon: HiOutlineCog6Tooth },
 	{ href: "/account/billing",  label: "Billing",  Icon: HiOutlineCreditCard },

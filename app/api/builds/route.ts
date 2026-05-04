@@ -11,6 +11,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prepareBuild } from "@/lib/build.service";
 import { validateCliToken } from "@/lib/cli-auth.service";
+import { getAdminDb } from "@/lib/firebase-admin";
+import { checkAndResetCredits } from "@/lib/credit.service";
 
 export async function POST(request: NextRequest) {
   const token = request.headers.get("Authorization")?.replace("Bearer ", "").trim();
@@ -19,6 +21,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "Chưa đăng nhập. Chạy: ant-go auth login" },
       { status: 401 }
+    );
+  }
+
+  // Lazy reset credit nếu đầu tháng mới
+  await checkAndResetCredits(session.uid).catch(() => {});
+
+  // Kiểm tra credit
+  const db = getAdminDb();
+  const userSnap = await db.collection("users").doc(session.uid).get();
+  const userData = userSnap.data() ?? {};
+  const credits: number = userData.credits ?? 0;
+  const planCredits: number = userData.planCredits ?? 15;
+
+  // planCredits === -1 là unlimited (enterprise)
+  if (planCredits !== -1 && credits <= 0) {
+    return NextResponse.json(
+      { error: "Hết credit. Nâng cấp plan hoặc chờ reset đầu tháng tại antgo.work/account/billing" },
+      { status: 402 }
     );
   }
 

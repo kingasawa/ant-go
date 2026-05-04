@@ -2,7 +2,21 @@ import { doc, getDoc, setDoc, serverTimestamp, addDoc, collection } from "fireba
 import { User } from "firebase/auth";
 import { db } from "@/lib/firebase";
 
-export type UserPlan = "free" | "pro" | "enterprise";
+export type UserPlan = "free" | "starter" | "pro" | "enterprise";
+
+export const PLAN_CREDITS: Record<string, number> = {
+  free:       15,
+  starter:    50,
+  pro:        500,
+  enterprise: -1,   // unlimited (-1 = không trừ credit)
+};
+
+export const PLAN_APP_LIMIT: Record<string, number> = {
+  free:       3,
+  starter:    -1,   // unlimited
+  pro:        -1,
+  enterprise: -1,
+};
 
 export interface UserProfile {
   uid: string;
@@ -12,10 +26,20 @@ export interface UserProfile {
   plan: UserPlan;
   /** Total number of builds the user has submitted */
   builds: number;
-  /** Remaining free build credits (default 10) */
-  freeBuildsRemaining: number;
-  createdAt: unknown; // Firestore Timestamp
-  updatedAt: unknown; // Firestore Timestamp
+  /** Credit còn lại trong tháng hiện tại */
+  credits: number;
+  /** Credit tối đa của plan hiện tại (dùng cho UI progress bar). -1 = unlimited */
+  planCredits: number;
+  /** Timestamp ngày 1 đầu tháng tiếp theo — thời điểm reset credit */
+  creditsResetAt: unknown;
+  createdAt: unknown;
+  updatedAt: unknown;
+}
+
+/** Tính timestamp ngày 1 đầu tháng tiếp theo (UTC+7) */
+function nextMonthFirstDay(): Date {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth() + 1, 1);
 }
 
 /**
@@ -42,7 +66,9 @@ export async function createUserProfileIfNeeded(user: User): Promise<void> {
       photoURL: user.photoURL,
       plan: "free",
       builds: 0,
-      freeBuildsRemaining: 10,
+      credits: PLAN_CREDITS.free,
+      planCredits: PLAN_CREDITS.free,
+      creditsResetAt: nextMonthFirstDay(),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
