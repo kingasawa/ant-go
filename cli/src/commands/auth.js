@@ -11,6 +11,7 @@ const ora     = require('ora');
 const inquirer = require('inquirer');
 
 const { API_URL, getAuth, setAuth, clearAuth, isLoggedIn } = require('../config');
+const { createClient, fetchUserInfo } = require('../api');
 const { t, tError } = require('../i18n');
 
 // ── login ─────────────────────────────────────────────────────────────────────
@@ -182,19 +183,32 @@ async function whoamiCommand() {
     return;
   }
 
+  // Fetch fresh từ server — không dùng cache
+  let info;
+  try {
+    const client = createClient(API_URL, session.token);
+    info = await fetchUserInfo(client);
+    // Cập nhật cache credits sau khi fetch
+    setAuth({ ...session, credits: info.credits, planCredits: info.planCredits, plan: info.plan });
+  } catch (err) {
+    const msg = tError(err.response?.data?.error ?? err.message);
+    console.log('');
+    console.log(chalk.red(`✖  ${msg}`));
+    console.log('');
+    return;
+  }
+
   const isExpired = session.expiresAt && new Date(session.expiresAt) < new Date();
 
   console.log('');
   console.log(chalk.bold(t('whoamiTitle')));
   console.log('');
-  console.log(`  ${chalk.gray(t('whoamiEmail'))}     ${session.email ?? '-'}`);
+  console.log(`  ${chalk.gray(t('whoamiEmail'))}     ${info.email ?? session.email ?? '-'}`);
   if (session.displayName) {
     console.log(`  ${chalk.gray(t('whoamiName'))}       ${session.displayName}`);
   }
-  console.log(`  ${chalk.gray(t('whoamiPlan'))}      ${chalk.cyan(session.plan ?? 'free')}`);
-  if (session.credits != null) {
-    console.log(`  ${chalk.gray(t('whoamiCredits'))}   ${session.credits} / ${session.planCredits ?? '-'}`);
-  }
+  console.log(`  ${chalk.gray(t('whoamiPlan'))}      ${chalk.cyan(info.plan ?? 'free')}`);
+  console.log(`  ${chalk.gray(t('whoamiCredits'))}   ${info.credits} / ${info.planCredits ?? '-'}`);
   if (isExpired) {
     console.log(`  ${chalk.gray(t('whoamiExpires'))}  ${chalk.red(t('whoamiExpired'))}`);
   } else if (session.expiresAt) {
