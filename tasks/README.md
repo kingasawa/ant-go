@@ -11,7 +11,7 @@ Danh sách task và quy tắc làm việc cho Claude.
 | [fix-add-device-flow.md](fix-add-device-flow.md) | Sửa lại flow add device CLI + Dashboard | `done` | [#1](https://github.com/kingasawa/ant-go/pull/1) |
 | [submit-ipa-testflight.md](submit-ipa-testflight.md) | Submit IPA lên TestFlight từ dashboard | `done` | [#2](https://github.com/kingasawa/ant-go/pull/2) |
 | [cli-auto-collect-asc-key.md](cli-auto-collect-asc-key.md) | CLI tự động thu thập ASC API Key khi build (store), lưu vào dashboard per-user | `done` | [#PR](https://github.com/kingasawa/ant-go/pull/new/feature/cli-auto-collect-asc-key) |
-| [credit-system.md](credit-system.md) | Hệ thống credit quản lý lượt build — FREE 15 credit/tháng, giới hạn 3 app, trang Usage | `in_progress` | — |
+| [credit-system.md](credit-system.md) | Hệ thống credit quản lý lượt build — FREE 15 credit/tháng, giới hạn 3 app, trang Usage | `done` | [#PR](https://github.com/kingasawa/ant-go/pull/new/feature/credit-system) |
 
 **Status hợp lệ:** `pending` · `in_progress` · `done` · `blocked`
 

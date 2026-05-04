@@ -1,8 +1,8 @@
 
 # Task: credit-system
 
-**Status:** `in_progress`
-**PR:** —
+**Status:** `done`
+**PR:** https://github.com/kingasawa/ant-go/pull/new/feature/credit-system
 
 ## Mô tả
 
@@ -101,20 +101,20 @@ export const PLAN_APP_LIMIT: Record<string, number> = {
 
 ## Subtasks
 
-- [ ] TASK-01  Schema & types — `lib/createUserProfile.ts`
-- [ ] TASK-02  Credit service — `lib/credit.service.ts`
-- [ ] TASK-03  Dashboard — `POST /api/builds/:id/complete` (route mới cho Mac server)
-- [ ] TASK-04  Dashboard — Credit check trong `POST /api/builds`
-- [ ] TASK-05  Dashboard — `POST /api/apps` (route mới, giới hạn FREE plan)
-- [ ] TASK-06  Dashboard — `GET /api/user/me` trả `credits`
-- [ ] TASK-07  Dashboard — Cron reset credit `GET /api/cron/reset-credits`
-- [ ] TASK-08  Dashboard — Stripe webhook cập nhật credit khi đổi plan
-- [ ] TASK-09  Dashboard — Trang Usage (`app/(account)/account/usage/`)
-- [ ] TASK-10  Dashboard — Sửa Overview page + Apps page
-- [ ] TASK-11  CLI — Sửa `fetchUserInfo` + hiển thị credit trong build
+- [x] TASK-01  Schema & types — `lib/createUserProfile.ts`
+- [x] TASK-02  Credit service — `lib/credit.service.ts`
+- [x] TASK-03  Dashboard — `POST /api/builds/:id/complete` (route mới cho Mac server)
+- [x] TASK-04  Dashboard — Credit check trong `POST /api/builds`
+- [x] TASK-05  Dashboard — `POST /api/apps` (route mới, giới hạn FREE plan)
+- [x] TASK-06  Dashboard — `GET /api/user/me` trả `credits`
+- [x] TASK-07  Dashboard — Cron reset credit `GET /api/cron/reset-credits`
+- [x] TASK-08  Dashboard — Stripe webhook cập nhật credit khi đổi plan
+- [x] TASK-09  Dashboard — Trang Usage (`app/(account)/account/usage/`)
+- [x] TASK-10  Dashboard — Sửa Overview page + Apps page
+- [x] TASK-11  CLI — Sửa `fetchUserInfo` + hiển thị credit trong build
 - [ ] TASK-12  Mac server — Sửa ant-go-builder gọi `/api/builds/:id/complete`
-- [ ] TASK-13  Firestore rules — thêm rule `creditHistory`
-- [ ] TASK-14  Docs — Cập nhật tài liệu
+- [x] TASK-13  Firestore rules — thêm rule `creditHistory`
+- [x] TASK-14  Docs — Cập nhật tài liệu
 
 ---
 
@@ -394,8 +394,8 @@ match /users/{userId}/creditHistory/{histId} {
 
 ## Tài liệu cần cập nhật sau khi hoàn thành
 
-- [ ] `docs/build-flow.md` — thêm luồng credit deduction, endpoint `/complete`, schema mới
-- [ ] `app/docs/page.tsx` — terminal demo build: đổi text quota sang credits
+- [x] `docs/build-flow.md` — thêm luồng credit deduction, endpoint `/complete`, schema mới
+- [x] `app/docs/page.tsx` — terminal demo build: đổi text quota sang credits
 
 ---
 
