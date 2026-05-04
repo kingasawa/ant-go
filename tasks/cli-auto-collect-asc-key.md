@@ -1,7 +1,7 @@
 # Task: cli-auto-collect-asc-key
 
-**Status:** `in_progress`
-**PR:** —
+**Status:** `done`
+**PR:** https://github.com/kingasawa/ant-go/pull/new/feature/cli-auto-collect-asc-key
 
 ## Mô tả
 
