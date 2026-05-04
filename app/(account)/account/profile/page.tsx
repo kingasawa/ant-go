@@ -68,7 +68,11 @@ export default function ProfilePage() {
     );
   }
 
-  const freeUsed = 10 - profile.freeBuildsRemaining;
+  const p = profile as any;
+  const credits: number = p.credits ?? 0;
+  const planCredits: number = p.planCredits ?? 15;
+  const isUnlimited = planCredits === -1;
+  const creditsUsed = isUnlimited ? 0 : planCredits - credits;
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -98,24 +102,26 @@ export default function ProfilePage() {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard label="Total Builds" value={profile.builds} sub="All time" />
-        <StatCard label="Free Credits Left" value={profile.freeBuildsRemaining} sub={`${freeUsed} of 10 used`} />
+        <StatCard label="Credits Left" value={isUnlimited ? "∞" : credits.toFixed(1)} sub={isUnlimited ? "Unlimited plan" : `${creditsUsed.toFixed(1)} of ${planCredits} used`} />
         <StatCard label="Current Plan" value={profile.plan.charAt(0).toUpperCase() + profile.plan.slice(1)} sub={profile.plan === "free" ? "Upgrade to unlock more" : "Active"} />
       </div>
 
-      {/* Free credit usage bar */}
+      {/* Credit usage bar */}
       <div className="rounded-2xl p-6" style={GLASS}>
         <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-medium text-white">Free Build Credits</p>
-          <p className="text-sm text-white/50">{freeUsed} / 10 used</p>
+          <p className="text-sm font-medium text-white">Build Credits</p>
+          <p className="text-sm text-white/50">{isUnlimited ? "Unlimited" : `${credits.toFixed(1)} / ${planCredits} remaining`}</p>
         </div>
-        <div className="w-full bg-white/10 rounded-full h-2.5">
-          <div
-            className={`h-2.5 rounded-full transition-all ${freeUsed >= 10 ? "bg-red-400" : freeUsed >= 7 ? "bg-yellow-400" : "bg-accent-light"}`}
-            style={{ width: `${Math.min((freeUsed / 10) * 100, 100)}%` }}
-          />
-        </div>
-        {profile.freeBuildsRemaining === 0 && (
-          <p className="text-xs text-red-400 mt-2">⚠ Free credits exhausted. Upgrade your plan to continue building.</p>
+        {!isUnlimited && (
+          <div className="w-full bg-white/10 rounded-full h-2.5">
+            <div
+              className={`h-2.5 rounded-full transition-all ${credits <= 0 ? "bg-red-400" : credits / planCredits < 0.2 ? "bg-yellow-400" : "bg-accent-light"}`}
+              style={{ width: `${Math.min((creditsUsed / planCredits) * 100, 100)}%` }}
+            />
+          </div>
+        )}
+        {credits <= 0 && !isUnlimited && (
+          <p className="text-xs text-red-400 mt-2">⚠ Credits exhausted. Upgrade your plan or wait for monthly reset.</p>
         )}
       </div>
 

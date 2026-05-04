@@ -62,15 +62,16 @@ async function emailLoginFlow() {
 
     setAuth({
       token:               data.cliToken,
-      refreshToken:        data.refreshToken,
-      expiresAt:           data.expiresAt,
-      uid:                 data.uid,
-      email:               data.email,
-      displayName:         data.displayName,
-      photoURL:            data.photoURL,
-      plan:                data.plan,
-      builds:              data.builds,
-      freeBuildsRemaining: data.freeBuildsRemaining,
+      refreshToken:  data.refreshToken,
+      expiresAt:     data.expiresAt,
+      uid:           data.uid,
+      email:         data.email,
+      displayName:   data.displayName,
+      photoURL:      data.photoURL,
+      plan:          data.plan,
+      builds:        data.builds,
+      credits:       data.credits,
+      planCredits:   data.planCredits,
     });
 
     spinner.succeed(`Đăng nhập thành công!`);
@@ -123,14 +124,15 @@ async function browserLoginFlow() {
       setAuth({
         token:               url.searchParams.get('token'),
         refreshToken:        url.searchParams.get('refreshToken') || null,
-        expiresAt:           url.searchParams.get('expiresAt'),
-        uid:                 url.searchParams.get('uid'),
-        email:               url.searchParams.get('email'),
-        displayName:         url.searchParams.get('displayName') || null,
-        photoURL:            url.searchParams.get('photoURL') || null,
-        plan:                url.searchParams.get('plan') || 'free',
-        builds:              parseInt(url.searchParams.get('builds') || '0', 10),
-        freeBuildsRemaining: parseInt(url.searchParams.get('freeBuildsRemaining') || '10', 10),
+        expiresAt:    url.searchParams.get('expiresAt'),
+        uid:          url.searchParams.get('uid'),
+        email:        url.searchParams.get('email'),
+        displayName:  url.searchParams.get('displayName') || null,
+        photoURL:     url.searchParams.get('photoURL') || null,
+        plan:         url.searchParams.get('plan') || 'free',
+        builds:       parseInt(url.searchParams.get('builds') || '0', 10),
+        credits:      parseFloat(url.searchParams.get('credits') || '15'),
+        planCredits:  parseInt(url.searchParams.get('planCredits') || '15', 10),
       });
 
       const session = getAuth();

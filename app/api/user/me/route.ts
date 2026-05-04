@@ -44,11 +44,13 @@ export async function GET(request: NextRequest) {
   });
 
   return NextResponse.json({
-    uid:                 session.uid,
-    email:               session.email,
-    plan:                userData.plan                ?? "free",
-    planStatus:          userData.planStatus          ?? null,
-    freeBuildsRemaining: userData.freeBuildsRemaining ?? 0,
+    uid:             session.uid,
+    email:           session.email,
+    plan:            userData.plan            ?? "free",
+    planStatus:      userData.planStatus      ?? null,
+    credits:         userData.credits         ?? 0,
+    planCredits:     userData.planCredits     ?? 15,
+    creditsResetAt:  userData.creditsResetAt?.toDate?.()?.toISOString() ?? null,
     devices,
   });
 }

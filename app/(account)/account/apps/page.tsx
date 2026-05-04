@@ -221,13 +221,22 @@ export default function AppsPage() {
   const handleCreate = async (data: AppFormData) => {
     if (!user) return;
     setSaving(true);
+    setError(null);
     try {
-      await addDoc(collection(db, "apps"), {
-        ...data,
-        userId: user.uid,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+      const token = await user.getIdToken();
+      const res = await fetch("/api/apps", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: data.name }),
       });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error ?? "Lỗi khi tạo app");
+        return;
+      }
       setShowCreate(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Lỗi khi tạo app");

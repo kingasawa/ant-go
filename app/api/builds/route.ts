@@ -11,6 +11,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prepareBuild } from "@/lib/build.service";
 import { validateCliToken } from "@/lib/cli-auth.service";
+import { getAdminDb } from "@/lib/firebase-admin";
+import { checkAndResetCredits } from "@/lib/credit.service";
 
 export async function POST(request: NextRequest) {
   const token = request.headers.get("Authorization")?.replace("Bearer ", "").trim();
@@ -22,8 +24,26 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Lazy reset credit nếu đầu tháng mới
+  await checkAndResetCredits(session.uid).catch(() => {});
+
+  // Kiểm tra credit
+  const db = getAdminDb();
+  const userSnap = await db.collection("users").doc(session.uid).get();
+  const userData = userSnap.data() ?? {};
+  const credits: number = userData.credits ?? 0;
+  const planCredits: number = userData.planCredits ?? 15;
+
+  // planCredits === -1 là unlimited (enterprise)
+  if (planCredits !== -1 && credits <= 0) {
+    return NextResponse.json(
+      { error: "Hết credit. Nâng cấp plan hoặc chờ reset đầu tháng tại antgo.work/account/billing" },
+      { status: 402 }
+    );
+  }
+
   const body = await request.json().catch(() => ({}));
-  const { projectId, platform, autoSubmit, buildNumber } = body;
+  const { projectId, platform, autoSubmit, buildNumber, teamId } = body;
 
   if (!projectId || typeof projectId !== "string") {
     return NextResponse.json({ error: "projectId là bắt buộc" }, { status: 400 });
@@ -38,12 +58,12 @@ export async function POST(request: NextRequest) {
       : undefined;
 
   try {
-    const { jobId, tarUrl, credsUrl, buildNumber: resolvedBuildNumber } = await prepareBuild(
+    const { jobId, tarUrl, credsUrl, buildNumber: resolvedBuildNumber, appName } = await prepareBuild(
       projectId.trim(),
       platform,
-      { autoSubmit: autoSubmit === true, buildNumber: parsedBuildNumber }
+      { autoSubmit: autoSubmit === true, buildNumber: parsedBuildNumber, teamId: typeof teamId === "string" ? teamId : undefined }
     );
-    return NextResponse.json({ jobId, tarUrl, credsUrl, buildNumber: resolvedBuildNumber }, { status: 201 });
+    return NextResponse.json({ jobId, tarUrl, credsUrl, buildNumber: resolvedBuildNumber, appName }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: err.status ?? 500 });
   }

@@ -24,7 +24,7 @@ const CLI_VERSION = '1.0';
 
 const { API_URL, loadConfig }          = require('../config');
 const { ensureToken }                  = require('./auth');
-const { createClient, createBuild, getBuildStatus, fetchUserInfo } = require('../api');
+const { createClient, createBuild, getBuildStatus, fetchUserInfo, uploadAscKey } = require('../api');
 const { ensureAppleCreds }             = require('../apple-creds');
 const logger = require('../logger');
 
@@ -277,9 +277,12 @@ async function runBuild(options) {
   let userInfo;
   try {
     userInfo = await fetchUserInfo(client);
+    const creditsDisplay = userInfo.planCredits === -1
+      ? 'Unlimited'
+      : `${userInfo.credits.toFixed ? userInfo.credits.toFixed(1) : userInfo.credits}/${userInfo.planCredits}`;
     infoSpinner.succeed(
       `Plan: ${chalk.cyan(userInfo.plan)}  ·  ` +
-      `Builds còn lại: ${chalk.bold(userInfo.freeBuildsRemaining)}`
+      `Credits còn lại: ${chalk.bold(creditsDisplay)}`
     );
   } catch (err) {
     infoSpinner.fail('Không tải được thông tin tài khoản');
@@ -287,11 +290,11 @@ async function runBuild(options) {
     process.exit(1);
   }
 
-  // Kiểm tra quota
-  if (userInfo.plan === 'free' && userInfo.freeBuildsRemaining <= 0) {
+  // Kiểm tra quota (server cũng check, nhưng CLI check trước để UX tốt hơn)
+  if (userInfo.planCredits !== -1 && (userInfo.credits ?? 0) <= 0) {
     console.log('');
-    console.log(chalk.red('✖  Bạn đã hết lượt build miễn phí.'));
-    console.log(chalk.gray('   Nâng cấp tại: https://antgo.work/account/billing'));
+    console.log(chalk.red('✖  Bạn đã hết credit build.'));
+    console.log(chalk.gray('   Nâng cấp plan hoặc chờ reset đầu tháng tại: https://antgo.work/account/billing'));
     console.log('');
     process.exit(1);
   }
@@ -364,12 +367,25 @@ async function runBuild(options) {
       platform,
       autoSubmit,
       ...(configBuildNumber != null && { buildNumber: configBuildNumber }),
+      ...(creds?.teamId     && { teamId: creds.teamId }),
     });
     jobId    = res.jobId;
     tarUrl   = res.tarUrl;
     credsUrl = res.credsUrl;
     const resolvedBN = res.buildNumber;
+    const appName    = res.appName ?? null;
     spinner.succeed(`Job tạo thành công: ${chalk.bold(jobId)}  ·  Build #${chalk.cyan(resolvedBN)}`);
+
+    // Upload ASC key lên dashboard (best-effort, không block build)
+    if (platform === 'ios' && creds?.ascKey && creds?.teamId) {
+      const { keyId, issuerId, privateKeyP8 } = creds.ascKey;
+      try {
+        await uploadAscKey(client, { teamId: creds.teamId, keyId, issuerId, privateKeyP8 });
+        console.log(chalk.green('✔  ASC API Key đã lưu vào dashboard'));
+      } catch (err) {
+        console.log(chalk.yellow('⚠  Không lưu được ASC API Key: ') + chalk.gray(err.response?.data?.error ?? err.message));
+      }
+    }
   } catch (err) {
     spinner.fail('Tạo build job thất bại');
     const msg = err.response?.data?.error ?? err.message;

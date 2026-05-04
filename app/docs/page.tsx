@@ -384,12 +384,15 @@ export default function DocPage() {
                 <div className="text-white/40">{"? "}Đăng nhập tài khoản Apple Developer</div>
                 <div className="text-green-400">{"  ❯ "}Đăng nhập tài khoản <span className="text-white">dev@example.com</span> (TEAMID123)</div>
                 <div className="mt-1 text-green-400">✔ Đăng nhập thành công</div>
+                <div className="text-green-400">✔ ASC API Key (cached): <span className="text-accent-light">XXXXXXXXXX</span></div>
                 <div className="text-green-400">✔ Distribution Certificate (reused): CERTID</div>
                 <div className="text-green-400">✔ App Store Provisioning Profile OK</div>
                 <div className="text-green-400">✔ Credentials đã cache tại: <span className="text-white/40">~/.ant-go/creds-production.json</span></div>
               </div>
               <div className="mt-3 space-y-1">
                 <div className="text-green-400">✔ Job tạo thành công: <span className="text-accent-light">abc123xyz</span></div>
+                <div className="text-white/40">{"  "}Plan: <span className="text-accent-light">free</span>{"  ·  "}Credits còn lại: <span className="text-white">12/15</span></div>
+                <div className="text-green-400">✔ ASC API Key đã lưu vào dashboard</div>
                 <div className="text-green-400">✔ Project đã nén: <span className="text-white">12.4 MB</span></div>
                 <div className="text-green-400">✔ Upload ios.tar.gz hoàn tất</div>
                 <div className="text-green-400">✔ Upload credentials.json hoàn tất</div>
@@ -431,6 +434,9 @@ export default function DocPage() {
                 <div className="text-white/40">{"   "}✈{"  "}Auto Submit: bật — IPA sẽ tự động được gửi lên TestFlight sau khi build xong.</div>
               </div>
             </Terminal>
+            <p className="text-white/30 text-xs mt-2">
+              Chỉ dùng được với profile có <Code>distribution: store</Code>. Dùng với <Code>distribution: internal</Code> sẽ báo lỗi.
+            </p>
 
             <p className="text-white/55 text-sm mt-6 mb-3">Force đăng nhập lại Apple Developer (bỏ cache):</p>
             <Terminal title="Terminal">
@@ -443,9 +449,6 @@ export default function DocPage() {
                 <span className="text-blue-400"> --reauth</span>
               </div>
             </Terminal>
-            <p className="text-white/30 text-xs mt-2">
-              Chỉ dùng được với profile có <Code>distribution: store</Code>. Dùng với <Code>distribution: internal</Code> sẽ báo lỗi.
-            </p>
 
             <div className="mt-6 rounded-xl p-4" style={GLASS}>
               <p className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-3">Options</p>
@@ -729,8 +732,8 @@ export default function DocPage() {
               <div className="mt-3 space-y-1">
                 <div className="text-white/40">{"  "}Name:    <span className="text-white">Nguyen Van A</span></div>
                 <div className="text-white/40">{"  "}Email:   <span className="text-white">dev@example.com</span></div>
-                <div className="text-white/40">{"  "}Plan:    <span className="text-accent-light">Pro</span></div>
-                <div className="text-white/40">{"  "}Builds:  <span className="text-white">47 / unlimited</span></div>
+                <div className="text-white/40">{"  "}Plan:    <span className="text-accent-light">free</span></div>
+                <div className="text-white/40">{"  "}Credits: <span className="text-white">12/15</span></div>
                 <div className="text-white/40">{"  "}Expires: <span className="text-yellow-300">2026-05-01 10:30:00</span></div>
               </div>
             </Terminal>
