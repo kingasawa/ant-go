@@ -353,9 +353,9 @@ export default function DocPage() {
             <Terminal title="Terminal">
               <div>
                 <span className="text-white/30 select-none">$ </span>
-                <span className="text-white">ant-go --version</span>
+                <span className="text-white">ant --version</span>
               </div>
-              <div className="text-white/40 mt-1">1.0.0</div>
+              <div className="text-white/40 mt-1">0.1.0</div>
             </Terminal>
           </Section>
 
@@ -367,14 +367,14 @@ export default function DocPage() {
             <Terminal title="Terminal — build iOS production">
               <div>
                 <span className="text-white/30 select-none">$ </span>
-                <span className="text-yellow-300">ant-go</span>
+                <span className="text-yellow-300">ant</span>
                 <span className="text-white"> build</span>
                 <span className="text-blue-400"> --platform</span>
                 <span className="text-orange-300"> ios</span>
               </div>
               <div className="mt-3 space-y-0.5 text-accent-light">
                 <div>{"========================================"}</div>
-                <div>{"== Ant Go CLI : v1.0                  =="}</div>
+                <div>{"== Ant Go CLI : v0.1.0                =="}</div>
                 <div>{"== Project ID : my-app-prod           =="}</div>
                 <div>{"== Bundle ID  : com.myorg.myapp       =="}</div>
                 <div>{"== Profile    : production  (store)   =="}</div>
@@ -406,7 +406,7 @@ export default function DocPage() {
             <Terminal title="Terminal">
               <div>
                 <span className="text-white/30 select-none">$ </span>
-                <span className="text-yellow-300">ant-go</span>
+                <span className="text-yellow-300">ant</span>
                 <span className="text-white"> build</span>
                 <span className="text-blue-400"> --platform</span>
                 <span className="text-orange-300"> ios</span>
@@ -419,7 +419,7 @@ export default function DocPage() {
             <Terminal title="Terminal">
               <div>
                 <span className="text-white/30 select-none">$ </span>
-                <span className="text-yellow-300">ant-go</span>
+                <span className="text-yellow-300">ant</span>
                 <span className="text-white"> build</span>
                 <span className="text-blue-400"> --platform</span>
                 <span className="text-orange-300"> ios</span>
@@ -436,7 +436,7 @@ export default function DocPage() {
             <Terminal title="Terminal">
               <div>
                 <span className="text-white/30 select-none">$ </span>
-                <span className="text-yellow-300">ant-go</span>
+                <span className="text-yellow-300">ant</span>
                 <span className="text-white"> build</span>
                 <span className="text-blue-400"> --platform</span>
                 <span className="text-orange-300"> ios</span>
@@ -461,10 +461,10 @@ export default function DocPage() {
           {/* ── status ── */}
           <Section id="status" title="Build Status">
             <p className="text-white/55 text-sm mb-4">Xem trạng thái của một build job theo Job ID.</p>
-            <Terminal title="Terminal — ant-go status">
+            <Terminal title="Terminal — ant status">
               <div>
                 <span className="text-white/30 select-none">$ </span>
-                <span className="text-yellow-300">ant-go</span>
+                <span className="text-yellow-300">ant</span>
                 <span className="text-white"> status</span>
                 <span className="text-orange-300"> abc123xyz</span>
               </div>
@@ -511,7 +511,7 @@ export default function DocPage() {
             <Terminal title="Terminal — device enrollment">
               <div>
                 <span className="text-white/30 select-none">$ </span>
-                <span className="text-yellow-300">ant-go</span>
+                <span className="text-yellow-300">ant</span>
                 <span className="text-white"> build</span>
                 <span className="text-blue-400"> --platform</span>
                 <span className="text-orange-300"> ios</span>
@@ -572,7 +572,7 @@ export default function DocPage() {
           {/* ── ant.json ── */}
           <Section id="ant-json" title="Build Profiles">
             <p className="text-white/55 text-sm mb-4">
-              File cấu hình build profiles đặt ở root của project. Nếu chưa có, <Code>ant-go build</Code> sẽ tự tạo với các profile mặc định.
+              File cấu hình build profiles đặt ở root của project. Nếu chưa có, <Code>ant build</Code> sẽ tự tạo với các profile mặc định.
             </p>
             <Terminal title="ant.json">
               <div className="text-white/30">{"{"}</div>
@@ -654,10 +654,10 @@ export default function DocPage() {
             </p>
 
             <p className="text-white/55 text-sm mb-3">Đăng nhập bằng email và mật khẩu:</p>
-            <Terminal title="Terminal — ant-go auth login">
+            <Terminal title="Terminal — ant auth login">
               <div>
                 <span className="text-white/30 select-none">$ </span>
-                <span className="text-yellow-300">ant-go</span>
+                <span className="text-yellow-300">ant</span>
                 <span className="text-white"> auth login</span>
               </div>
               <div className="mt-3 space-y-1">
@@ -677,7 +677,7 @@ export default function DocPage() {
             <Terminal title="Terminal — browser login">
               <div>
                 <span className="text-white/30 select-none">$ </span>
-                <span className="text-yellow-300">ant-go</span>
+                <span className="text-yellow-300">ant</span>
                 <span className="text-white"> auth login</span>
                 <span className="text-blue-400"> --browser</span>
               </div>
@@ -703,10 +703,10 @@ export default function DocPage() {
             <p className="text-white/55 text-sm mb-4">
               Đăng xuất khỏi tài khoản ant-go. Token hiện tại sẽ bị thu hồi trên server và xoá khỏi máy.
             </p>
-            <Terminal title="Terminal — ant-go auth logout">
+            <Terminal title="Terminal — ant auth logout">
               <div>
                 <span className="text-white/30 select-none">$ </span>
-                <span className="text-yellow-300">ant-go</span>
+                <span className="text-yellow-300">ant</span>
                 <span className="text-white"> auth logout</span>
               </div>
               <div className="mt-3 space-y-1">
@@ -720,10 +720,10 @@ export default function DocPage() {
             <p className="text-white/55 text-sm mb-4">
               Xem thông tin tài khoản đang đăng nhập và trạng thái token hiện tại.
             </p>
-            <Terminal title="Terminal — ant-go auth whoami">
+            <Terminal title="Terminal — ant auth whoami">
               <div>
                 <span className="text-white/30 select-none">$ </span>
-                <span className="text-yellow-300">ant-go</span>
+                <span className="text-yellow-300">ant</span>
                 <span className="text-white"> auth whoami</span>
               </div>
               <div className="mt-3 space-y-1">
@@ -735,13 +735,13 @@ export default function DocPage() {
               </div>
             </Terminal>
             <p className="text-white/25 text-xs mt-4">
-              Nếu chưa đăng nhập, lệnh sẽ hiện thông báo và hướng dẫn chạy <Code>ant-go auth login</Code>.
+              Nếu chưa đăng nhập, lệnh sẽ hiện thông báo và hướng dẫn chạy <Code>ant auth login</Code>.
             </p>
           </Section>
 
           {/* Footer */}
           <div className="pt-6 mt-2 flex items-center justify-between" style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-            <p className="text-xs text-white/25">ant-go CLI v1.0 · Build automation service</p>
+            <p className="text-xs text-white/25">ant-go CLI v0.1.0 · Build automation service</p>
             <Link href="/login" className="text-xs text-accent hover:text-accent-light transition">
               Mở Console →
             </Link>

@@ -1,5 +1,5 @@
 /**
- * status.js — `ant-go status <jobId>`
+ * status.js — `ant status <jobId>`
  */
 
 const { API_URL }                      = require('../config');

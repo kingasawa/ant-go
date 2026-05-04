@@ -1,6 +1,6 @@
 # Add Device Flow — CLI
 
-Luồng đăng ký UDID thiết bị iOS từ CLI, được kích hoạt tự động khi chạy `ant-go build` với profile `distribution: internal`.
+Luồng đăng ký UDID thiết bị iOS từ CLI, được kích hoạt tự động khi chạy `ant build` với profile `distribution: internal`.
 
 ---
 
@@ -9,7 +9,7 @@ Luồng đăng ký UDID thiết bị iOS từ CLI, được kích hoạt tự đ
 ```
 Developer Machine (CLI)              antgo.work API                 iPhone
         │                                  │                           │
-        ├── ant-go build --profile development                         │
+        ├── ant build --profile development                         │
         ├── ensureToken()                  │                           │
         │                                  │                           │
         ├── GET /api/user/me ─────────────►│ trả plan, quota, devices  │
@@ -59,7 +59,7 @@ Flow này chỉ chạy khi cả hai điều kiện đều đúng:
 
 Lệnh kích hoạt:
 ```bash
-ant-go build --platform ios --profile development
+ant build --platform ios --profile development
 ```
 
 ---

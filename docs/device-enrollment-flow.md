@@ -6,7 +6,7 @@ Luồng đăng ký UDID thiết bị iOS từ ant-go dashboard.
 
 Khi user bấm **"Thêm device"** trên trang `/account/devices`, hệ thống dùng cơ chế **Apple Profile Service** (`.mobileconfig`) để iOS tự động gửi UDID về server — không cần app riêng, chỉ cần Camera app quét QR.
 
-> Device được lưu vào Firestore của ant-go. Việc đăng ký UDID lên Apple Developer Portal xảy ra sau đó, khi chạy `ant-go build --profile development` từ CLI.
+> Device được lưu vào Firestore của ant-go. Việc đăng ký UDID lên Apple Developer Portal xảy ra sau đó, khi chạy `ant build --profile development` từ CLI.
 
 ---
 
@@ -160,7 +160,7 @@ users/{uid}/devices/{udid}     ← danh sách device của user
 Device sau khi lưu vào Firestore **chưa được đăng ký trên Apple Developer Portal**. Việc đăng ký UDID lên Apple xảy ra khi chạy CLI:
 
 ```bash
-ant-go build --platform ios --profile development
+ant build --platform ios --profile development
 ```
 
 Lúc đó CLI dùng `@expo/apple-utils` → `Device.createAsync()` để đăng ký UDID và thêm vào Provisioning Profile.

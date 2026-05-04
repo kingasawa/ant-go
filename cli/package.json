@@ -4,7 +4,7 @@
   "description": "CLI to trigger iOS builds via ant-go build server",
   "main": "src/index.js",
   "bin": {
-    "ant-go": "bin/ant-go.js"
+    "ant": "bin/ant-go.js"
   },
   "scripts": {
     "start": "node bin/ant-go.js"

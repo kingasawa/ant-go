@@ -1,5 +1,5 @@
 /**
- * api.js — HTTP client gọi tới ant-go Next.js API
+ * api.js — HTTP client gọi tới ant Next.js API
  */
 
 const axios = require('axios');

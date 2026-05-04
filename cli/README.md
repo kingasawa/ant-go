@@ -10,8 +10,8 @@ cli/
 │   └── ant-go.js          # Entry point (CLI)
 ├── src/
 │   ├── commands/
-│   │   ├── build.js        # `ant-go build`
-│   │   └── status.js       # `ant-go status <jobId>`
+│   │   ├── build.js        # `ant build`
+│   │   └── status.js       # `ant status <jobId>`
 │   ├── apple/
 │   │   ├── auth.js         # Apple login
 │   │   ├── certificate.js  # Distribution cert (p12 cache)
@@ -43,7 +43,7 @@ cp .env.example .env
 ```bash
 node bin/ant-go.js build
 # hoặc sau npm link:
-ant-go build
+ant build
 ```
 
 Options:
@@ -54,7 +54,7 @@ Options:
 ### Xem status
 
 ```bash
-ant-go status <jobId>
+ant status <jobId>
 ```
 
 ## Workflow (giống trigger-build.js)
@@ -72,6 +72,5 @@ ant-go status <jobId>
 ```bash
 cd cli
 npm install
-npm link   # → `ant-go` available globally
+npm link   # → `ant` available globally
 ```
-

@@ -4,7 +4,7 @@ const { program } = require('commander');
 const { version } = require('../package.json');
 
 program
-  .name('ant-go')
+  .name('ant')
   .description('CLI to trigger iOS and Android builds')
   .version(version);
 

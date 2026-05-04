@@ -1,5 +1,5 @@
 /**
- * configure.js — `ant-go configure`
+ * configure.js — `ant configure`
  * User chỉ cần set projectRoot (optional, mặc định là cwd khi chạy build)
  * Server URL được hardcode — user không cần biết.
  */
@@ -17,9 +17,9 @@ async function configure(options) {
     console.log('');
     console.log(`  Config:  ${chalk.gray(CONFIG_FILE)}`);
     console.log(`  Server:  ${chalk.green(API_URL)} ${chalk.gray('(hardcoded)')}`);
-    console.log(`  Project: ${cfg.projectRoot ? chalk.green(cfg.projectRoot) : chalk.gray('(cwd khi chạy ant-go build)')}`);
+    console.log(`  Project: ${cfg.projectRoot ? chalk.green(cfg.projectRoot) : chalk.gray('(cwd khi chạy ant build)')}`);
     console.log('');
-    console.log(`  Dùng: ${chalk.cyan('ant-go configure --project <path>')}\n`);
+    console.log(`  Dùng: ${chalk.cyan('ant configure --project <path>')}\n`);
     return;
   }
 

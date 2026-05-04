@@ -1,5 +1,5 @@
 /**
- * build.js — `ant-go build`
+ * build.js — `ant build`
  *
  * Flow:
  *  1. Đọc app.json → lấy projectId + project info (bundleId, scheme, xcworkspace, xcodeproj)
@@ -250,14 +250,14 @@ async function runBuild(options) {
     console.log('');
     console.log(chalk.red('✖  Thiếu flag --platform'));
     console.log('');
-    console.log(`   Cách dùng: ${chalk.cyan('ant-go build --platform <platform>')}`);
+    console.log(`   Cách dùng: ${chalk.cyan('ant build --platform <platform>')}`);
     console.log('');
     console.log('   Nền tảng hỗ trợ:');
     console.log(`     ${chalk.cyan('--platform ios')}      Build iOS app (.ipa)`);
     console.log(`     ${chalk.cyan('--platform android')}  Build Android app`);
     console.log('');
     console.log('   Ví dụ:');
-    console.log(`     ${chalk.gray('$')} ant-go build --platform ios`);
+    console.log(`     ${chalk.gray('$')} ant build --platform ios`);
     console.log('');
     process.exit(1);
   }

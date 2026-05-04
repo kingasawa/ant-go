@@ -37,7 +37,7 @@ const features = [
 const steps = [
   { n: "1", label: "Đăng ký tài khoản và tạo project trên dashboard" },
   { n: "2", label: "Cài CLI: npm install -g ant-go, thêm projectId vào app.json" },
-  { n: "3", label: "Chạy ant-go build — CLI tự pack project và upload lên server" },
+  { n: "3", label: "Chạy ant build — CLI tự pack project và upload lên server" },
   { n: "4", label: "Mac build server nhận job, build với Fastlane, stream log realtime" },
   { n: "5", label: "Build xong: IPA sẵn sàng tải về hoặc submit lên App Store Connect" },
 ];
@@ -111,19 +111,19 @@ const TERMINAL_LINES: TLine[] = [
   },
   { type: "output", raw: "added 42 packages in 3s",      outputCls: "text-white/35" },
   {
-    type: "cmd", raw: "ant-go build",
+    type: "cmd", raw: "ant build",
     segments: [
-      { text: "ant-go", cls: "text-accent font-semibold" },
-      { text: " build",  cls: "text-green-300" },
+      { text: "ant",   cls: "text-accent font-semibold" },
+      { text: " build", cls: "text-green-300" },
     ],
   },
   { type: "output", raw: "✔ Project packed: 12.4 MB",    outputCls: "text-green-400" },
   { type: "output", raw: "✔ Upload hoàn tất",             outputCls: "text-green-400" },
   { type: "output", raw: "✔ Build đã gửi lên server!",   outputCls: "text-emerald-300" },
   {
-    type: "cmd", raw: "ant-go status abc123xyz",
+    type: "cmd", raw: "ant status abc123xyz",
     segments: [
-      { text: "ant-go",     cls: "text-accent font-semibold" },
+      { text: "ant",        cls: "text-accent font-semibold" },
       { text: " status",    cls: "text-white/80" },
       { text: " abc123xyz", cls: "text-yellow-300" },
     ],
@@ -320,7 +320,7 @@ function useReveal() {
   return ref;
 }
 
-const CLI_TEXT = "$ npm install -g ant-go && ant-go build";
+const CLI_TEXT = "$ npm install -g ant-go && ant build";
 
 function useTypewriter(text: string, speed = 45, startDelay = 900) {
   const [displayed, setDisplayed] = useState("");

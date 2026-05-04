@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   const session = await validateCliToken(token);
   if (!session) {
     return NextResponse.json(
-      { error: "Chưa đăng nhập. Chạy: ant-go auth login" },
+      { error: "Chưa đăng nhập. Chạy: ant auth login" },
       { status: 401 }
     );
   }

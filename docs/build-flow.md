@@ -1,6 +1,6 @@
 # Build Flow — CLI đến Dashboard
 
-Luồng đầy đủ từ khi CLI gửi lệnh `ant-go build` đến khi artifact (.ipa/.apk) sẵn sàng trên dashboard.
+Luồng đầy đủ từ khi CLI gửi lệnh `ant build` đến khi artifact (.ipa/.apk) sẵn sàng trên dashboard.
 
 ---
 
@@ -33,7 +33,7 @@ CLI                         Dashboard (Next.js)             Mac Build Server
 
 | File | Vai trò |
 |---|---|
-| `cli/src/commands/build.js` | Entry point lệnh `ant-go build` |
+| `cli/src/commands/build.js` | Entry point lệnh `ant build` |
 | `cli/src/apple-creds.js` | Thu thập Apple credentials (cert + provisioning profile) |
 | `cli/src/api.js` | Axios client gọi API |
 | `app/api/builds/route.ts` | `POST /api/builds` — tạo job + sinh signed URL |

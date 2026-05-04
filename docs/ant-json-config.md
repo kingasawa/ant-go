@@ -1,6 +1,6 @@
 # ant.json — Cấu hình build
 
-File `ant.json` đặt ở thư mục gốc của project (cùng cấp với `app.json`). Nếu chưa có, CLI sẽ tự tạo với các profile mặc định khi bạn chạy `ant-go build` lần đầu.
+File `ant.json` đặt ở thư mục gốc của project (cùng cấp với `app.json`). Nếu chưa có, CLI sẽ tự tạo với các profile mặc định khi bạn chạy `ant build` lần đầu.
 
 ---
 
@@ -20,8 +20,8 @@ File `ant.json` đặt ở thư mục gốc của project (cùng cấp với `ap
 Mỗi key trong `"build"` là tên một **build profile**. Dùng bằng flag `--profile`:
 
 ```bash
-ant-go build --platform ios --profile production
-ant-go build --platform ios --profile development
+ant build --platform ios --profile production
+ant build --platform ios --profile development
 ```
 
 ---
@@ -99,7 +99,7 @@ Ví dụ `app.json`:
 ### Luồng buildNumber
 
 ```
-ant-go build --platform ios
+ant build --platform ios
     │
     ├── app.json có expo.ios.buildNumber?
     │     ├── Có (VD: "42") → dùng 42

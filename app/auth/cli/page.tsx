@@ -15,7 +15,7 @@ function CliAuthContent() {
 
   const handleGoogleLogin = async () => {
     if (!port || !state) {
-      setError("Thiếu tham số port hoặc state. Hãy chạy lại: ant-go auth login --browser");
+      setError("Thiếu tham số port hoặc state. Hãy chạy lại: ant auth login --browser");
       setStatus("error");
       return;
     }

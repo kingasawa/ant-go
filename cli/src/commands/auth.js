@@ -1,5 +1,5 @@
 /**
- * auth.js — `ant-go auth` commands
+ * auth.js — `ant auth` commands
  *
  * login:   email/password (mặc định) hoặc --browser cho Google OAuth
  * logout:  revoke token + xóa config
@@ -23,7 +23,7 @@ async function loginCommand({ browser = false } = {}) {
     const session = getAuth();
     console.log('');
     console.log(chalk.yellow(`Bạn đã đăng nhập với tài khoản: ${chalk.bold(session.email)}`));
-    console.log(chalk.gray('  Chạy `ant-go auth logout` nếu muốn đăng nhập tài khoản khác.'));
+    console.log(chalk.gray('  Chạy `ant auth logout` nếu muốn đăng nhập tài khoản khác.'));
     console.log('');
     return;
   }
@@ -185,7 +185,7 @@ async function whoamiCommand() {
   if (!session?.token) {
     console.log('');
     console.log(chalk.yellow('Bạn chưa đăng nhập.'));
-    console.log(chalk.gray('  Chạy: ant-go auth login'));
+    console.log(chalk.gray('  Chạy: ant auth login'));
     console.log('');
     return;
   }
@@ -203,7 +203,7 @@ async function whoamiCommand() {
   console.log(`  ${chalk.gray('Builds còn lại:')}  ${session.freeBuildsRemaining ?? '-'}`);
 
   if (isExpired) {
-    console.log(`  ${chalk.gray('Phiên:')}           ${chalk.red('Đã hết hạn — chạy: ant-go auth login')}`);
+    console.log(`  ${chalk.gray('Phiên:')}           ${chalk.red('Đã hết hạn — chạy: ant auth login')}`);
   } else if (session.expiresAt) {
     const exp = new Date(session.expiresAt).toLocaleString('vi-VN');
     console.log(`  ${chalk.gray('Hết hạn:')}         ${exp}`);
@@ -249,7 +249,7 @@ async function ensureToken() {
 
   console.log('');
   console.log(chalk.red('✖  Bạn chưa đăng nhập hoặc phiên đã hết hạn.'));
-  console.log(chalk.gray('   Chạy: ant-go auth login'));
+  console.log(chalk.gray('   Chạy: ant auth login'));
   console.log('');
   process.exit(1);
 }
