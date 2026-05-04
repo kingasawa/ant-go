@@ -2,6 +2,10 @@
 
 const { program } = require('commander');
 const { version } = require('../package.json');
+const { startUpdateCheck } = require('../src/update-check');
+
+// Kick off update check immediately (non-blocking)
+const showUpdateHint = startUpdateCheck();
 
 program
   .name('ant')
@@ -20,6 +24,7 @@ auth
   .action(async (options) => {
     const { loginCommand } = require('../src/commands/auth');
     await loginCommand({ browser: !!options.browser });
+    await showUpdateHint();
   });
 
 auth
@@ -28,6 +33,7 @@ auth
   .action(async () => {
     const { logoutCommand } = require('../src/commands/auth');
     await logoutCommand();
+    await showUpdateHint();
   });
 
 auth
@@ -36,6 +42,7 @@ auth
   .action(async () => {
     const { whoamiCommand } = require('../src/commands/auth');
     await whoamiCommand();
+    await showUpdateHint();
   });
 
 // ── build ─────────────────────────────────────────────────────────────────────
@@ -51,6 +58,7 @@ program
   .action(async (options) => {
     const { runBuild } = require('../src/commands/build');
     await runBuild(options);
+    await showUpdateHint();
   });
 
 // ── status ────────────────────────────────────────────────────────────────────
@@ -60,6 +68,7 @@ program
   .action(async (jobId) => {
     const { checkStatus } = require('../src/commands/status');
     await checkStatus(jobId);
+    await showUpdateHint();
   });
 
 program.parse(process.argv);
