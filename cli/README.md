@@ -1,26 +1,26 @@
 # ant-go CLI
 
-Build app iOS và Android nhanh chóng chỉ với một lệnh — không cần cấu hình CI/CD phức tạp.
+Build iOS and Android apps with a single command — no complex CI/CD setup required.
 
-## Cài đặt
+## Installation
 
 ```bash
 npm install -g ant-go
 ```
 
-## Bắt đầu
+## Getting Started
 
-### 1. Đăng nhập
+### 1. Login
 
 ```bash
-# Đăng nhập bằng email/password
+# Login with email/password
 ant auth login
 
-# Hoặc đăng nhập qua Google bằng trình duyệt
+# Or login with Google via browser
 ant auth login --browser
 ```
 
-### 2. Thêm cấu hình vào `app.json`
+### 2. Add configuration to `app.json`
 
 ```json
 {
@@ -45,34 +45,34 @@ ant build --platform ios
 
 ---
 
-## Các lệnh
+## Commands
 
 ### `ant build`
 
-Nén project, upload lên build server và theo dõi tiến trình.
+Packages your project, uploads it to the build server, and tracks progress.
 
 ```bash
 ant build --platform ios
 ant build --platform ios --profile development
-ant build --platform ios --auto-submit        # tự submit lên TestFlight sau khi build xong
-ant build --platform ios --reauth             # đăng nhập lại Apple Developer, bỏ cache
-ant build --platform ios --refresh-profile    # tạo lại Provisioning Profile
+ant build --platform ios --auto-submit        # auto-submit to TestFlight after build
+ant build --platform ios --reauth             # re-login to Apple Developer, clear cache
+ant build --platform ios --refresh-profile    # recreate Provisioning Profile
 ```
 
-| Option | Mô tả |
+| Option | Description |
 |---|---|
-| `--platform <platform>` | `ios` hoặc `android` |
-| `--profile <profile>` | Build profile trong `ant.json` (mặc định: `production`) |
-| `--project <path>` | Đường dẫn tới project (mặc định: thư mục hiện tại) |
-| `--reauth` | Bỏ cache Apple Developer session, đăng nhập lại từ đầu |
-| `--refresh-profile` | Tạo lại Provisioning Profile (dùng khi thay đổi Capabilities) |
-| `--auto-submit` | Tự động submit IPA lên TestFlight sau khi build xong |
+| `--platform <platform>` | `ios` or `android` |
+| `--profile <profile>` | Build profile from `ant.json` (default: `production`) |
+| `--project <path>` | Path to project directory (default: current directory) |
+| `--reauth` | Clear Apple Developer session cache and re-login |
+| `--refresh-profile` | Recreate Provisioning Profile (use when Capabilities change) |
+| `--auto-submit` | Automatically submit IPA to TestFlight after a successful build |
 
 ---
 
 ### `ant status <jobId>`
 
-Xem trạng thái của một build job.
+Check the status of a build job.
 
 ```bash
 ant status abc123xyz
@@ -90,7 +90,7 @@ ant status abc123xyz
 
 ### `ant auth login`
 
-Đăng nhập vào tài khoản antgo.work. Token được lưu tại `~/.ant-go/config.json`.
+Login to your antgo.work account. Token is stored at `~/.ant-go/config.json` and valid for 24 hours.
 
 ```bash
 ant auth login
@@ -99,7 +99,7 @@ ant auth login --browser   # Google OAuth
 
 ### `ant auth logout`
 
-Đăng xuất và thu hồi token hiện tại.
+Logout and revoke the current token.
 
 ```bash
 ant auth logout
@@ -107,14 +107,14 @@ ant auth logout
 
 ### `ant auth whoami`
 
-Xem thông tin tài khoản đang đăng nhập.
+Display information about the currently logged-in account.
 
 ```bash
 ant auth whoami
 ```
 
 ```
-  Name:    Nguyen Van A
+  Name:    John Doe
   Email:   dev@example.com
   Plan:    Pro
   Credits: 12 / 15
@@ -125,7 +125,7 @@ ant auth whoami
 
 ## Build Profiles (`ant.json`)
 
-Đặt file `ant.json` ở thư mục gốc của project (cùng cấp với `app.json`). Nếu chưa có, CLI tự tạo khi chạy lần đầu.
+Place `ant.json` at the root of your project (next to `app.json`). If it doesn't exist, the CLI will create it with default profiles on first run.
 
 ```json
 {
@@ -144,24 +144,24 @@ ant auth whoami
 }
 ```
 
-| Profile | `distribution` | Dùng khi |
+| Profile | `distribution` | Use when |
 |---|---|---|
-| `production` | `store` | Release lên App Store hoặc TestFlight |
-| `development` | `internal` | Debug trên thiết bị thật, kết nối Metro bundler |
-| `preview` | `internal` | Share bản test nội bộ trước khi lên store |
+| `production` | `store` | Releasing to App Store or distributing via TestFlight |
+| `development` | `internal` | Debugging on a real device, connecting to Metro bundler |
+| `preview` | `internal` | Sharing internal test builds before going to the store |
 
-> **`distribution: internal`** yêu cầu đăng ký UDID thiết bị trước. CLI sẽ hướng dẫn qua QR code tự động.
+> **`distribution: internal`** requires registering device UDIDs beforehand. The CLI guides you through this automatically via QR code.
 
 ---
 
 ## Add Device (iOS internal build)
 
-Khi build với `distribution: internal`, CLI tự động hỏi bạn muốn build cho thiết bị nào. Nếu chưa đăng ký thiết bị hoặc muốn thêm mới:
+When building with `distribution: internal`, the CLI will ask which devices to include. To register a new device:
 
-1. CLI hiển thị **QR code** trong terminal.
-2. Quét QR bằng **Camera app** trên iPhone (không cần app riêng).
-3. iPhone tải `.mobileconfig` → gửi UDID về server tự động.
-4. CLI nhận UDID, đăng ký lên **Apple Developer Portal** và tạo Provisioning Profile mới.
+1. CLI displays a **QR code** in the terminal.
+2. Scan the QR code with the **Camera app** on your iPhone (no separate app needed).
+3. iPhone downloads `.mobileconfig` → automatically sends UDID to the server.
+4. CLI receives the UDID, registers it on **Apple Developer Portal**, and creates a new Provisioning Profile.
 
 ```bash
 ant build --platform ios --profile development
@@ -169,59 +169,59 @@ ant build --platform ios --profile development
 
 ---
 
-## Auto Submit lên TestFlight
+## Auto Submit to TestFlight
 
-Thêm `--auto-submit` để CLI tự động gửi IPA lên TestFlight ngay sau khi build xong (chỉ dùng với `distribution: store`).
+Add `--auto-submit` to automatically upload your IPA to TestFlight after a successful build (only works with `distribution: store`).
 
 ```bash
 ant build --platform ios --auto-submit
 ```
 
-CLI sẽ tự động:
-1. Tạo và cache **App Store Connect API Key** từ Apple Developer Portal session.
-2. Upload key lên server (dùng cho bước submit).
-3. Sau khi build xong, server tự trigger submit job lên TestFlight.
+The CLI will automatically:
+1. Generate and cache an **App Store Connect API Key** from your Apple Developer Portal session.
+2. Upload the key to the server for use during submission.
+3. After the build completes, the server triggers a TestFlight submission job.
 
 ---
 
-## Luồng hoạt động
+## How It Works
 
 ```
 ant build --platform ios
     │
-    ├── Đọc app.json + ant.json
-    ├── Đăng nhập Apple Developer (cache 24h)
-    ├── Tạo/reuse Distribution Certificate (.p12)
-    ├── Tạo/reuse Provisioning Profile
-    ├── POST /api/builds → nhận jobId + signed upload URLs
+    ├── Read app.json + ant.json
+    ├── Login to Apple Developer (cached 24h)
+    ├── Create/reuse Distribution Certificate (.p12)
+    ├── Create/reuse Provisioning Profile
+    ├── POST /api/builds → receive jobId + signed upload URLs
     ├── Upload project.tar.gz → GCS
     ├── Upload credentials.json → GCS
     ├── POST /api/builds/:id/start
     │
-    └── Build URL: https://antgo.work/account/app/MyApp/builds/abc123xyz
+    └── Track at: https://antgo.work/account/app/MyApp/builds/abc123xyz
 
-Mac Build Server (tự động):
-    ├── Download + giải nén project
+Mac Build Server (automatic):
+    ├── Download + extract project
     ├── npm install + Fastlane + Xcode build
     ├── Upload IPA → GCS
-    └── Cập nhật trạng thái + trừ credit → dashboard realtime
+    └── Update status + deduct credit → realtime dashboard
 ```
 
 ---
 
-## Cache credentials
+## Credential Caching
 
-CLI cache Apple credentials tại `~/.ant-go/creds-<profileName>.json` (TTL 24h):
+The CLI caches Apple credentials at `~/.ant-go/creds-<profileName>.json` (TTL: 24h):
 
 - Apple Developer session
 - Distribution Certificate (`.p12`)
 - Provisioning Profile
-- App Store Connect API Key (không hết hạn)
+- App Store Connect API Key (no expiry)
 
-Dùng `--reauth` để xoá cache và đăng nhập lại từ đầu.
+Use `--reauth` to clear the cache and re-login from scratch.
 
 ---
 
-## Tài liệu đầy đủ
+## Full Documentation
 
 👉 **[antgo.work/docs](https://antgo.work/docs)**
