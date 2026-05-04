@@ -112,7 +112,7 @@ export const PLAN_APP_LIMIT: Record<string, number> = {
 - [x] TASK-09  Dashboard — Trang Usage (`app/(account)/account/usage/`)
 - [x] TASK-10  Dashboard — Sửa Overview page + Apps page
 - [x] TASK-11  CLI — Sửa `fetchUserInfo` + hiển thị credit trong build
-- [ ] TASK-12  Mac server — Sửa ant-go-builder gọi `/api/builds/:id/complete`
+- [x] TASK-12  Mac server — Sửa ant-go-builder gọi `/api/builds/:id/complete`
 - [x] TASK-13  Firestore rules — thêm rule `creditHistory`
 - [x] TASK-14  Docs — Cập nhật tài liệu
 
