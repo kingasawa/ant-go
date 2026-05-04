@@ -297,22 +297,24 @@ async function ensureAppleCreds(projectInfo, {
         if (useCache) {
           // internal: luôn hỏi chọn device, dù dùng cache
           if (distribution === 'internal') {
-            const selectedUdids = await selectDevices(userDevices, projectInfo.projectId, apiClient);
+            // Merge cached udids vào userDevices để hiện đủ danh sách dù Firestore chưa có
+            const cachedDevices = cachedUdids
+              .filter(u => !userDevices.find(d => d.udid === u))
+              .map(u => ({ udid: u, name: 'Device (cached)', deviceProduct: null }));
+            const mergedDevices = [...userDevices, ...cachedDevices];
+
+            const selectedUdids = await selectDevices(mergedDevices, projectInfo.projectId, apiClient);
             const sameDevices = selectedUdids.length === cachedUdids.length
               && selectedUdids.every(u => cachedUdids.includes(u));
 
             if (sameDevices) {
-              // Devices không đổi → dùng cache luôn
               return { ...cached, udids: selectedUdids, ...projectInfo };
             } else {
-              // Devices thay đổi → cần tạo lại provisioning profile
-              // Clear cache rồi chạy lại với force=true, bỏ qua bước chọn device
               clearCache(profileName);
               return await ensureAppleCreds(projectInfo, {
                 force: true, refreshProfile: true,
                 distribution, profileName,
-                userDevices: selectedUdids.map(u => ({ udid: u })),
-                apiClient,
+                userDevices, apiClient,
                 _preselectedUdids: selectedUdids,
               });
             }
