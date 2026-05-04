@@ -4,9 +4,10 @@
 
 const { API_URL }                      = require('../config');
 const { createClient, getBuildStatus } = require('../api');
-const { watchBuild }               = require('./build');
+const { watchBuild }                   = require('./build');
 const logger = require('../logger');
 const chalk  = require('chalk');
+const { t }  = require('../i18n');
 
 async function checkStatus(jobId, options) {
   const client = createClient(API_URL);
@@ -31,7 +32,7 @@ async function checkStatus(jobId, options) {
   console.log('');
 
   if (data.status === 'pending' || data.status === 'running') {
-    logger.log('Build đang chạy — đang theo dõi...\n');
+    logger.log(t('statusRunning') + '\n');
     try { await watchBuild(client, jobId); } catch { process.exit(1); }
   }
   process.exit(0);

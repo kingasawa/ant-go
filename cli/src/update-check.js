@@ -90,23 +90,12 @@ function startUpdateCheck() {
       const latest = await resultPromise;
       if (latest && isNewer(latest, current)) {
         const chalk = require('chalk');
+        const { t } = require('./i18n');
         console.log('');
-        console.log(
-          chalk.yellow('  ┌─────────────────────────────────────────────────────┐')
-        );
-        console.log(
-          chalk.yellow('  │') +
-          chalk.bold(`  Update available: ${chalk.gray(current)} → ${chalk.green(latest)}`) +
-          chalk.yellow('  │')
-        );
-        console.log(
-          chalk.yellow('  │') +
-          `  Run: ${chalk.cyan('npm install -g ant-go')} to upgrade` +
-          chalk.yellow('          │')
-        );
-        console.log(
-          chalk.yellow('  └─────────────────────────────────────────────────────┘')
-        );
+        console.log(chalk.yellow('  ┌─────────────────────────────────────────────────────┐'));
+        console.log(chalk.yellow('  │') + chalk.bold(t('updateAvailable', current, latest)) + chalk.yellow('  │'));
+        console.log(chalk.yellow('  │') + t('updateRun') + chalk.yellow('          │'));
+        console.log(chalk.yellow('  └─────────────────────────────────────────────────────┘'));
         console.log('');
       }
     } catch {}

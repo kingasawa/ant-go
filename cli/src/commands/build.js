@@ -27,6 +27,7 @@ const { ensureToken }                  = require('./auth');
 const { createClient, createBuild, getBuildStatus, fetchUserInfo, uploadAscKey } = require('../api');
 const { ensureAppleCreds }             = require('../apple-creds');
 const logger = require('../logger');
+const { t }  = require('../i18n');
 
 const STEP_LABELS = {
   uploading:      '☁️  CLI đang upload project...',
@@ -250,14 +251,14 @@ async function runBuild(options) {
     console.log('');
     console.log(chalk.red('✖  Thiếu flag --platform'));
     console.log('');
-    console.log(`   Cách dùng: ${chalk.cyan('ant build --platform <platform>')}`);
+    console.log(`   ${t('buildUsage')} ${chalk.cyan('ant build --platform <platform>')}`);
     console.log('');
     console.log('   Nền tảng hỗ trợ:');
     console.log(`     ${chalk.cyan('--platform ios')}      Build iOS app (.ipa)`);
     console.log(`     ${chalk.cyan('--platform android')}  Build Android app`);
     console.log('');
     console.log('   Ví dụ:');
-    console.log(`     ${chalk.gray('$')} ant build --platform ios`);
+    console.log(`     ${chalk.gray('$')} ${t('buildExample')}`);
     console.log('');
     process.exit(1);
   }

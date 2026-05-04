@@ -1,9 +1,5 @@
 /**
  * auth.js — `ant auth` commands
- *
- * login:   email/password (mặc định) hoặc --browser cho Google OAuth
- * logout:  revoke token + xóa config
- * whoami:  hiển thị thông tin tài khoản đang đăng nhập
  */
 
 const http    = require('http');
@@ -15,6 +11,7 @@ const ora     = require('ora');
 const inquirer = require('inquirer');
 
 const { API_URL, getAuth, setAuth, clearAuth, isLoggedIn } = require('../config');
+const { t } = require('../i18n');
 
 // ── login ─────────────────────────────────────────────────────────────────────
 
@@ -22,67 +19,64 @@ async function loginCommand({ browser = false } = {}) {
   if (isLoggedIn()) {
     const session = getAuth();
     console.log('');
-    console.log(chalk.yellow(`Bạn đã đăng nhập với tài khoản: ${chalk.bold(session.email)}`));
-    console.log(chalk.gray('  Chạy `ant auth logout` nếu muốn đăng nhập tài khoản khác.'));
+    console.log(chalk.yellow(t('alreadyLoggedIn', session.email)));
+    console.log(chalk.gray('  ' + t('logoutHint')));
     console.log('');
     return;
   }
-
-  if (browser) {
-    return browserLoginFlow();
-  }
+  if (browser) return browserLoginFlow();
   return emailLoginFlow();
 }
 
 async function emailLoginFlow() {
   console.log('');
-  console.log(chalk.bold('Đăng nhập vào ant-go'));
-  console.log(chalk.gray('  Dùng --browser để đăng nhập với Google'));
+  console.log(chalk.bold(t('loginTitle')));
+  console.log(chalk.gray('  ' + t('loginBrowserHint')));
   console.log('');
 
   const { email, password } = await inquirer.prompt([
     {
       type: 'input',
       name: 'email',
-      message: 'Email:',
-      validate: (v) => (v.includes('@') ? true : 'Email không hợp lệ'),
+      message: t('loginEmailLabel'),
+      validate: (v) => (v.includes('@') ? true : t('loginEmailInvalid')),
     },
     {
       type: 'password',
       name: 'password',
-      message: 'Password:',
+      message: t('loginPasswordLabel'),
       mask: '•',
     },
   ]);
 
-  const spinner = ora('Đang đăng nhập...').start();
+  const spinner = ora(t('loginLoading')).start();
 
   try {
     const { data } = await axios.post(`${API_URL}/api/auth/cli-login`, { email, password });
 
     setAuth({
-      token:               data.cliToken,
-      refreshToken:  data.refreshToken,
-      expiresAt:     data.expiresAt,
-      uid:           data.uid,
-      email:         data.email,
-      displayName:   data.displayName,
-      photoURL:      data.photoURL,
-      plan:          data.plan,
-      builds:        data.builds,
-      credits:       data.credits,
-      planCredits:   data.planCredits,
+      token:        data.cliToken,
+      refreshToken: data.refreshToken,
+      expiresAt:    data.expiresAt,
+      uid:          data.uid,
+      email:        data.email,
+      displayName:  data.displayName,
+      photoURL:     data.photoURL,
+      plan:         data.plan,
+      builds:       data.builds,
+      credits:      data.credits,
+      planCredits:  data.planCredits,
     });
 
-    spinner.succeed(`Đăng nhập thành công!`);
+    spinner.succeed(t('loginSuccess'));
     printUserInfo(data);
   } catch (err) {
-    spinner.fail('Đăng nhập thất bại');
+    spinner.fail(t('loginFailed'));
     const msg = err.response?.data?.error ?? err.message;
     console.error(chalk.red(`  ✖  ${msg}`));
     console.log('');
-    console.log(chalk.yellow("  Don't have an account yet?"));
-    console.log(`  Register at: ${chalk.cyan('https://antgo.work/register')}`);
+    console.log(chalk.yellow(`  ${t('loginNoAccount')}`));
+    console.log(`  ${t('loginRegisterAt')} ${chalk.cyan('https://antgo.work/register')}`);
     console.log('');
     process.exit(1);
   }
@@ -95,29 +89,21 @@ async function browserLoginFlow() {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       server.close();
-      reject(new Error('Timeout: quá 5 phút không hoàn tất đăng nhập'));
+      reject(new Error(t('browserTimeout')));
     }, 5 * 60 * 1000);
 
     const server = http.createServer((req, res) => {
       const url = new URL(req.url, `http://localhost:${port}`);
-      if (url.pathname !== '/callback') {
-        res.writeHead(404);
-        res.end('Not found');
-        return;
-      }
+      if (url.pathname !== '/callback') { res.writeHead(404); res.end('Not found'); return; }
 
       const receivedState = url.searchParams.get('state');
-      if (receivedState !== state) {
-        res.writeHead(400);
-        res.end('Invalid state');
-        return;
-      }
+      if (receivedState !== state) { res.writeHead(400); res.end('Invalid state'); return; }
 
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(`
         <html><body style="font-family:sans-serif;text-align:center;padding:60px;background:#0f0c29;color:#fff">
-          <h2 style="color:#a78bfa">✓ Đăng nhập thành công!</h2>
-          <p style="color:#9ca3af">Bạn có thể đóng tab này và quay lại terminal.</p>
+          <h2 style="color:#a78bfa">${t('browserSuccess')}</h2>
+          <p style="color:#9ca3af">${t('browserSuccessClose')}</p>
         </body></html>
       `);
 
@@ -125,8 +111,8 @@ async function browserLoginFlow() {
       server.close();
 
       setAuth({
-        token:               url.searchParams.get('token'),
-        refreshToken:        url.searchParams.get('refreshToken') || null,
+        token:        url.searchParams.get('token'),
+        refreshToken: url.searchParams.get('refreshToken') || null,
         expiresAt:    url.searchParams.get('expiresAt'),
         uid:          url.searchParams.get('uid'),
         email:        url.searchParams.get('email'),
@@ -140,17 +126,16 @@ async function browserLoginFlow() {
 
       const session = getAuth();
       console.log('');
-      console.log(chalk.green('✓ Đăng nhập thành công!'));
+      console.log(chalk.green(t('browserSuccess')));
       printUserInfo(session);
-
       resolve();
     });
 
     server.listen(port, () => {
       const loginUrl = `${API_URL}/auth/cli?port=${port}&state=${state}`;
       console.log('');
-      console.log('Đang mở browser để đăng nhập với Google...');
-      console.log(chalk.gray(`  Nếu browser không tự mở: ${loginUrl}`));
+      console.log(t('browserOpening'));
+      console.log(chalk.gray(`  ${t('browserManual')} ${loginUrl}`));
       openBrowser(loginUrl);
     });
 
@@ -164,7 +149,7 @@ async function logoutCommand() {
   const session = getAuth();
   if (!session?.token) {
     console.log('');
-    console.log(chalk.yellow('Bạn chưa đăng nhập.'));
+    console.log(chalk.yellow(t('notLoggedIn')));
     console.log('');
     return;
   }
@@ -173,13 +158,11 @@ async function logoutCommand() {
     await axios.delete(`${API_URL}/api/auth/cli-token`, {
       headers: { Authorization: `Bearer ${session.token}` },
     });
-  } catch {
-    // Bỏ qua — token có thể đã hết hạn
-  }
+  } catch {}
 
   clearAuth();
   console.log('');
-  console.log(chalk.green('✓ Đã đăng xuất thành công.'));
+  console.log(chalk.green(t('logoutSuccess')));
   console.log('');
 }
 
@@ -189,8 +172,8 @@ async function whoamiCommand() {
   const session = getAuth();
   if (!session?.token) {
     console.log('');
-    console.log(chalk.yellow('Bạn chưa đăng nhập.'));
-    console.log(chalk.gray('  Chạy: ant auth login'));
+    console.log(chalk.yellow(t('notLoggedIn')));
+    console.log(chalk.gray('  ' + t('runLoginHint')));
     console.log('');
     return;
   }
@@ -198,63 +181,60 @@ async function whoamiCommand() {
   const isExpired = session.expiresAt && new Date(session.expiresAt) < new Date();
 
   console.log('');
-  console.log(chalk.bold('Thông tin tài khoản:'));
+  console.log(chalk.bold(t('whoamiTitle')));
   console.log('');
-  console.log(`  ${chalk.gray('Email:')}           ${session.email ?? '-'}`);
+  console.log(`  ${chalk.gray(t('whoamiEmail'))}     ${session.email ?? '-'}`);
   if (session.displayName) {
-    console.log(`  ${chalk.gray('Tên:')}             ${session.displayName}`);
+    console.log(`  ${chalk.gray(t('whoamiName'))}       ${session.displayName}`);
   }
-  console.log(`  ${chalk.gray('Plan:')}            ${chalk.cyan(session.plan ?? 'free')}`);
-  console.log(`  ${chalk.gray('Builds còn lại:')}  ${session.freeBuildsRemaining ?? '-'}`);
-
+  console.log(`  ${chalk.gray(t('whoamiPlan'))}      ${chalk.cyan(session.plan ?? 'free')}`);
+  if (session.credits != null) {
+    console.log(`  ${chalk.gray(t('whoamiCredits'))}   ${session.credits} / ${session.planCredits ?? '-'}`);
+  }
   if (isExpired) {
-    console.log(`  ${chalk.gray('Phiên:')}           ${chalk.red('Đã hết hạn — chạy: ant auth login')}`);
+    console.log(`  ${chalk.gray(t('whoamiExpires'))}  ${chalk.red(t('whoamiExpired'))}`);
   } else if (session.expiresAt) {
-    const exp = new Date(session.expiresAt).toLocaleString('vi-VN');
-    console.log(`  ${chalk.gray('Hết hạn:')}         ${exp}`);
+    console.log(`  ${chalk.gray(t('whoamiExpires'))}  ${new Date(session.expiresAt).toLocaleString()}`);
   }
   console.log('');
 }
 
 // ── ensureToken ───────────────────────────────────────────────────────────────
-// Gọi trước khi chạy build: kiểm tra token, tự gia hạn nếu cần.
 
 async function ensureToken() {
   if (isLoggedIn()) return getAuth().token;
 
   const session = getAuth();
 
-  // Thử gia hạn bằng refreshToken
   if (session?.refreshToken) {
-    const spinner = ora('Đang gia hạn phiên đăng nhập...').start();
+    const spinner = ora(t('sessionRenewing')).start();
     try {
       const { data } = await axios.post(`${API_URL}/api/auth/cli-refresh`, {
         refreshToken: session.refreshToken,
       });
-
       setAuth({
-        token:               data.cliToken,
-        refreshToken:        data.refreshToken,
-        expiresAt:           data.expiresAt,
-        uid:                 data.uid,
-        email:               data.email,
-        displayName:         data.displayName,
-        photoURL:            data.photoURL,
-        plan:                data.plan,
-        builds:              data.builds,
-        freeBuildsRemaining: data.freeBuildsRemaining,
+        token:        data.cliToken,
+        refreshToken: data.refreshToken,
+        expiresAt:    data.expiresAt,
+        uid:          data.uid,
+        email:        data.email,
+        displayName:  data.displayName,
+        photoURL:     data.photoURL,
+        plan:         data.plan,
+        builds:       data.builds,
+        credits:      data.credits,
+        planCredits:  data.planCredits,
       });
-
-      spinner.succeed('Phiên đăng nhập đã được gia hạn');
+      spinner.succeed(t('sessionRenewed'));
       return data.cliToken;
     } catch {
-      spinner.fail('Không thể gia hạn phiên');
+      spinner.fail(t('sessionRenewFailed'));
     }
   }
 
   console.log('');
-  console.log(chalk.red('✖  Bạn chưa đăng nhập hoặc phiên đã hết hạn.'));
-  console.log(chalk.gray('   Chạy: ant auth login'));
+  console.log(chalk.red(`✖  ${t('sessionExpired')}`));
+  console.log(chalk.gray(`   ${t('runLoginHint')}`));
   console.log('');
   process.exit(1);
 }
@@ -263,12 +243,14 @@ async function ensureToken() {
 
 function printUserInfo(data) {
   console.log('');
-  console.log(`  ${chalk.gray('Email:')}           ${data.email ?? '-'}`);
+  console.log(`  ${chalk.gray(t('whoamiEmail'))}     ${data.email ?? '-'}`);
   if (data.displayName) {
-    console.log(`  ${chalk.gray('Tên:')}             ${data.displayName}`);
+    console.log(`  ${chalk.gray(t('whoamiName'))}       ${data.displayName}`);
   }
-  console.log(`  ${chalk.gray('Plan:')}            ${chalk.cyan(data.plan ?? 'free')}`);
-  console.log(`  ${chalk.gray('Builds còn lại:')}  ${data.freeBuildsRemaining ?? '-'}`);
+  console.log(`  ${chalk.gray(t('whoamiPlan'))}      ${chalk.cyan(data.plan ?? 'free')}`);
+  if (data.credits != null) {
+    console.log(`  ${chalk.gray(t('whoamiCredits'))}   ${data.credits} / ${data.planCredits ?? '-'}`);
+  }
   console.log('');
 }
 
@@ -278,7 +260,7 @@ function openBrowser(url) {
     process.platform === 'win32'  ? `start "" "${url}"` :
                                     `xdg-open "${url}"`;
   exec(cmd, (err) => {
-    if (err) console.log(chalk.gray(`  Mở trình duyệt thủ công: ${url}`));
+    if (err) console.log(chalk.gray(`  ${t('browserManual')} ${url}`));
   });
 }
 

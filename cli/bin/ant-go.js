@@ -3,6 +3,26 @@
 const { program } = require('commander');
 const { version } = require('../package.json');
 const { startUpdateCheck } = require('../src/update-check');
+const { setLang, isFirstRun, markFirstRunDone } = require('../src/config');
+const { t, getLang } = require('../src/i18n');
+const chalk = require('chalk');
+
+// ── First-run welcome ─────────────────────────────────────────────────────────
+if (isFirstRun()) {
+  markFirstRunDone();
+  console.log('');
+  console.log(chalk.bold.cyan(`  🐜  ant-go CLI  v${version}`));
+  console.log(chalk.gray('  ─────────────────────────────────'));
+  console.log(`  ${t('firstRunWelcome')}`);
+  console.log('');
+  console.log(`  ${t('firstRunGetStarted')}`);
+  console.log(`  ${chalk.cyan('ant auth login')}`);
+  console.log('');
+  console.log(`  ${t('firstRunDocs')} ${chalk.cyan('https://antgo.work/docs')}`);
+  console.log('');
+  console.log(chalk.yellow(`  ${t('firstRunLangHint')}`));
+  console.log('');
+}
 
 // Kick off update check immediately (non-blocking)
 const showUpdateHint = startUpdateCheck();
@@ -15,12 +35,12 @@ program
 // ── auth ──────────────────────────────────────────────────────────────────────
 const auth = program
   .command('auth')
-  .description('Quản lý đăng nhập tài khoản ant-go');
+  .description('Manage account authentication');
 
 auth
   .command('login')
-  .description('Đăng nhập vào tài khoản ant-go')
-  .option('--browser', 'Đăng nhập bằng Google qua trình duyệt')
+  .description('Login to your ant-go account')
+  .option('--browser', 'Login with Google via browser')
   .action(async (options) => {
     const { loginCommand } = require('../src/commands/auth');
     await loginCommand({ browser: !!options.browser });
@@ -29,7 +49,7 @@ auth
 
 auth
   .command('logout')
-  .description('Đăng xuất khỏi tài khoản hiện tại')
+  .description('Logout from current account')
   .action(async () => {
     const { logoutCommand } = require('../src/commands/auth');
     await logoutCommand();
@@ -38,7 +58,7 @@ auth
 
 auth
   .command('whoami')
-  .description('Xem thông tin tài khoản đang đăng nhập')
+  .description('Show current logged-in account info')
   .action(async () => {
     const { whoamiCommand } = require('../src/commands/auth');
     await whoamiCommand();
@@ -48,13 +68,13 @@ auth
 // ── build ─────────────────────────────────────────────────────────────────────
 program
   .command('build')
-  .description('Trigger a build (ios hoặc android)')
-  .option('--platform <platform>', 'Nền tảng build: ios hoặc android')
-  .option('--profile <profile>', 'Build profile từ ant.json (default: production)', 'production')
-  .option('--project <path>', 'Đường dẫn tới project (mặc định: thư mục hiện tại)')
-  .option('--reauth', 'Bỏ qua cache, đăng nhập lại Apple Developer từ đầu')
-  .option('--refresh-profile', 'Tạo lại Provisioning Profile (dùng khi thay đổi Capabilities)')
-  .option('--auto-submit', 'Tự động submit IPA lên TestFlight sau khi build thành công')
+  .description('Trigger a build (ios or android)')
+  .option('--platform <platform>', 'Build platform: ios or android')
+  .option('--profile <profile>', 'Build profile from ant.json (default: production)', 'production')
+  .option('--project <path>', 'Path to project directory (default: current directory)')
+  .option('--reauth', 'Clear Apple Developer session cache and re-login')
+  .option('--refresh-profile', 'Recreate Provisioning Profile')
+  .option('--auto-submit', 'Auto submit IPA to TestFlight after successful build')
   .action(async (options) => {
     const { runBuild } = require('../src/commands/build');
     await runBuild(options);
@@ -64,11 +84,33 @@ program
 // ── status ────────────────────────────────────────────────────────────────────
 program
   .command('status <jobId>')
-  .description('Xem trạng thái build job')
+  .description('Check build job status')
   .action(async (jobId) => {
     const { checkStatus } = require('../src/commands/status');
     await checkStatus(jobId);
     await showUpdateHint();
+  });
+
+// ── set ───────────────────────────────────────────────────────────────────────
+const set = program
+  .command('set')
+  .description('Set CLI preferences');
+
+set
+  .command('lang <lang>')
+  .description('Set language: vi (Vietnamese) or en (English)')
+  .action((lang) => {
+    const valid = ['vi', 'en'];
+    if (!valid.includes(lang)) {
+      console.log('');
+      console.log(chalk.red(`  ${t('langInvalid')}`));
+      console.log('');
+      process.exit(1);
+    }
+    setLang(lang);
+    console.log('');
+    console.log(chalk.green(`  ${t('langSet', lang)}`));
+    console.log('');
   });
 
 program.parse(process.argv);

@@ -7,6 +7,7 @@
 const { saveConfig, loadConfig, CONFIG_FILE, API_URL } = require('../config');
 const logger = require('../logger');
 const chalk  = require('chalk');
+const { t }  = require('../i18n');
 
 async function configure(options) {
   const updates = {};
@@ -17,9 +18,9 @@ async function configure(options) {
     console.log('');
     console.log(`  Config:  ${chalk.gray(CONFIG_FILE)}`);
     console.log(`  Server:  ${chalk.green(API_URL)} ${chalk.gray('(hardcoded)')}`);
-    console.log(`  Project: ${cfg.projectRoot ? chalk.green(cfg.projectRoot) : chalk.gray('(cwd khi chạy ant build)')}`);
+    console.log(`  ${t('configureProjectLabel')}  ${cfg.projectRoot ? chalk.green(cfg.projectRoot) : chalk.gray(t('configureProjectDefault'))}`);
     console.log('');
-    console.log(`  Dùng: ${chalk.cyan('ant configure --project <path>')}\n`);
+    console.log(`  ${t('configureUsage')} ${chalk.cyan('ant configure --project <path>')}\n`);
     return;
   }
 

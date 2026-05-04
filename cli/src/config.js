@@ -49,4 +49,20 @@ function isLoggedIn() {
   return new Date(session.expiresAt) > new Date();
 }
 
-module.exports = { API_URL, loadConfig, saveConfig, CONFIG_FILE, getAuth, setAuth, clearAuth, isLoggedIn };
+function getLang() {
+  return loadConfig().lang === 'en' ? 'en' : 'vi';
+}
+
+function setLang(lang) {
+  saveConfig({ lang });
+}
+
+function isFirstRun() {
+  return !loadConfig().firstRunDone;
+}
+
+function markFirstRunDone() {
+  saveConfig({ firstRunDone: true });
+}
+
+module.exports = { API_URL, loadConfig, saveConfig, CONFIG_FILE, getAuth, setAuth, clearAuth, isLoggedIn, getLang, setLang, isFirstRun, markFirstRunDone };
