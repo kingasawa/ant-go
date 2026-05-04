@@ -12,6 +12,8 @@ steps:
       - PROFILE_SIGNING_CERT
       - PROFILE_SIGNING_KEY
       - ASC_ENCRYPTION_KEY
+      - INTERNAL_BUILD_SECRET
+      - CRON_SECRET
     args:
       - "-c"
       - |
@@ -33,6 +35,8 @@ steps:
           PROFILE_SIGNING_CERT: '$$PROFILE_SIGNING_CERT'
           PROFILE_SIGNING_KEY: '$$PROFILE_SIGNING_KEY'
           ASC_ENCRYPTION_KEY: '$$ASC_ENCRYPTION_KEY'
+          INTERNAL_BUILD_SECRET: '$$INTERNAL_BUILD_SECRET'
+          CRON_SECRET: '$$CRON_SECRET'
         EOF
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
@@ -54,6 +58,10 @@ availableSecrets:
       env: "PROFILE_SIGNING_KEY"
     - versionName: "projects/$PROJECT_ID/secrets/ASC_ENCRYPTION_KEY/versions/latest"
       env: "ASC_ENCRYPTION_KEY"
+    - versionName: "projects/$PROJECT_ID/secrets/INTERNAL_BUILD_SECRET/versions/latest"
+      env: "INTERNAL_BUILD_SECRET"
+    - versionName: "projects/$PROJECT_ID/secrets/CRON_SECRET/versions/latest"
+      env: "CRON_SECRET"
 
 substitutions:
   _NEXT_PUBLIC_FIREBASE_API_KEY: ""
