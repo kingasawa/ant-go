@@ -134,16 +134,199 @@ const MESSAGES = {
 
   // ── build ───────────────────────────────────────────────────────────────────
   buildNoPlatform: {
-    vi: 'Thiếu --platform. Dùng: --platform ios hoặc --platform android',
-    en: 'Missing --platform. Use: --platform ios or --platform android',
+    vi: 'Thiếu flag --platform',
+    en: 'Missing --platform flag',
+  },
+  buildPlatformSupported: {
+    vi: 'Nền tảng hỗ trợ:',
+    en: 'Supported platforms:',
+  },
+  buildPlatformInvalid: {
+    vi: (p) => `--platform không hợp lệ: "${p}"`,
+    en: (p) => `Invalid --platform: "${p}"`,
+  },
+  buildPlatformOnly: {
+    vi: `Chỉ chấp nhận: ios hoặc android`,
+    en: `Only accepted: ios or android`,
+  },
+  buildExample: {
+    vi: '$ ant build --platform ios',
+    en: '$ ant build --platform ios',
   },
   buildUsage: {
     vi: 'Cách dùng:',
     en: 'Usage:',
   },
-  buildExample: {
-    vi: '$ ant build --platform ios',
-    en: '$ ant build --platform ios',
+  buildLoadingAccount: {
+    vi: 'Đang tải thông tin tài khoản...',
+    en: 'Loading account info...',
+  },
+  buildLoadAccountFailed: {
+    vi: 'Không tải được thông tin tài khoản',
+    en: 'Failed to load account info',
+  },
+  buildCreditsRemaining: {
+    vi: (plan, credits) => `Plan: ${plan}  ·  Credits còn lại: ${credits}`,
+    en: (plan, credits) => `Plan: ${plan}  ·  Credits remaining: ${credits}`,
+  },
+  buildOutOfCredits: {
+    vi: 'Bạn đã hết credit build.',
+    en: 'You have run out of build credits.',
+  },
+  buildOutOfCreditsHint: {
+    vi: 'Nâng cấp plan hoặc chờ reset đầu tháng tại: https://antgo.work/account/billing',
+    en: 'Upgrade your plan or wait for monthly reset at: https://antgo.work/account/billing',
+  },
+  buildPastDue: {
+    vi: 'Thanh toán thất bại — vui lòng cập nhật thông tin thanh toán.',
+    en: 'Payment failed — please update your billing information.',
+  },
+  buildNoPlatformDir: {
+    vi: (dir, root) => `Không tìm thấy thư mục ${dir}/ trong: ${root}`,
+    en: (dir, root) => `Could not find ${dir}/ directory in: ${root}`,
+  },
+  buildAutoSubmitStoreOnly: {
+    vi: '--auto-submit chỉ dùng được với distribution: store',
+    en: '--auto-submit only works with distribution: store',
+  },
+  buildAutoSubmitProfileHint: {
+    vi: (name, dist) => `Profile "${name}" đang dùng distribution: ${dist}`,
+    en: (name, dist) => `Profile "${name}" uses distribution: ${dist}`,
+  },
+  buildCreatingJob: {
+    vi: 'Đang tạo build job...',
+    en: 'Creating build job...',
+  },
+  buildJobCreated: {
+    vi: (id, bn) => `Job tạo thành công: ${id}  ·  Build #${bn}`,
+    en: (id, bn) => `Job created: ${id}  ·  Build #${bn}`,
+  },
+  buildAscKeySaved: {
+    vi: '✔  ASC API Key đã lưu vào dashboard',
+    en: '✔  ASC API Key saved to dashboard',
+  },
+  buildAscKeyFailed: {
+    vi: '⚠  Không lưu được ASC API Key: ',
+    en: '⚠  Failed to save ASC API Key: ',
+  },
+  buildJobFailed: {
+    vi: 'Tạo build job thất bại',
+    en: 'Failed to create build job',
+  },
+  buildProjectNotFound: {
+    vi: (id) => `Project ID "${id}" không tồn tại trên hệ thống.`,
+    en: (id) => `Project ID "${id}" does not exist on the system.`,
+  },
+  buildProjectNotFoundHint1: {
+    vi: 'Hãy kiểm tra lại projectId trong app.json:',
+    en: 'Please check the projectId in app.json:',
+  },
+  buildProjectNotFoundHint2: {
+    vi: 'Tạo project tại:',
+    en: 'Create a project at:',
+  },
+  buildProjectNotFoundHint3: {
+    vi: 'Sau đó copy Project ID vào app.json.',
+    en: 'Then copy the Project ID into app.json.',
+  },
+  buildPacking: {
+    vi: 'Đang nén project...',
+    en: 'Packing project...',
+  },
+  buildPackDone: {
+    vi: (mb) => `Project đã nén: ${mb} MB`,
+    en: (mb) => `Project packed: ${mb} MB`,
+  },
+  buildPackFailed: {
+    vi: 'Lỗi khi nén project',
+    en: 'Failed to pack project',
+  },
+  buildUploading: {
+    vi: (file) => `Đang upload ${file}...`,
+    en: (file) => `Uploading ${file}...`,
+  },
+  buildUploadDone: {
+    vi: (file) => `Upload ${file} hoàn tất`,
+    en: (file) => `Upload ${file} complete`,
+  },
+  buildUploadFailed: {
+    vi: (file) => `Lỗi khi upload ${file}`,
+    en: (file) => `Failed to upload ${file}`,
+  },
+  buildUploadProgress: {
+    vi: (pct, up, total) => `Đang upload... ${pct}% (${up} / ${total} MB)`,
+    en: (pct, up, total) => `Uploading... ${pct}% (${up} / ${total} MB)`,
+  },
+  buildVerifyingFiles: {
+    vi: 'Đang kiểm tra files...',
+    en: 'Verifying files...',
+  },
+  buildVerifyDone: {
+    vi: 'Đã kiểm tra đầy đủ files',
+    en: 'All files verified',
+  },
+  buildStartFailed: {
+    vi: 'Không thể khởi động build',
+    en: 'Failed to start build',
+  },
+  buildSubmitted: {
+    vi: 'Build đã được gửi lên server!',
+    en: 'Build submitted to server!',
+  },
+  buildAutoSubmitNote: {
+    vi: '✈  Auto Submit: bật — IPA sẽ tự động được gửi lên TestFlight sau khi build xong.',
+    en: '✈  Auto Submit: on — IPA will be automatically submitted to TestFlight after build.',
+  },
+  buildTrackAt: {
+    vi: 'Theo dõi tiến trình tại:',
+    en: 'Track progress at:',
+  },
+  buildAppleCredsError: {
+    vi: 'Không lấy được Apple credentials: ',
+    en: 'Failed to get Apple credentials: ',
+  },
+  // ant.json
+  antJsonCreated: {
+    vi: '📄  Đã tạo ant.json với các profile mặc định:',
+    en: '📄  Created ant.json with default profiles:',
+  },
+  antJsonParseFailed: {
+    vi: 'Không thể parse ant.json',
+    en: 'Failed to parse ant.json',
+  },
+  antJsonProfileNotFound: {
+    vi: (name) => `Profile "${name}" không tồn tại trong ant.json`,
+    en: (name) => `Profile "${name}" does not exist in ant.json`,
+  },
+  antJsonProfilesAvailable: {
+    vi: '   Profiles hiện có:',
+    en: '   Available profiles:',
+  },
+  // app.json
+  appJsonNotFound: {
+    vi: (path) => `Không tìm thấy app.json tại: ${path}`,
+    en: (path) => `app.json not found at: ${path}`,
+  },
+  appJsonParseFailed: {
+    vi: 'Không thể parse app.json',
+    en: 'Failed to parse app.json',
+  },
+  appJsonNoProjectId: {
+    vi: '⚠  Chưa có projectId trong app.json → expo.extra.ant.projectId',
+    en: '⚠  Missing projectId in app.json → expo.extra.ant.projectId',
+  },
+  appJsonNoProjectIdHint: {
+    vi: 'Vào https://antgo.work để lấy Project ID',
+    en: 'Go to https://antgo.work to get your Project ID',
+  },
+  appJsonNoBundleId: {
+    vi: 'Thiếu bundleId — thêm expo.extra.ant.bundleId hoặc expo.ios.bundleIdentifier vào app.json',
+    en: 'Missing bundleId — add expo.extra.ant.bundleId or expo.ios.bundleIdentifier to app.json',
+  },
+  // apple creds
+  appleCredsLogin: {
+    vi: '🔐  Cần đăng nhập Apple Developer để lấy certificate & provisioning profile',
+    en: '🔐  Apple Developer login required to get certificate & provisioning profile',
   },
 
   // ── status ──────────────────────────────────────────────────────────────────

@@ -318,7 +318,8 @@ async function ensureAppleCreds(projectInfo, {
   } = require('@expo/apple-utils');
 
   console.log('');
-  console.log(chalk.yellow.bold('🔐  Cần đăng nhập Apple Developer để lấy certificate & provisioning profile'));
+  const { t } = require('./i18n');
+  console.log(chalk.yellow.bold(t('appleCredsLogin')));
   console.log('');
 
   // ── Apple ID + password ──────────────────────────────────────────────────────

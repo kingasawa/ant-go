@@ -30,12 +30,12 @@ const logger = require('../logger');
 const { t, tError } = require('../i18n');
 
 const STEP_LABELS = {
-  uploading:      '☁️  CLI đang upload project...',
-  pending:        '⏳ Đang chờ build server xử lý...',
-  initialising:   '🔧 Đang khởi tạo...',
-  setup_certs:    '🔑 Đang setup certificates...',
-  bundle_install: '💎 Đang cài Ruby gems...',
-  fastlane_build: '🏗️  Đang build IPA (Fastlane)...',
+  uploading:      { vi: '☁️  CLI đang upload project...', en: '☁️  CLI is uploading project...' },
+  pending:        { vi: '⏳ Đang chờ build server xử lý...', en: '⏳ Waiting for build server...' },
+  initialising:   { vi: '🔧 Đang khởi tạo...', en: '🔧 Initialising...' },
+  setup_certs:    { vi: '🔑 Đang setup certificates...', en: '🔑 Setting up certificates...' },
+  bundle_install: { vi: '💎 Đang cài Ruby gems...', en: '💎 Installing Ruby gems...' },
+  fastlane_build: { vi: '🏗️  Đang build IPA (Fastlane)...', en: '🏗️  Building IPA (Fastlane)...' },
 };
 
 // ── ant.json — build profiles ─────────────────────────────────────────────────
@@ -60,7 +60,7 @@ function resolveAntJson(projectRoot, profileName) {
   if (!fs.existsSync(antJsonPath)) {
     fs.writeFileSync(antJsonPath, JSON.stringify(DEFAULT_ANT_JSON, null, 2));
     console.log('');
-    console.log(chalk.cyan('📄  Đã tạo ant.json với các profile mặc định:'));
+    console.log(chalk.cyan(t('antJsonCreated')));
     Object.entries(DEFAULT_ANT_JSON.build).forEach(([name, cfg]) => {
       const tags = [`distribution: ${cfg.distribution}`];
       if (cfg.developmentClient) tags.push('developmentClient: true');
@@ -71,18 +71,18 @@ function resolveAntJson(projectRoot, profileName) {
 
   let antJson;
   try { antJson = JSON.parse(fs.readFileSync(antJsonPath, 'utf8')); }
-  catch { logger.error('Không thể parse ant.json'); process.exit(1); }
+  catch { logger.error(t('antJsonParseFailed')); process.exit(1); }
 
   const profiles = antJson.build || {};
   const profile  = profiles[profileName];
 
   if (!profile) {
     console.log('');
-    console.log(chalk.red(`✖  Profile "${profileName}" không tồn tại trong ant.json`));
+    console.log(chalk.red(`✖  ${t('antJsonProfileNotFound', profileName)}`));
     console.log('');
     const names = Object.keys(profiles);
     if (names.length > 0) {
-      console.log('   Profiles hiện có:');
+      console.log(t('antJsonProfilesAvailable'));
       names.forEach(n => {
         const cfg  = profiles[n];
         const tags = [`distribution: ${cfg.distribution || 'store'}`];
@@ -104,13 +104,13 @@ function resolveAntJson(projectRoot, profileName) {
 function resolveProjectInfo(projectRoot) {
   const appJsonPath = path.join(projectRoot, 'app.json');
   if (!fs.existsSync(appJsonPath)) {
-    logger.error(`Không tìm thấy app.json tại: ${appJsonPath}`);
+    logger.error(t('appJsonNotFound', appJsonPath));
     process.exit(1);
   }
 
   let appJson;
   try { appJson = JSON.parse(fs.readFileSync(appJsonPath, 'utf8')); }
-  catch { logger.error('Không thể parse app.json'); process.exit(1); }
+  catch { logger.error(t('appJsonParseFailed')); process.exit(1); }
 
   appJson.expo             ??= {};
   appJson.expo.extra       ??= {};
@@ -125,8 +125,8 @@ function resolveProjectInfo(projectRoot) {
       fs.writeFileSync(appJsonPath, JSON.stringify(appJson, null, 2));
     }
     console.log('');
-    console.log(chalk.yellow('⚠  Chưa có projectId trong app.json → expo.extra.ant.projectId'));
-    console.log(`   Vào ${chalk.cyan('https://antgo.work')} để lấy Project ID\n`);
+    console.log(chalk.yellow(t('appJsonNoProjectId')));
+    console.log(`   ${t('appJsonNoProjectIdHint')}\n`);
     process.exit(0);
   }
 
@@ -138,7 +138,7 @@ function resolveProjectInfo(projectRoot) {
   const bundleId    = ant.bundleId    ?? appJson.expo?.ios?.bundleIdentifier ?? '';
 
   if (!bundleId) {
-    logger.error('Thiếu bundleId — thêm expo.extra.ant.bundleId hoặc expo.ios.bundleIdentifier vào app.json');
+    logger.error(t('appJsonNoBundleId'));
     process.exit(1);
   }
 
@@ -234,7 +234,7 @@ function uploadFile(uploadUrl, filePath, contentType, spinner) {
       uploaded += chunk.length;
       const pct        = Math.round((uploaded / fileSize) * 100);
       const uploadedMB = (uploaded / 1024 / 1024).toFixed(1);
-      spinner.text = `Đang upload... ${pct}% (${uploadedMB} / ${totalMB} MB)`;
+      spinner.text = t('buildUploadProgress', pct, uploadedMB, totalMB);
     });
     stream.on('error', reject);
     stream.pipe(req);
@@ -243,30 +243,28 @@ function uploadFile(uploadUrl, filePath, contentType, spinner) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function runBuild(options) {
-  // Kiểm tra đăng nhập — tự gia hạn token nếu cần
   const authToken = await ensureToken();
 
   const platform = (options.platform || '').toLowerCase();
   if (!platform) {
     console.log('');
-    console.log(chalk.red('✖  Thiếu flag --platform'));
+    console.log(chalk.red(`✖  ${t('buildNoPlatform')}`));
     console.log('');
     console.log(`   ${t('buildUsage')} ${chalk.cyan('ant build --platform <platform>')}`);
     console.log('');
-    console.log('   Nền tảng hỗ trợ:');
+    console.log(`   ${t('buildPlatformSupported')}`);
     console.log(`     ${chalk.cyan('--platform ios')}      Build iOS app (.ipa)`);
     console.log(`     ${chalk.cyan('--platform android')}  Build Android app`);
     console.log('');
-    console.log('   Ví dụ:');
-    console.log(`     ${chalk.gray('$')} ${t('buildExample')}`);
+    console.log(`   ${t('buildExample')}`);
     console.log('');
     process.exit(1);
   }
   if (!['ios', 'android'].includes(platform)) {
     console.log('');
-    console.log(chalk.red(`✖  --platform không hợp lệ: "${options.platform}"`));
+    console.log(chalk.red(`✖  ${t('buildPlatformInvalid', options.platform)}`));
     console.log('');
-    console.log(`   Chỉ chấp nhận: ${chalk.cyan('ios')} hoặc ${chalk.cyan('android')}`);
+    console.log(`   ${t('buildPlatformOnly')}`);
     console.log('');
     process.exit(1);
   }
@@ -274,33 +272,29 @@ async function runBuild(options) {
   const client = createClient(API_URL, authToken);
 
   // Fetch fresh user info (plan, quota, devices)
-  const infoSpinner = ora('Đang tải thông tin tài khoản...').start();
+  const infoSpinner = ora(t('buildLoadingAccount')).start();
   let userInfo;
   try {
     userInfo = await fetchUserInfo(client);
     const creditsDisplay = userInfo.planCredits === -1
       ? 'Unlimited'
       : `${userInfo.credits.toFixed ? userInfo.credits.toFixed(1) : userInfo.credits}/${userInfo.planCredits}`;
-    infoSpinner.succeed(
-      `Plan: ${chalk.cyan(userInfo.plan)}  ·  ` +
-      `Credits còn lại: ${chalk.bold(creditsDisplay)}`
-    );
+    infoSpinner.succeed(t('buildCreditsRemaining', chalk.cyan(userInfo.plan), chalk.bold(creditsDisplay)));
   } catch (err) {
-    infoSpinner.fail('Không tải được thông tin tài khoản');
-    logger.error(err.response?.data?.error ?? err.message);
+    infoSpinner.fail(t('buildLoadAccountFailed'));
+    logger.error(tError(err.response?.data?.error ?? err.message));
     process.exit(1);
   }
 
-  // Kiểm tra quota (server cũng check, nhưng CLI check trước để UX tốt hơn)
   if (userInfo.planCredits !== -1 && (userInfo.credits ?? 0) <= 0) {
     console.log('');
-    console.log(chalk.red('✖  Bạn đã hết credit build.'));
-    console.log(chalk.gray('   Nâng cấp plan hoặc chờ reset đầu tháng tại: https://antgo.work/account/billing'));
+    console.log(chalk.red(`✖  ${t('buildOutOfCredits')}`));
+    console.log(chalk.gray(`   ${t('buildOutOfCreditsHint')}`));
     console.log('');
     process.exit(1);
   }
   if (userInfo.planStatus === 'past_due') {
-    console.log(chalk.yellow('⚠  Thanh toán thất bại — vui lòng cập nhật thông tin thanh toán.'));
+    console.log(chalk.yellow(`⚠  ${t('buildPastDue')}`));
     console.log(chalk.gray('   https://antgo.work/account/billing'));
     console.log('');
   }
@@ -311,7 +305,7 @@ async function runBuild(options) {
 
   const platformDir = platform === 'android' ? 'android' : 'ios';
   if (!fs.existsSync(path.join(projectRoot, platformDir))) {
-    logger.error(`Không tìm thấy thư mục ${platformDir}/ trong: ${projectRoot}`);
+    logger.error(t('buildNoPlatformDir', platformDir, projectRoot));
     process.exit(1);
   }
 
@@ -324,8 +318,8 @@ async function runBuild(options) {
 
   if (autoSubmit && distribution !== 'store') {
     console.log('');
-    console.log(chalk.red('✖  --auto-submit chỉ dùng được với distribution: store'));
-    console.log(chalk.gray(`   Profile "${profileName}" đang dùng distribution: ${distribution}`));
+    console.log(chalk.red(`✖  ${t('buildAutoSubmitStoreOnly')}`));
+    console.log(chalk.gray(`   ${t('buildAutoSubmitProfileHint', profileName, distribution)}`));
     console.log('');
     process.exit(1);
   }
@@ -353,13 +347,13 @@ async function runBuild(options) {
         apiClient:   client,
       });
     } catch (err) {
-      logger.error('Không lấy được Apple credentials: ' + err.message);
+      logger.error(t('buildAppleCredsError') + err.message);
       process.exit(1);
     }
   }
 
   // 3. Tạo build job → lấy 2 signed URLs (cùng folder trên Storage)
-  const spinner = ora('Đang tạo build job...').start();
+  const spinner = ora(t('buildCreatingJob')).start();
   let jobId, tarUrl, credsUrl;
   try {
     const res = await createBuild(client, {
@@ -373,33 +367,32 @@ async function runBuild(options) {
     tarUrl   = res.tarUrl;
     credsUrl = res.credsUrl;
     const resolvedBN = res.buildNumber;
-    const appName    = res.appName ?? null;
-    spinner.succeed(`Job tạo thành công: ${chalk.bold(jobId)}  ·  Build #${chalk.cyan(resolvedBN)}`);
+    spinner.succeed(t('buildJobCreated', chalk.bold(jobId), chalk.cyan(resolvedBN)));
 
     // Upload ASC key lên dashboard (best-effort, không block build)
     if (platform === 'ios' && creds?.ascKey && creds?.teamId) {
       const { keyId, issuerId, privateKeyP8 } = creds.ascKey;
       try {
         await uploadAscKey(client, { teamId: creds.teamId, keyId, issuerId, privateKeyP8 });
-        console.log(chalk.green('✔  ASC API Key đã lưu vào dashboard'));
+        console.log(chalk.green(t('buildAscKeySaved')));
       } catch (err) {
-        console.log(chalk.yellow('⚠  Không lưu được ASC API Key: ') + chalk.gray(err.response?.data?.error ?? err.message));
+        console.log(chalk.yellow(t('buildAscKeyFailed')) + chalk.gray(err.response?.data?.error ?? err.message));
       }
     }
   } catch (err) {
-    spinner.fail('Tạo build job thất bại');
+    spinner.fail(t('buildJobFailed'));
     const msg = err.response?.data?.error ?? err.message;
     const status = err.response?.status;
 
     if (status === 404 && msg?.includes('không tồn tại')) {
       console.log('');
-      console.log(chalk.red(`  ✖  Project ID "${projectInfo.projectId}" không tồn tại trên hệ thống.`));
+      console.log(chalk.red(`  ✖  ${t('buildProjectNotFound', projectInfo.projectId)}`));
       console.log('');
-      console.log(chalk.yellow('  Hãy kiểm tra lại projectId trong app.json:'));
+      console.log(chalk.yellow(`  ${t('buildProjectNotFoundHint1')}`));
       console.log(`     expo.extra.ant.projectId = "${projectInfo.projectId}"`);
       console.log('');
-      console.log(`  Tạo project tại: ${chalk.cyan('https://antgo.work/account/apps')}`);
-      console.log(`  Sau đó copy Project ID vào app.json.`);
+      console.log(`  ${t('buildProjectNotFoundHint2')} ${chalk.cyan('https://antgo.work/account/apps')}`);
+      console.log(`  ${t('buildProjectNotFoundHint3')}`);
     } else {
       logger.error(tError(msg));
     }
@@ -413,24 +406,24 @@ async function runBuild(options) {
   // 4. Pack + upload tar.gz
   const tarName = platform === 'android' ? 'android.tar.gz' : 'ios.tar.gz';
   const tarFile = path.join(tmpDir, tarName);
-  const packSpinner = ora('Đang nén project...').start();
+  const packSpinner = ora(t('buildPacking')).start();
   try {
     await packProject(projectRoot, tarFile, platform);
     const sizeMB = (fs.statSync(tarFile).size / 1024 / 1024).toFixed(1);
-    packSpinner.succeed(`Project đã nén: ${sizeMB} MB`);
+    packSpinner.succeed(t('buildPackDone', sizeMB));
   } catch (err) {
-    packSpinner.fail('Lỗi khi nén project');
+    packSpinner.fail(t('buildPackFailed'));
     logger.error(err.message);
     fs.rmSync(tmpDir, { recursive: true, force: true });
     process.exit(1);
   }
 
-  const tarSpinner = ora(`Đang upload ${tarName}...`).start();
+  const tarSpinner = ora(t('buildUploading', tarName)).start();
   try {
     await uploadFile(tarUrl, tarFile, 'application/gzip', tarSpinner);
-    tarSpinner.succeed(`Upload ${tarName} hoàn tất`);
+    tarSpinner.succeed(t('buildUploadDone', tarName));
   } catch (err) {
-    tarSpinner.fail(`Lỗi khi upload ${tarName}`);
+    tarSpinner.fail(t('buildUploadFailed', tarName));
     logger.error(err.message);
     process.exit(1);
   }
@@ -451,12 +444,12 @@ async function runBuild(options) {
       developmentClient,
     }));
 
-    const credsSpinner = ora('Đang upload credentials.json...').start();
+    const credsSpinner = ora(t('buildUploading', 'credentials.json')).start();
     try {
       await uploadFile(credsUrl, credsFile, 'application/json', credsSpinner);
-      credsSpinner.succeed('Upload credentials.json hoàn tất');
+      credsSpinner.succeed(t('buildUploadDone', 'credentials.json'));
     } catch (err) {
-      credsSpinner.fail('Lỗi khi upload credentials.json');
+      credsSpinner.fail(t('buildUploadFailed', 'credentials.json'));
       logger.error(err.message);
       process.exit(1);
     } finally {
@@ -467,26 +460,26 @@ async function runBuild(options) {
   }
 
   // 6. Notify server — verify 2 file đã tồn tại và đánh dấu pending
-  const startSpinner = ora('Đang kiểm tra files...').start();
+  const startSpinner = ora(t('buildVerifyingFiles')).start();
   try {
     await client.post(`/api/builds/${jobId}/start`);
-    startSpinner.succeed('Đã kiểm tra đầy đủ files');
+    startSpinner.succeed(t('buildVerifyDone'));
   } catch (err) {
-    startSpinner.fail('Không thể khởi động build');
-    logger.error(err.response?.data?.error ?? err.message);
+    startSpinner.fail(t('buildStartFailed'));
+    logger.error(tError(err.response?.data?.error ?? err.message));
     process.exit(1);
   }
 
   // Hiện URL và thoát — user vào web xem log, CLI không poll gì thêm
   const appUrl  = `${API_URL}/account/app/${encodeURIComponent(projectInfo.schemeName)}/builds/${jobId}`;
-  const hyperlink = (url, text) => `]8;;${url}\\${text}]8;;\\`;
+  const hyperlink = (url, text) => `]8;;${url}\\${text}]8;;\\`;
   console.log('');
-  console.log(chalk.bold('Build đã được gửi lên server!'));
+  console.log(chalk.bold(t('buildSubmitted')));
   if (autoSubmit) {
-    console.log(chalk.gray('   ✈  Auto Submit: bật — IPA sẽ tự động được gửi lên TestFlight sau khi build xong.'));
+    console.log(chalk.gray(`   ${t('buildAutoSubmitNote')}`));
   }
   console.log('');
-  console.log(`   Theo dõi tiến trình tại:`);
+  console.log(`   ${t('buildTrackAt')}`);
   console.log(`   ${chalk.cyan.underline(hyperlink(appUrl, appUrl))}`);
   console.log('');
   process.exit(0);
