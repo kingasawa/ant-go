@@ -8,6 +8,20 @@ Build iOS and Android apps with a single command — no complex CI/CD setup requ
 npm install -g ant-go
 ```
 
+## Upgrading
+
+```bash
+npm install -g ant-go
+```
+
+To check your current version:
+
+```bash
+ant --version
+```
+
+> The CLI automatically notifies you when a newer version is available after each command.
+
 ## Getting Started
 
 ### 1. Login
