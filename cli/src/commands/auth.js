@@ -107,7 +107,11 @@ async function browserLoginFlow() {
         </body></html>
       `);
 
+      // Destroy socket so server.close() can finish immediately
+      res.socket?.destroy();
+
       clearTimeout(timeout);
+      server.closeAllConnections?.();
       server.close();
 
       setAuth({

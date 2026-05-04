@@ -45,6 +45,7 @@ auth
     const { loginCommand } = require('../src/commands/auth');
     await loginCommand({ browser: !!options.browser });
     await showUpdateHint();
+    process.exit(0);
   });
 
 auth
