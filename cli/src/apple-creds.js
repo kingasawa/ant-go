@@ -353,8 +353,9 @@ async function ensureAppleCreds(projectInfo, {
   ]);
 
   console.log('');
-  const loginSpinner = require('ora')(t('appleLoggingIn')).start();
 
+  // Không dùng spinner ở đây vì @expo/apple-utils có spinner nội bộ riêng.
+  // Nếu cả hai cùng chạy, spinner của chúng ta sẽ overwrite readline prompt 2FA.
   let authCtx, teamId;
   try {
     const result = await Auth.loginAsync({
@@ -363,24 +364,22 @@ async function ensureAppleCreds(projectInfo, {
     }, {
       serviceKey: undefined,
       onTwoFactorRequest: async () => {
-        // Dùng readline thay vì inquirer để tránh xung đột với ora spinner
-        // đang giữ terminal state (inquirer không render được khi spinner đang chạy)
-        loginSpinner.stop();
-        process.stdout.write('\n');
-        process.stdout.write('🔐  ' + t('apple2FA') + ' ');
+        // Apple-utils đã dừng spinner nội bộ của nó trước khi gọi callback này.
+        // Dùng readline trực tiếp — đơn giản và không bị xung đột terminal.
+        process.stdout.write('\n🔐  ' + t('apple2FA') + ' ');
 
         const readline = require('readline');
         const rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: true });
         const code = await new Promise(resolve => rl.on('line', line => { rl.close(); resolve(line.trim()); }));
 
-        loginSpinner.start(t('apple2FAVerifying'));
+        console.log(chalk.gray(t('apple2FAVerifying')));
         return code;
       },
     });
     authCtx = result.context ?? result;
-    loginSpinner.succeed(t('appleLoginSuccess'));
+    console.log(chalk.green('✔  ' + t('appleLoginSuccess')));
   } catch (err) {
-    loginSpinner.fail(t('appleLoginFailed', err.message));
+    console.log(chalk.red('✖  ' + t('appleLoginFailed', err.message)));
     throw err;
   }
 
