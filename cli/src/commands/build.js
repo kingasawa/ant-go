@@ -190,7 +190,13 @@ function packProject(projectRoot, tarFile, platform) {
   const dirs = isAndroid
     ? 'android node_modules package.json package-lock.json'
     : 'ios node_modules package.json package-lock.json';
-  const cmd = `tar -czf "${tarFile}" ${excludes.join(' ')} -C "${projectRoot}" ${dirs}`;
+
+  // Convert Windows path (C:\foo) → POSIX path (/c/foo) cho bash trên Windows (Git Bash / MINGW)
+  const toPosix = p => p.replace(/^([A-Za-z]):[\\/]/, (_, d) => `/${d.toLowerCase()}/`).replace(/\\/g, '/');
+  const tarFilePosix  = toPosix(tarFile);
+  const projectPosix  = toPosix(projectRoot);
+
+  const cmd = `tar -czf "${tarFilePosix}" ${excludes.join(' ')} -C "${projectPosix}" ${dirs}`;
   return new Promise((resolve, reject) => {
     const child = spawn('bash', ['-c', cmd], { stdio: 'pipe' });
     let stderr = '';
