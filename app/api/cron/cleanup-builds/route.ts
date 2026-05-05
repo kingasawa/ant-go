@@ -16,7 +16,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { FieldValue } from "firebase-admin/firestore";
 
 const BUILDS_COLLECTION = process.env.BUILDS_COLLECTION || "builds";
 
@@ -36,72 +36,106 @@ export async function GET(request: NextRequest) {
   const db  = getAdminDb();
   const now = Date.now();
   let failed = 0;
+  const errors: string[] = [];
 
   // ── 1. Stuck at "uploading" ───────────────────────────────────────────────
-  const uploadingCutoff = Timestamp.fromMillis(now - TIMEOUT_UPLOADING_MS);
-  const uploadingSnap = await db
-    .collection(BUILDS_COLLECTION)
-    .where("status", "==", "uploading")
-    .where("createdAt", "<=", uploadingCutoff)
-    .get();
+  // Không dùng composite query — filter bằng JS để tránh cần Firestore index
+  let uploadingCount = 0;
+  try {
+    const uploadingSnap = await db
+      .collection(BUILDS_COLLECTION)
+      .where("status", "==", "uploading")
+      .get();
 
-  for (const doc of uploadingSnap.docs) {
-    await doc.ref.set({
-      status:       "failed",
-      step:         "error",
-      errorMessage: "Build timed out during upload — CLI may have crashed or lost connection.",
-      updatedAt:    FieldValue.serverTimestamp(),
-    }, { merge: true });
-    failed++;
-    console.log(`[cleanup-builds] UPLOADING timeout → failed: ${doc.id}`);
+    const uploadingCutoff = now - TIMEOUT_UPLOADING_MS;
+    for (const doc of uploadingSnap.docs) {
+      const createdAt = doc.data().createdAt?.toMillis?.() ?? 0;
+      if (createdAt > uploadingCutoff) continue;
+      await doc.ref.set({
+        status:       "failed",
+        step:         "error",
+        errorMessage: "Build timed out during upload — CLI may have crashed or lost connection.",
+        updatedAt:    FieldValue.serverTimestamp(),
+      }, { merge: true });
+      failed++;
+      uploadingCount++;
+      console.log(`[cleanup-builds] UPLOADING timeout → failed: ${doc.id}`);
+    }
+  } catch (err: any) {
+    const msg = `uploading query failed: ${err.message}`;
+    console.error(`[cleanup-builds] ${msg}`);
+    errors.push(msg);
   }
 
   // ── 2. Stuck at "pending" ─────────────────────────────────────────────────
-  const pendingCutoff = Timestamp.fromMillis(now - TIMEOUT_PENDING_MS);
-  const pendingSnap = await db
-    .collection(BUILDS_COLLECTION)
-    .where("status", "==", "pending")
-    .where("updatedAt", "<=", pendingCutoff)
-    .get();
+  let pendingCount = 0;
+  try {
+    const pendingSnap = await db
+      .collection(BUILDS_COLLECTION)
+      .where("status", "==", "pending")
+      .get();
 
-  for (const doc of pendingSnap.docs) {
-    await doc.ref.set({
-      status:       "failed",
-      step:         "error",
-      errorMessage: "Build timed out waiting for build server — no server picked up the job.",
-      updatedAt:    FieldValue.serverTimestamp(),
-    }, { merge: true });
-    failed++;
-    console.log(`[cleanup-builds] PENDING timeout → failed: ${doc.id}`);
+    const pendingCutoff = now - TIMEOUT_PENDING_MS;
+    for (const doc of pendingSnap.docs) {
+      const updatedAt = doc.data().updatedAt?.toMillis?.() ?? 0;
+      if (updatedAt > pendingCutoff) continue;
+      await doc.ref.set({
+        status:       "failed",
+        step:         "error",
+        errorMessage: "Build timed out waiting for build server — no server picked up the job.",
+        updatedAt:    FieldValue.serverTimestamp(),
+      }, { merge: true });
+      failed++;
+      pendingCount++;
+      console.log(`[cleanup-builds] PENDING timeout → failed: ${doc.id}`);
+    }
+  } catch (err: any) {
+    const msg = `pending query failed: ${err.message}`;
+    console.error(`[cleanup-builds] ${msg}`);
+    errors.push(msg);
   }
 
   // ── 3. Stuck at "in_progress" (no heartbeat) ─────────────────────────────
-  const heartbeatCutoff = Timestamp.fromMillis(now - TIMEOUT_HEARTBEAT_MS);
-  const inProgressSnap = await db
-    .collection(BUILDS_COLLECTION)
-    .where("status", "==", "in_progress")
-    .where("lastHeartbeat", "<=", heartbeatCutoff)
-    .get();
+  let inProgressCount = 0;
+  try {
+    const inProgressSnap = await db
+      .collection(BUILDS_COLLECTION)
+      .where("status", "==", "in_progress")
+      .get();
 
-  for (const doc of inProgressSnap.docs) {
-    await doc.ref.set({
-      status:       "failed",
-      step:         "error",
-      errorMessage: "Build server stopped responding (no heartbeat for 30 minutes). The server may have crashed.",
-      updatedAt:    FieldValue.serverTimestamp(),
-    }, { merge: true });
-    failed++;
-    console.log(`[cleanup-builds] IN_PROGRESS heartbeat lost → failed: ${doc.id}`);
+    const heartbeatCutoff = now - TIMEOUT_HEARTBEAT_MS;
+    for (const doc of inProgressSnap.docs) {
+      const lastHeartbeat = doc.data().lastHeartbeat?.toMillis?.() ?? 0;
+      if (lastHeartbeat > heartbeatCutoff) continue;
+      await doc.ref.set({
+        status:       "failed",
+        step:         "error",
+        errorMessage: "Build server stopped responding (no heartbeat for 30 minutes). The server may have crashed.",
+        updatedAt:    FieldValue.serverTimestamp(),
+      }, { merge: true });
+      failed++;
+      inProgressCount++;
+      console.log(`[cleanup-builds] IN_PROGRESS heartbeat lost → failed: ${doc.id}`);
+    }
+  } catch (err: any) {
+    const msg = `in_progress query failed: ${err.message}`;
+    console.error(`[cleanup-builds] ${msg}`);
+    errors.push(msg);
   }
 
   console.log(`[cleanup-builds] Done. Marked ${failed} stuck build(s) as failed.`);
+
+  if (errors.length > 0) {
+    return NextResponse.json({ ok: false, failed, errors }, { status: 500 });
+  }
+
   return NextResponse.json({
     ok:     true,
     failed,
     detail: {
-      uploading:  uploadingSnap.size,
-      pending:    pendingSnap.size,
-      inProgress: inProgressSnap.size,
+      uploading:  uploadingCount,
+      pending:    pendingCount,
+      inProgress: inProgressCount,
     },
   });
 }
