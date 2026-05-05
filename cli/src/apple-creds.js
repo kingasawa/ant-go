@@ -466,14 +466,21 @@ async function ensureAppleCreds(projectInfo, {
         p12Password = result.password ?? '';
         certSpinner.succeed(t('certReused', certLabel, certId));
       } else {
-        // Private key không còn local → revoke cert cũ rồi tạo mới
-        certSpinner.text = `${t('certLoading', certLabel)} (revoking old cert...)`;
-        try {
-          await Certificate.deleteAsync(authCtx, { id: existing[0].id });
-        } catch {}
+        // Private key không còn local → revoke TẤT CẢ cert cũ rồi tạo mới.
+        // Phải xoá hết vì Apple không cho tạo mới khi còn cert active.
+        certSpinner.text = `${t('certLoading', certLabel)} (revoking ${existing.length} old cert(s)...)`;
+        for (const cert of existing) {
+          try {
+            await Certificate.deleteAsync(authCtx, { id: cert.id });
+          } catch (delErr) {
+            certSpinner.warn(`Could not revoke cert ${cert.id}: ${delErr.message}`);
+            certSpinner.start();
+          }
+        }
         const newResult = await createCertificateAndP12Async(authCtx, { certificateType: certType });
         const certsAfter = await Certificate.getAsync(authCtx, { query: { filter: { certificateType: [certType] } } });
-        const newCert = certsAfter.find(c => !existing.find(e => e.id === c.id));
+        const existingIds = new Set(existing.map(c => c.id));
+        const newCert = certsAfter.find(c => !existingIds.has(c.id));
         certId        = newCert?.id ?? newResult.certificate?.id;
         p12Base64     = newResult.certificateP12;
         p12Password   = newResult.password ?? '';
