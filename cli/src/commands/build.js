@@ -477,16 +477,15 @@ async function runBuild(options) {
   }
 
   // Hiện URL và thoát — user vào web xem log, CLI không poll gì thêm
-  const appUrl  = `${API_URL}/account/app/${encodeURIComponent(projectInfo.schemeName)}/builds/${jobId}`;
-  const hyperlink = (url, text) => `]8;;${url}\\${text}]8;;\\`;
+  const appUrl = `${API_URL}/account/app/${encodeURIComponent(projectInfo.schemeName)}/builds/${jobId}`;
   console.log('');
-  console.log(chalk.bold(t('buildSubmitted')));
+  console.log(chalk.bold('Build submitted to server!'));
   if (autoSubmit) {
-    console.log(chalk.gray(`   ${t('buildAutoSubmitNote')}`));
+    console.log(chalk.gray('   ✈  Auto Submit: on — IPA will be submitted to TestFlight automatically after build completes.'));
   }
   console.log('');
-  console.log(`   ${t('buildTrackAt')}`);
-  console.log(`   ${chalk.cyan.underline(hyperlink(appUrl, appUrl))}`);
+  console.log('   Track progress at:');
+  console.log(`   ${chalk.cyan.underline(appUrl)}`);
   console.log('');
   process.exit(0);
 }
