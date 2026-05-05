@@ -20,10 +20,19 @@ export async function validateCliToken(token: string | null | undefined): Promis
   if (!doc.exists) return null;
 
   const data = doc.data()!;
-  if (data.revoked) return null;
+
+  // Lazy delete: xóa ngay khi phát hiện revoked hoặc expired
+  // Không await để không block response
+  if (data.revoked) {
+    doc.ref.delete().catch(() => {});
+    return null;
+  }
 
   const expiresAt: Date = data.expiresAt?.toDate?.() ?? new Date(data.expiresAt);
-  if (expiresAt < new Date()) return null;
+  if (expiresAt < new Date()) {
+    doc.ref.delete().catch(() => {});
+    return null;
+  }
 
   return {
     uid: data.uid,
