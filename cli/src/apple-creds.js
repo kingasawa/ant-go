@@ -363,15 +363,18 @@ async function ensureAppleCreds(projectInfo, {
     }, {
       serviceKey: undefined,
       onTwoFactorRequest: async () => {
+        // Dùng readline thay vì inquirer để tránh xung đột với ora spinner
+        // đang giữ terminal state (inquirer không render được khi spinner đang chạy)
         loginSpinner.stop();
-        const { code } = await inquirer.prompt([{
-          type:     'input',
-          name:     'code',
-          message:  t('apple2FA'),
-          validate: v => /^\d{6}$/.test(v.trim()) ? true : t('apple2FACode'),
-        }]);
+        process.stdout.write('\n');
+        process.stdout.write('🔐  ' + t('apple2FA') + ' ');
+
+        const readline = require('readline');
+        const rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: true });
+        const code = await new Promise(resolve => rl.on('line', line => { rl.close(); resolve(line.trim()); }));
+
         loginSpinner.start(t('apple2FAVerifying'));
-        return code.trim();
+        return code;
       },
     });
     authCtx = result.context ?? result;
