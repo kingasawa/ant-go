@@ -51,6 +51,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [apps, setApps] = useState<AppDoc[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [appChecked, setAppChecked] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const base = `/account/app/${appName}`;
@@ -62,8 +63,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       const data = snap.docs.map((d) => ({ id: d.id, name: d.data().name as string }));
       data.sort((a, b) => a.name.localeCompare(b.name));
       setApps(data);
+
+      // Kiểm tra app có tồn tại và thuộc user không
+      const exists = data.some((a) => a.name === decodedName);
+      if (!exists) {
+        router.replace("/account/apps");
+        return;
+      }
+      setAppChecked(true);
     });
-  }, [user]);
+  }, [user, decodedName, router]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -184,6 +193,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex" style={{ background: "var(--dash-bg)" }}>
+      {!appChecked && (
+        <div className="m-auto flex flex-col items-center gap-3">
+          <div className="w-7 h-7 rounded-full border-2 border-purple/40 border-t-purple animate-spin" />
+          <span className="text-white/30 text-sm">Loading…</span>
+        </div>
+      )}
+      {appChecked && (<>
 
       {/* Desktop sidebar */}
       <aside
@@ -243,6 +259,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         <main className="flex-1 px-8 py-7 overflow-auto text-white">{children}</main>
       </div>
+      </>)}
     </div>
   );
 }
