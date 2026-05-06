@@ -115,17 +115,21 @@ export default function DashboardPage() {
   const isUnlimited = planCredits === -1;
 
   return (
-    <div className="max-w-6xl">
-      {/* ── Header ──────────────────────────────────────────────── */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">
+    <div className="max-w-7xl mx-auto">
+      {/* ── Page title (mobile only — desktop shows in topbar) ── */}
+      <div className="mb-7 lg:hidden">
+        <h1 className="text-xl font-bold text-white">
           Good day, {user?.displayName?.split(" ")[0] ?? "there"}! 👋
         </h1>
         <p className="text-white/40 text-sm mt-1">Here's what's happening with your projects.</p>
       </div>
+      <div className="mb-7 hidden lg:block">
+        <h1 className="text-xl font-bold text-white">Overview</h1>
+        <p className="text-white/40 text-sm mt-0.5">Here's what's happening with your projects.</p>
+      </div>
 
       {/* ── Stat cards ──────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         <StatCard label="Total Builds"  value={builds.length}     sub="All time"        href="/account/builds"  badgeClass="icon-badge-purple" Icon={HiOutlineCube} />
         <StatCard label="Apps"          value={apps.length}       sub="Created"         href="/account/apps"    badgeClass="icon-badge-orange" Icon={HiOutlineDevicePhoneMobile} />
         <StatCard label="Success Rate"  value={`${successRate}%`} sub={`${successCount} successful`}           badgeClass="icon-badge-teal"   Icon={HiOutlineCheckCircle} />
@@ -139,137 +143,164 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* ── Bottom row ──────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* ── Two-column layout (wide screen) ─────────────────────── */}
+      <div className="flex gap-6">
 
-        {/* Build status breakdown */}
-        <div className="dash-card p-5">
-          <h2 className="text-sm font-semibold text-white/70 mb-5">Build Status</h2>
-          <div className="space-y-3.5">
-            {([
-              { status: "success",     label: "Success",     count: successCount },
-              { status: "failed",      label: "Failed",      count: failedCount },
-              { status: "in_progress", label: "In Progress", count: builds.filter((b) => b.status === "in_progress").length },
-              { status: "pending",     label: "Pending",     count: builds.filter((b) => b.status === "pending").length },
-            ] as const).map(({ status, label, count }) => (
-              <div key={status} className="flex items-center gap-3">
-                <span className={`border text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${STATUS_COLOR[status]}`}>
-                  {label}
-                </span>
-                <div className="flex-1 bg-white/8 rounded-full h-1.5">
-                  <div
-                    className={`h-1.5 rounded-full ${STATUS_BAR[status]}`}
-                    style={{ width: builds.length ? `${(count / builds.length) * 100}%` : "0%" }}
-                  />
-                </div>
-                <span className="text-sm font-semibold text-white/70 w-5 text-right">{count}</span>
+        {/* Left — main content */}
+        <div className="flex-1 min-w-0 space-y-6">
+
+          {/* Recent builds */}
+          <div className="dash-card p-5">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-sm font-semibold text-white/70">Recent Builds</h2>
+              <Link href="/account/builds" className="text-xs text-purple hover:text-accent-light transition">
+                View all →
+              </Link>
+            </div>
+            {recentBuilds.length === 0 ? (
+              <div className="text-center py-10 text-white/30">
+                <HiOutlineCube className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">No builds yet.</p>
+                <p className="text-xs mt-1">Create an App and start your first build!</p>
               </div>
-            ))}
+            ) : (
+              <div className="space-y-1.5">
+                {recentBuilds.map((build) => (
+                  <Link
+                    key={build.id}
+                    href="/account/builds"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.06] transition"
+                  >
+                    <span className={`border text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${STATUS_COLOR[build.status] ?? "bg-white/10 text-white/40 border-white/15"}`}>
+                      {build.status}
+                    </span>
+                    <span className="text-sm text-white/75 flex-1 truncate font-medium">
+                      {build.schemeName ?? build.id}
+                    </span>
+                    <span className="text-xs text-white/35 flex-shrink-0">
+                      {build.createdAt?.seconds
+                        ? new Date(build.createdAt.seconds * 1000).toLocaleDateString()
+                        : "—"}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Credit bar */}
-          {!isUnlimited && (
-            <div className="mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-              <div className="flex justify-between mb-2">
-                <span className="text-xs text-white/40">Build Credits</span>
-                <span className="text-xs text-white/40">{credits.toFixed ? credits.toFixed(1) : credits} / {planCredits} left</span>
-              </div>
-              <div className="w-full bg-white/8 rounded-full h-1.5">
-                <div
-                  className={`h-1.5 rounded-full ${credits / planCredits < 0.2 ? "bg-red-400" : credits / planCredits < 0.5 ? "bg-yellow-400" : "bg-purple"}`}
-                  style={{ width: `${Math.max(0, Math.min(100, (credits / planCredits) * 100))}%` }}
-                />
-              </div>
+          {/* Apps */}
+          <div className="dash-card p-5">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-sm font-semibold text-white/70">Apps</h2>
+              <Link href="/account/apps" className="text-xs text-purple hover:text-accent-light transition">
+                Manage →
+              </Link>
             </div>
-          )}
+            {apps.length === 0 ? (
+              <div className="text-center py-8 text-white/30">
+                <HiOutlineDevicePhoneMobile className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">No apps yet.</p>
+                <Link href="/account/apps" className="text-xs text-purple hover:underline mt-1 inline-block">
+                  Create your first app →
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {apps.map((app) => (
+                  <Link
+                    key={app.id}
+                    href={`/account/app/${encodeURIComponent(app.name)}`}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl border transition-all duration-150"
+                    style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(158,62,191,0.4)";
+                      (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)";
+                      (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)";
+                    }}
+                  >
+                    <span className="icon-badge icon-badge-purple flex-shrink-0">
+                      <span className="text-sm font-bold text-white">{app.name.charAt(0).toUpperCase()}</span>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-white truncate">{app.name}</p>
+                      {app.scheme && <p className="text-xs text-white/35 font-mono truncate">{app.scheme}</p>}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Recent builds */}
-        <div className="lg:col-span-2 dash-card p-5">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-sm font-semibold text-white/70">Recent Builds</h2>
-            <Link href="/account/builds" className="text-xs text-purple hover:text-accent-light transition">
-              View all →
-            </Link>
-          </div>
-          {recentBuilds.length === 0 ? (
-            <div className="text-center py-10 text-white/30">
-              <HiOutlineCube className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">No builds yet.</p>
-              <p className="text-xs mt-1">Create an App and start your first build!</p>
+        {/* Right — sidebar panel (hidden on small screens) */}
+        <div className="hidden xl:flex flex-col gap-4 w-64 flex-shrink-0">
+
+          {/* Build Status */}
+          <div className="dash-card p-5">
+            <h2 className="text-sm font-semibold text-white/70 mb-4">Build Status</h2>
+            <div className="space-y-3.5">
+              {([
+                { status: "success",     label: "Success",     count: successCount },
+                { status: "failed",      label: "Failed",      count: failedCount },
+                { status: "in_progress", label: "In Progress", count: builds.filter((b) => b.status === "in_progress").length },
+                { status: "pending",     label: "Pending",     count: builds.filter((b) => b.status === "pending").length },
+              ] as const).map(({ status, label, count }) => (
+                <div key={status}>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className={`border text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[status]}`}>{label}</span>
+                    <span className="text-sm font-semibold text-white/60">{count}</span>
+                  </div>
+                  <div className="w-full rounded-full h-1" style={{ background: "rgba(255,255,255,0.06)" }}>
+                    <div
+                      className={`h-1 rounded-full ${STATUS_BAR[status]}`}
+                      style={{ width: builds.length ? `${(count / builds.length) * 100}%` : "0%" }}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
-          ) : (
-            <div className="space-y-1.5">
-              {recentBuilds.map((build) => (
+
+            {!isUnlimited && (
+              <div className="mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                <div className="flex justify-between mb-1.5">
+                  <span className="text-xs text-white/40">Credits</span>
+                  <span className="text-xs text-white/40">{credits.toFixed ? credits.toFixed(1) : credits} / {planCredits}</span>
+                </div>
+                <div className="w-full rounded-full h-1" style={{ background: "rgba(255,255,255,0.06)" }}>
+                  <div
+                    className={`h-1 rounded-full ${credits / planCredits < 0.2 ? "bg-red-400" : credits / planCredits < 0.5 ? "bg-yellow-400" : "bg-purple"}`}
+                    style={{ width: `${Math.max(0, Math.min(100, (credits / planCredits) * 100))}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Quick links */}
+          <div className="dash-card p-5">
+            <h2 className="text-sm font-semibold text-white/70 mb-4">Quick Actions</h2>
+            <div className="space-y-2">
+              {[
+                { href: "/account/apps",    label: "New App",       icon: "＋" },
+                { href: "/account/devices", label: "Add Device",    icon: "📱" },
+                { href: "/account/billing", label: "Upgrade Plan",  icon: "⚡" },
+                { href: "/account/profile", label: "Edit Profile",  icon: "✏️" },
+              ].map(({ href, label, icon }) => (
                 <Link
-                  key={build.id}
-                  href="/account/builds"
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.06] transition"
+                  key={href}
+                  href={href}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/50 hover:text-white hover:bg-white/[0.06] transition"
                 >
-                  <span className={`border text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${STATUS_COLOR[build.status] ?? "bg-white/10 text-white/40 border-white/15"}`}>
-                    {build.status}
-                  </span>
-                  <span className="text-sm text-white/75 flex-1 truncate font-medium">
-                    {build.schemeName ?? build.id}
-                  </span>
-                  <span className="text-xs text-white/35 flex-shrink-0">
-                    {build.createdAt?.seconds
-                      ? new Date(build.createdAt.seconds * 1000).toLocaleDateString()
-                      : "—"}
-                  </span>
+                  <span className="text-base w-5 text-center">{icon}</span>
+                  {label}
                 </Link>
               ))}
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── Apps ────────────────────────────────────────────────── */}
-      <div className="dash-card p-5 mt-6">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-sm font-semibold text-white/70">Apps</h2>
-          <Link href="/account/apps" className="text-xs text-purple hover:text-accent-light transition">
-            Manage →
-          </Link>
-        </div>
-        {apps.length === 0 ? (
-          <div className="text-center py-8 text-white/30">
-            <HiOutlineDevicePhoneMobile className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">No apps yet.</p>
-            <Link href="/account/apps" className="text-xs text-purple hover:underline mt-1 inline-block">
-              Create your first app →
-            </Link>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {apps.map((app) => (
-              <Link
-                key={app.id}
-                href={`/account/app/${encodeURIComponent(app.name)}`}
-                className="flex items-center gap-3 px-3 py-3 rounded-xl border transition-all duration-150"
-                style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "rgba(158,62,191,0.4)";
-                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)";
-                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)";
-                }}
-              >
-                <span className="icon-badge icon-badge-purple flex-shrink-0">
-                  <span className="text-sm font-bold text-white">
-                    {app.name.charAt(0).toUpperCase()}
-                  </span>
-                </span>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">{app.name}</p>
-                  {app.scheme && <p className="text-xs text-white/35 font-mono truncate">{app.scheme}</p>}
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

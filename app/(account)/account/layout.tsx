@@ -158,8 +158,31 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
           />
         </header>
 
+        {/* Desktop topbar */}
+        <header
+          className="hidden lg:flex items-center justify-between px-8 py-4 flex-shrink-0"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+        >
+          <div>
+            <p className="text-xs text-white/30 uppercase tracking-widest font-tomorrow">
+              {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-sm font-semibold text-white leading-none">{user.displayName ?? user.email}</p>
+              <p className="text-xs text-white/35 mt-0.5">{user.email}</p>
+            </div>
+            <img
+              src={user.photoURL ?? "/avatar.png"}
+              alt=""
+              className="w-9 h-9 rounded-full object-cover border-2 border-white/10"
+            />
+          </div>
+        </header>
+
         {/* Page slot */}
-        <main className="flex-1 px-6 py-8 overflow-auto text-white">
+        <main className="flex-1 px-8 py-7 overflow-auto text-white">
           {children}
         </main>
       </div>
