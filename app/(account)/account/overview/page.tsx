@@ -144,10 +144,10 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Two-column layout (wide screen) ─────────────────────── */}
-      <div className="flex gap-6">
+      <div className="xl:grid xl:grid-cols-4 xl:gap-4 flex flex-col gap-6">
 
-        {/* Left — main content */}
-        <div className="flex-1 min-w-0 space-y-6">
+        {/* Left — main content (3/4) */}
+        <div className="xl:col-span-3 flex flex-col gap-6">
 
           {/* Recent builds */}
           <div className="dash-card p-5">
@@ -235,8 +235,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Right — sidebar panel (hidden on small screens) */}
-        <div className="hidden xl:flex flex-col gap-4 w-64 flex-shrink-0">
+        {/* Right — sidebar panel (1/4, matches stat card width, xl only) */}
+        <div className="hidden xl:flex xl:col-span-1 flex-col gap-4">
 
           {/* Build Status */}
           <div className="dash-card p-5">
