@@ -50,7 +50,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:static lg:flex`}
         style={{
           background: "var(--dash-sidebar)",
-          borderRight: "1px solid rgba(255,255,255,0.06)",
+          borderRight: "1px solid var(--dash-border)",
         }}
       >
         {/* Logo */}
@@ -105,7 +105,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         {/* User card */}
         <div
           className="px-4 py-4 flex-shrink-0 flex items-center gap-3"
-          style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+          style={{ borderTop: "1px solid var(--dash-border)" }}
         >
           <img
             src={user.photoURL ?? "/avatar.png"}
@@ -136,7 +136,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
           className="lg:hidden flex items-center justify-between px-4 py-3"
           style={{
             background: "var(--dash-sidebar)",
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            borderBottom: "1px solid var(--dash-border)",
           }}
         >
           <button
@@ -161,7 +161,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         {/* Desktop topbar */}
         <header
           className="hidden lg:flex items-center justify-between px-8 py-4 flex-shrink-0"
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+          style={{ borderBottom: "1px solid var(--dash-border)" }}
         >
           <div>
             <p className="text-xs text-white/30 uppercase tracking-widest font-tomorrow">

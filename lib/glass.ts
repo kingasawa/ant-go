@@ -1,13 +1,13 @@
 import type { CSSProperties } from "react";
 
-// Flat dark card — dùng cho card thông thường trên nền tối
+// Flat card — tự động adapt dark/light via CSS variables
 export const GLASS: CSSProperties = {
-  background: "rgba(255, 255, 255, 0.05)",
-  border: "1px solid rgba(255, 255, 255, 0.08)",
+  background: "var(--dash-card)",
+  border: "1px solid var(--dash-card-border)",
 };
 
-// Modal / drawer — cần background solid để đọc được nội dung khi float trên overlay
+// Modal / drawer — solid background, float trên overlay
 export const MODAL_BG: CSSProperties = {
-  background: "#13152E",
-  border: "1px solid rgba(255, 255, 255, 0.1)",
+  background: "var(--dash-modal)",
+  border: "1px solid var(--dash-card-border)",
 };
