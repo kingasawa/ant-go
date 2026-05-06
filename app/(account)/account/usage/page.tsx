@@ -110,7 +110,7 @@ export default function UsagePage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
 
         {/* Credit Card */}
-        <div className="rounded-2xl p-6" style={{ ...GLASS, boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}>
+        <div className="rounded-2xl p-6" style={GLASS}>
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm font-semibold text-white/60 uppercase tracking-wider">Build Credits</p>
             <span
@@ -160,7 +160,7 @@ export default function UsagePage() {
         </div>
 
         {/* App Limit Card */}
-        <div className="rounded-2xl p-6" style={{ ...GLASS, boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}>
+        <div className="rounded-2xl p-6" style={GLASS}>
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm font-semibold text-white/60 uppercase tracking-wider">Apps</p>
             {appNearLimit && !appLimitUnlimited && (
@@ -204,7 +204,7 @@ export default function UsagePage() {
       </div>
 
       {/* Credit History */}
-      <div className="rounded-2xl p-6" style={{ ...GLASS, boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}>
+      <div className="rounded-2xl p-6" style={GLASS}>
         <h2 className="text-base font-semibold text-white mb-4">Lịch sử trừ credit</h2>
 
         {history.length === 0 ? (
