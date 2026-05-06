@@ -29,7 +29,6 @@
 .dash-card:hover {
   background: var(--dash-card-hover);
   border-color: rgba(158, 62, 191, 0.35);
-  box-shadow: 0 4px 24px rgba(158, 62, 191, 0.12);
 }
 
 /* ── Gradient icon badge ─────────────────────────────────────────── */
@@ -93,14 +92,9 @@
 
 /* ── Card glow hover ─────────────────────────────────────────────── */
 .card-glow {
-  transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  transition: border-color 0.3s ease;
 }
 .card-glow:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow:
-    0 0 0 1px rgb(var(--tw-accent) / 0.5),
-    0 8px 32px rgb(var(--tw-accent-dark) / 0.22),
-    inset 0 1px 0 rgb(var(--tw-accent-light) / 0.12);
   border-color: rgb(var(--tw-accent) / 0.5) !important;
 }
 
