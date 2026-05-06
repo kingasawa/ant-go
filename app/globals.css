@@ -3,16 +3,51 @@
 @tailwind utilities;
 
 /* ══════════════════════════════════════════════════════════════════
-   ACCENT COLOR — đổi 3 dòng này để retheme toàn bộ site
+   ACCENT COLOR — Purple theme (from design reference)
    ══════════════════════════════════════════════════════════════════ */
 :root {
-  --tw-accent:          240 195 142;  /* #F0C38E — main   */
-  --tw-accent-light:    245 214 178;  /* lighter variant  */
-  --tw-accent-dark:     215 165 100;  /* darker variant   */
-  --tw-accent-contrast: 120  53  15;  /* #78350F — dark amber for text on accent bg */
+  --tw-accent:          158  62 191;  /* #9E3EBF — purple main   */
+  --tw-accent-light:    181 102 210;  /* lighter purple           */
+  --tw-accent-dark:      81  69 158;  /* #51459E — dark purple    */
+  --tw-accent-contrast: 255 255 255;  /* white text on accent bg  */
+
+  /* Dashboard background */
+  --dash-bg:         #0A0B1A;
+  --dash-sidebar:    #0D0E23;
+  --dash-card:       rgba(255,255,255,0.05);
+  --dash-card-border: rgba(255,255,255,0.08);
+  --dash-card-hover: rgba(255,255,255,0.09);
 }
 
-/* ── B3: Shimmer sweep ───────────────────────────────────────────────────────── */
+/* ── Dashboard card (dark glass style) ───────────────────────────── */
+.dash-card {
+  background: var(--dash-card);
+  border: 1px solid var(--dash-card-border);
+  border-radius: 1rem;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.dash-card:hover {
+  background: var(--dash-card-hover);
+  border-color: rgba(158, 62, 191, 0.35);
+  box-shadow: 0 4px 24px rgba(158, 62, 191, 0.12);
+}
+
+/* ── Gradient icon badge ─────────────────────────────────────────── */
+.icon-badge {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.icon-badge-purple { background: linear-gradient(135deg, #9E3EBF 0%, #51459E 100%); }
+.icon-badge-orange { background: linear-gradient(135deg, #FD951A 0%, #F9896B 100%); }
+.icon-badge-teal   { background: linear-gradient(135deg, #2DD4BF 0%, #38BDF8 100%); }
+.icon-badge-pink   { background: linear-gradient(135deg, #EC4899 0%, #9E3EBF 100%); }
+
+/* ── Shimmer sweep ───────────────────────────────────────────────── */
 @keyframes shimmer {
   0%   { background-position: -200% center; }
   100% { background-position:  200% center; }
@@ -21,11 +56,11 @@
 .shimmer-text {
   background: linear-gradient(
     90deg,
-    rgb(var(--tw-accent-dark))  0%,
-    rgb(var(--tw-accent))       30%,
-    #ffffff                     50%,
-    rgb(var(--tw-accent))       70%,
-    rgb(var(--tw-accent-dark))  100%
+    #51459E 0%,
+    #9E3EBF 30%,
+    #ffffff 50%,
+    #9E3EBF 70%,
+    #51459E 100%
   );
   background-size: 200% auto;
   -webkit-background-clip: text;
@@ -35,7 +70,7 @@
   animation-delay: 1.8s;
 }
 
-/* ── F1: Pulsing glow ring ───────────────────────────────────────────────────── */
+/* ── Pulsing glow ring ───────────────────────────────────────────── */
 @keyframes pulse-ring {
   0%   { transform: scale(1);    opacity: 0.55; }
   70%  { transform: scale(1.55); opacity: 0; }
@@ -56,7 +91,7 @@
   pointer-events: none;
 }
 
-/* ── C2: Card glow hover ─────────────────────────────────────────────────────── */
+/* ── Card glow hover ─────────────────────────────────────────────── */
 .card-glow {
   transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
 }
@@ -69,7 +104,7 @@
   border-color: rgb(var(--tw-accent) / 0.5) !important;
 }
 
-/* ── C1: Scroll reveal ───────────────────────────────────────────────────────── */
+/* ── Scroll reveal ───────────────────────────────────────────────── */
 .reveal {
   opacity: 0;
   transform: translateY(32px);
@@ -81,7 +116,7 @@
   transform: translateY(0);
 }
 
-/* ── B1: Fade-in + slide-up ──────────────────────────────────────────────────── */
+/* ── Fade-in + slide-up ──────────────────────────────────────────── */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(28px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -91,4 +126,3 @@
   opacity: 0;
   animation: fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
-
