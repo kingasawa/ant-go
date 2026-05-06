@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { GLASS } from "@/lib/glass";
+import { MODAL_BG } from "@/lib/glass";
 
 interface Props {
   appName: string;
@@ -46,7 +46,7 @@ export default function AppStoreKeyModal({ appName, onClose, onSaved }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative w-full max-w-md rounded-2xl p-6 text-white z-10" style={GLASS}>
+      <div className="relative w-full max-w-md rounded-2xl p-6 text-white z-10" style={MODAL_BG}>
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div>
