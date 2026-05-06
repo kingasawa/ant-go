@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
-import { GLASS } from "@/lib/glass";
+import { GLASS, MODAL_BG } from "@/lib/glass";
 import PageLoader from "@/app/components/PageLoader";
 
 export interface Build {
@@ -78,7 +78,7 @@ function BuildDetailDrawer({ build, onClose }: { build: Build; onClose: () => vo
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-md flex flex-col shadow-2xl" style={GLASS}>
+      <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-md flex flex-col" style={MODAL_BG}>
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.15)" }}>
           <h2 className="text-base font-semibold text-white">Build Detail</h2>
           <button onClick={onClose} className="text-white/50 hover:text-white transition p-1 rounded-lg hover:bg-white/10">
@@ -111,7 +111,7 @@ function BuildDetailDrawer({ build, onClose }: { build: Build; onClose: () => vo
       {showConfirm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowConfirm(false)} />
-          <div className="relative rounded-2xl w-full max-w-sm p-6 text-center" style={GLASS}>
+          <div className="relative rounded-2xl w-full max-w-sm p-6 text-center" style={MODAL_BG}>
             <div className="text-4xl mb-3">🚀</div>
             <h3 className="text-base font-bold text-white mb-2">Submit to App Store Connect</h3>
             <p className="text-sm text-white/60 mb-6">
