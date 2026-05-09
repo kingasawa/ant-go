@@ -4,4 +4,4 @@
 /.next/
 /node_modules/
 /env.yaml
-/.claude/
+.claude/
