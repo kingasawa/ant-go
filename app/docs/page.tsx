@@ -1,49 +1,18 @@
 ﻿"use client";
 import Link from "next/link";
-import React, { useState, useRef, useEffect, useMemo, memo } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { GLASS } from "@/lib/glass";
 
-/* ─── Nav glass (stronger blur for sticky header) ───────────────────────────── */
-const GLASS_STRONG = {
-  backdropFilter: "blur(22px) saturate(180%)",
-  WebkitBackdropFilter: "blur(22px) saturate(180%)",
-  background: "rgb(255 247 247 / 0.11)",
-  border: "1px solid rgba(255,255,255,0.25)",
-} satisfies React.CSSProperties;
+/* ─── Nav header style ───────────────────────────────────────────────────────── */
+const HEADER_STYLE: React.CSSProperties = {
+  background: "rgba(18,18,24,0.97)",
+  borderBottom: "1px solid rgba(255,255,255,0.1)",
+};
 
 /* ─── Apple-style Terminal Window ───────────────────────────────────────────── */
-const Terminal = memo(function Terminal({ title, children }: { title?: string; children: React.ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold: 0.15 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
-  const staggered = useMemo(() =>
-    React.Children.toArray(children).map((child, i) =>
-      React.isValidElement<{ style?: React.CSSProperties }>(child)
-        ? React.cloneElement(child, {
-            style: {
-              ...child.props.style,
-              opacity: visible ? 1 : 0,
-              transform: visible ? "translateY(0)" : "translateY(6px)",
-              transition: `opacity 0.3s ease ${i * 0.07}s, transform 0.3s ease ${i * 0.07}s`,
-            },
-          })
-        : child
-    ),
-  [visible, children]);
-
+function Terminal({ title, children }: { title?: string; children: React.ReactNode }) {
   return (
-    <div ref={ref} className="rounded-xl overflow-hidden shadow-2xl shadow-black/50" style={{ background: "rgba(20,20,20,0.85)", border: "1px solid rgba(255,255,255,0.1)" }}>
+    <div className="rounded-xl overflow-hidden" style={{ background: "rgba(20,20,20,0.85)", border: "1px solid rgba(255,255,255,0.1)" }}>
       <div className="flex items-center gap-2 px-4 py-3" style={{ background: "rgba(40,40,40,0.9)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
         <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
         <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
@@ -51,11 +20,11 @@ const Terminal = memo(function Terminal({ title, children }: { title?: string; c
         {title && <span className="ml-3 text-xs text-white/40 font-medium tracking-wide">{title}</span>}
       </div>
       <div className="px-5 py-4 font-mono text-sm leading-7 text-gray-200 overflow-x-auto">
-        {staggered}
+        {children}
       </div>
     </div>
   );
-});
+}
 
 /* ─── Inline code ────────────────────────────────────────────────────────────── */
 function Code({ children }: { children: React.ReactNode }) {
@@ -69,33 +38,10 @@ function Code({ children }: { children: React.ReactNode }) {
 
 const GLASS_SECTION = { ...GLASS, boxShadow: "0 4px 24px rgba(0,0,0,0.35)" };
 
-/* ─── Section — fade-in + slide-up on scroll ─────────────────────────────────── */
-const Section = memo(function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
-  const ref = useRef<HTMLElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold: 0.06 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
+/* ─── Section ────────────────────────────────────────────────────────────────── */
+function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
-    <section
-      ref={ref}
-      id={id}
-      className="scroll-mt-24 mb-12"
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(28px)",
-        transition: "opacity 0.55s cubic-bezier(0.4,0,0.2,1), transform 0.55s cubic-bezier(0.4,0,0.2,1)",
-      }}
-    >
+    <section id={id} className="scroll-mt-24 mb-12">
       <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-3 px-1">
         <span className="w-1 h-6 bg-accent-light rounded-full inline-block" />
         {title}
@@ -105,7 +51,7 @@ const Section = memo(function Section({ id, title, children }: { id: string; tit
       </div>
     </section>
   );
-});
+}
 
 /* ─── Option row ─────────────────────────────────────────────────────────────── */
 function Option({ flag, desc }: { flag: string; desc: string }) {
@@ -146,86 +92,36 @@ const navGroups = [
 ];
 const allNavItems = navGroups.flatMap((g) => g.items);
 
-/* ─── Sidebar Nav with sliding glass pill ────────────────────────────────────── */
-function SidebarNav({ scrollActiveId }: { scrollActiveId: string | null }) {
-  const [pill, setPill] = useState<{ top: number; height: number } | null>(null);
-  const [hoverActiveId, setHoverActiveId] = useState<string | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
-
-  const getPillFromEl = (el: HTMLAnchorElement) => ({
-    top: el.offsetTop,
-    height: el.offsetHeight,
-  });
-
-  // Anchor pill to scroll-active item when not hovering
-  useEffect(() => {
-    if (hoverActiveId) return;
-    if (!scrollActiveId) { setPill(null); return; }
-    const el = itemRefs.current[scrollActiveId];
-    if (el) setPill(getPillFromEl(el));
-  }, [scrollActiveId, hoverActiveId]);
-
-  const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
-    setPill(getPillFromEl(e.currentTarget));
-    setHoverActiveId(id);
-  };
-
-  const handleMouseLeave = () => {
-    setHoverActiveId(null);
-    // Snap pill back to scroll-active position
-    const el = scrollActiveId ? itemRefs.current[scrollActiveId] : null;
-    setPill(el ? getPillFromEl(el) : null);
-  };
-
-  const isHovering = !!hoverActiveId;
-
+/* ─── Sidebar Nav ────────────────────────────────────────────────────────────── */
+function SidebarNav({ activeId }: { activeId: string | null }) {
   return (
-    <div ref={containerRef} className="relative" onMouseLeave={handleMouseLeave}>
-      {/* Sliding pill — white on hover, accent-tinted on reading position */}
-      <div
-        className="absolute left-0 right-0 rounded-lg pointer-events-none"
-        style={{
-          top: pill?.top ?? 0,
-          height: pill?.height ?? 36,
-          opacity: pill ? 1 : 0,
-          backdropFilter: "blur(14px) saturate(160%)",
-          WebkitBackdropFilter: "blur(14px) saturate(160%)",
-          background: isHovering ? "rgba(255,255,255,0.09)" : "rgb(var(--tw-accent) / 0.13)",
-          border: isHovering
-            ? "1px solid rgba(255,255,255,0.16)"
-            : "1px solid rgb(var(--tw-accent) / 0.35)",
-          transition: "top 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease",
-        }}
-      />
-
+    <div>
       {navGroups.map((group, gi) => (
         <React.Fragment key={group.label}>
           <p className={`text-[10px] font-semibold uppercase tracking-widest text-white/35 mb-2 px-3 ${gi === 0 ? "mt-1" : "mt-5"}`}>
             {group.label}
           </p>
-          {group.items.map((n) => (
-            <a
-              key={n.id}
-              ref={(el) => { itemRefs.current[n.id] = el; }}
-              href={`#${n.id}`}
-              className="relative z-10 block text-sm py-2.5 px-3 rounded-lg"
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById(n.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
-              style={{
-                color: (hoverActiveId ?? scrollActiveId) === n.id
-                  ? "rgb(var(--tw-accent-light))"
-                  : "rgba(255,255,255,0.45)",
-                fontWeight: (hoverActiveId ?? scrollActiveId) === n.id ? 500 : undefined,
-                transition: "color 0.2s",
-              }}
-              onMouseEnter={(e) => handleMouseEnter(e, n.id)}
-            >
-              {n.label}
-            </a>
-          ))}
+          {group.items.map((n) => {
+            const isActive = activeId === n.id;
+            return (
+              <a
+                key={n.id}
+                href={`#${n.id}`}
+                className="block text-sm py-2 px-3 rounded-lg hover:text-white"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById(n.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                style={{
+                  color: isActive ? "rgb(var(--tw-accent-light))" : "rgba(255,255,255,0.45)",
+                  fontWeight: isActive ? 600 : undefined,
+                  background: isActive ? "rgb(var(--tw-accent) / 0.12)" : undefined,
+                }}
+              >
+                {n.label}
+              </a>
+            );
+          })}
         </React.Fragment>
       ))}
     </div>
@@ -234,43 +130,22 @@ function SidebarNav({ scrollActiveId }: { scrollActiveId: string | null }) {
 
 /* ─── Page ───────────────────────────────────────────────────────────────────── */
 export default function DocPage() {
-  const [navVisible, setNavVisible] = useState(true);
-  const [scrollActiveId, setScrollActiveId] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
-  const lastScrollY = useRef(0);
-  const rafId = useRef<number | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(allNavItems[0].id);
 
   useEffect(() => {
-    const NAV_OFFSET = 90;
-
-    const updateActiveSection = () => {
-      let active = allNavItems[0].id;
-      for (const { id } of allNavItems) {
-        const el = document.getElementById(id);
-        if (el && el.getBoundingClientRect().top <= NAV_OFFSET) active = id;
-      }
-      setScrollActiveId(active);
-    };
-
-    const onScroll = () => {
-      if (rafId.current !== null) return;
-      rafId.current = requestAnimationFrame(() => {
-        rafId.current = null;
-        const y = window.scrollY;
-        setNavVisible(y < lastScrollY.current || y < 56);
-        lastScrollY.current = y;
-        const total = document.documentElement.scrollHeight - window.innerHeight;
-        setProgress(total > 0 ? (y / total) * 100 : 0);
-        updateActiveSection();
-      });
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    updateActiveSection();
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (rafId.current !== null) cancelAnimationFrame(rafId.current);
-    };
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActiveId(entry.target.id);
+        }
+      },
+      { rootMargin: "-30% 0px -60% 0px" }
+    );
+    allNavItems.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (el) obs.observe(el);
+    });
+    return () => obs.disconnect();
   }, []);
 
   return (
@@ -279,28 +154,10 @@ export default function DocPage() {
       style={{ backgroundColor: "var(--dash-bg)" }}
     >
 
-      {/* C — Reading progress bar */}
-      <div
-        className="fixed top-0 left-0 z-50 h-[2px]"
-        style={{
-          width: `${progress}%`,
-          background: "rgb(var(--tw-accent))",
-          transition: "width 0.1s linear",
-          boxShadow: "0 0 6px rgb(var(--tw-accent) / 0.6)",
-        }}
-      />
-
       {/* ── Top nav ── */}
       <header
         className="fixed top-0 left-0 right-0 z-30"
-        style={{
-          ...GLASS_STRONG,
-          borderLeft: "none",
-          borderRight: "none",
-          borderTop: "none",
-          transform: navVisible ? "translateY(0)" : "translateY(-100%)",
-          transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
-        }}
+        style={HEADER_STYLE}
       >
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
@@ -328,7 +185,7 @@ export default function DocPage() {
         {/* Sidebar — hover glass per item, no wrapper */}
         <aside className="hidden lg:block w-48 flex-shrink-0">
           <div className="sticky top-24">
-            <SidebarNav scrollActiveId={scrollActiveId} />
+            <SidebarNav activeId={activeId} />
           </div>
         </aside>
 
