@@ -1,6 +1,6 @@
 ﻿"use client";
 import Link from "next/link";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo, memo } from "react";
 import { GLASS } from "@/lib/glass";
 
 /* ─── Nav glass (stronger blur for sticky header) ───────────────────────────── */
@@ -12,7 +12,7 @@ const GLASS_STRONG = {
 } satisfies React.CSSProperties;
 
 /* ─── Apple-style Terminal Window ───────────────────────────────────────────── */
-function Terminal({ title, children }: { title?: string; children: React.ReactNode }) {
+const Terminal = memo(function Terminal({ title, children }: { title?: string; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -20,25 +20,27 @@ function Terminal({ title, children }: { title?: string; children: React.ReactNo
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
       { threshold: 0.15 }
     );
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
 
-  const staggered = React.Children.toArray(children).map((child, i) =>
-    React.isValidElement<{ style?: React.CSSProperties }>(child)
-      ? React.cloneElement(child, {
-          style: {
-            ...child.props.style,
-            opacity: visible ? 1 : 0,
-            transform: visible ? "translateY(0)" : "translateY(6px)",
-            transition: `opacity 0.3s ease ${i * 0.07}s, transform 0.3s ease ${i * 0.07}s`,
-          },
-        })
-      : child
-  );
+  const staggered = useMemo(() =>
+    React.Children.toArray(children).map((child, i) =>
+      React.isValidElement<{ style?: React.CSSProperties }>(child)
+        ? React.cloneElement(child, {
+            style: {
+              ...child.props.style,
+              opacity: visible ? 1 : 0,
+              transform: visible ? "translateY(0)" : "translateY(6px)",
+              transition: `opacity 0.3s ease ${i * 0.07}s, transform 0.3s ease ${i * 0.07}s`,
+            },
+          })
+        : child
+    ),
+  [visible, children]);
 
   return (
     <div ref={ref} className="rounded-xl overflow-hidden shadow-2xl shadow-black/50" style={{ background: "rgba(20,20,20,0.85)", border: "1px solid rgba(255,255,255,0.1)" }}>
@@ -53,7 +55,7 @@ function Terminal({ title, children }: { title?: string; children: React.ReactNo
       </div>
     </div>
   );
-}
+});
 
 /* ─── Inline code ────────────────────────────────────────────────────────────── */
 function Code({ children }: { children: React.ReactNode }) {
@@ -65,8 +67,10 @@ function Code({ children }: { children: React.ReactNode }) {
   );
 }
 
+const GLASS_SECTION = { ...GLASS, boxShadow: "0 4px 24px rgba(0,0,0,0.35)" };
+
 /* ─── Section — fade-in + slide-up on scroll ─────────────────────────────────── */
-function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+const Section = memo(function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   const ref = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -74,7 +78,7 @@ function Section({ id, title, children }: { id: string; title: string; children:
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
       { threshold: 0.06 }
     );
     obs.observe(el);
@@ -96,12 +100,12 @@ function Section({ id, title, children }: { id: string; title: string; children:
         <span className="w-1 h-6 bg-accent-light rounded-full inline-block" />
         {title}
       </h2>
-      <div className="rounded-2xl p-6" style={{ ...GLASS, boxShadow: "0 4px 24px rgba(0,0,0,0.35)" }}>
+      <div className="rounded-2xl p-6" style={GLASS_SECTION}>
         {children}
       </div>
     </section>
   );
-}
+});
 
 /* ─── Option row ─────────────────────────────────────────────────────────────── */
 function Option({ flag, desc }: { flag: string; desc: string }) {
@@ -234,33 +238,39 @@ export default function DocPage() {
   const [scrollActiveId, setScrollActiveId] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const lastScrollY = useRef(0);
+  const rafId = useRef<number | null>(null);
 
   useEffect(() => {
-    const NAV_OFFSET = 90; // fixed header height + buffer
+    const NAV_OFFSET = 90;
 
     const updateActiveSection = () => {
       let active = allNavItems[0].id;
       for (const { id } of allNavItems) {
         const el = document.getElementById(id);
-        if (el && el.getBoundingClientRect().top <= NAV_OFFSET) {
-          active = id;
-        }
+        if (el && el.getBoundingClientRect().top <= NAV_OFFSET) active = id;
       }
       setScrollActiveId(active);
     };
 
     const onScroll = () => {
-      const y = window.scrollY;
-      setNavVisible(y < lastScrollY.current || y < 56);
-      lastScrollY.current = y;
-      const total = document.documentElement.scrollHeight - window.innerHeight;
-      setProgress(total > 0 ? (y / total) * 100 : 0);
-      updateActiveSection();
+      if (rafId.current !== null) return;
+      rafId.current = requestAnimationFrame(() => {
+        rafId.current = null;
+        const y = window.scrollY;
+        setNavVisible(y < lastScrollY.current || y < 56);
+        lastScrollY.current = y;
+        const total = document.documentElement.scrollHeight - window.innerHeight;
+        setProgress(total > 0 ? (y / total) * 100 : 0);
+        updateActiveSection();
+      });
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
-    updateActiveSection(); // set initial active on mount
-    return () => window.removeEventListener("scroll", onScroll);
+    updateActiveSection();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafId.current !== null) cancelAnimationFrame(rafId.current);
+    };
   }, []);
 
   return (
