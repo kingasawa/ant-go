@@ -38,8 +38,7 @@ const steps = [
   { n: "1", label: "Đăng ký tài khoản và tạo project trên dashboard" },
   { n: "2", label: "Cài CLI: npm install -g ant-go, thêm projectId vào app.json" },
   { n: "3", label: "Chạy ant build — CLI tự pack project và upload lên server" },
-  { n: "4", label: "Mac build server nhận job, build với Fastlane, stream log realtime" },
-  { n: "5", label: "Build xong: IPA sẵn sàng tải về hoặc submit lên App Store Connect" },
+  { n: "4", label: "Build xong: IPA sẵn sàng tải về hoặc submit lên App Store Connect" },
 ];
 
 const plans = [
@@ -397,13 +396,10 @@ export default function HomePage() {
   }, []);
 
   return (
-    <main className="relative min-h-screen text-white overflow-x-hidden">
-      {/* Fixed background */}
-      <div
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/assets/images/bgimg1.jpg')" }}
-      />
-      <div className="fixed inset-0 bg-black/65" />
+    <main
+      className="relative min-h-screen text-white overflow-x-hidden"
+      style={{ backgroundColor: "var(--dash-bg)" }}
+    >
 
 
       {/* Floating logo (hiện khi nav ẩn) */}
@@ -458,22 +454,28 @@ export default function HomePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-                {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-44 rounded-xl shadow-xl z-50 overflow-hidden" style={GLASS}>
-                    <button
-                      onClick={() => { setDropdownOpen(false); router.push("/account/overview"); }}
-                      className="w-full text-left px-4 py-3 text-sm text-white/80 hover:bg-white/10 transition"
-                    >
-                      🖥️ Console
-                    </button>
-                    <button
-                      onClick={async () => { setDropdownOpen(false); await signOut(auth); router.push("/login"); }}
-                      className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-white/10 transition"
-                    >
-                      🚪 Logout
-                    </button>
-                  </div>
-                )}
+                <div
+                  className="absolute right-0 mt-1 w-full rounded-xl shadow-2xl z-50 overflow-hidden border border-white/10"
+                  style={{
+                    background: "var(--dash-modal)",
+                    maxHeight: dropdownOpen ? "120px" : "0px",
+                    opacity: dropdownOpen ? 1 : 0,
+                    transition: "max-height 0.2s ease, opacity 0.15s ease",
+                  }}
+                >
+                  <button
+                    onClick={() => { setDropdownOpen(false); router.push("/account/overview"); }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-white/80 hover:bg-white/5 transition"
+                  >
+                    Console
+                  </button>
+                  <button
+                    onClick={async () => { setDropdownOpen(false); await signOut(auth); router.push("/login"); }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-white/5 transition"
+                  >
+                    Logout
+                  </button>
+                </div>
               </div>
             ) : (
               <Link

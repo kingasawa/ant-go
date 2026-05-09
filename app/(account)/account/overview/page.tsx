@@ -135,7 +135,7 @@ export default function DashboardPage() {
         <StatCard label="Success Rate"  value={`${successRate}%`} sub={`${successCount} successful`}           badgeClass="icon-badge-teal"   Icon={HiOutlineCheckCircle} />
         <StatCard
           label="Plan"
-          value={p?.plan ? p.plan.charAt(0).toUpperCase() + p.plan.slice(1) : "—"}
+          value={p?.plan ? p.plan.toUpperCase() : "—"}
           sub={isUnlimited ? "Unlimited credits" : `${credits.toFixed ? credits.toFixed(1) : credits} credits left`}
           href="/account/usage"
           badgeClass="icon-badge-pink"

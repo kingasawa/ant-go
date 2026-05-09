@@ -21,6 +21,93 @@ const { t } = require('./i18n');
 const CACHE_DIR = path.join(os.homedir(), '.ant-go');
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 giờ
 
+// ── Capability detection ──────────────────────────────────────────────────────
+// Maps entitlement key → ASC CapabilityType value
+const ENTITLEMENT_TO_CAPABILITY = {
+  'aps-environment':                    'PUSH_NOTIFICATIONS',
+  'com.apple.developer.associated-domains': 'ASSOCIATED_DOMAINS',
+  'com.apple.security.application-groups': 'APP_GROUPS',
+  'com.apple.developer.in-app-payments': 'APPLE_PAY',
+  'com.apple.developer.healthkit':      'HEALTHKIT',
+  'com.apple.developer.homekit':        'HOMEKIT',
+  'com.apple.developer.icloud-container-identifiers': 'ICLOUD',
+  'com.apple.developer.siri':           'SIRIKIT',
+  'com.apple.developer.networking.networkextension': 'NETWORK_EXTENSIONS',
+  'com.apple.developer.nfc.readersession.formats': 'NFC_TAG_READING',
+  'com.apple.developer.pass-type-identifiers': 'WALLET',
+  'com.apple.developer.personal-vpn':   'PERSONAL_VPN',
+  'com.apple.developer.authentication-services.autofill-credential-provider': 'AUTOFILL_CREDENTIAL_PROVIDER',
+  'com.apple.developer.ClassKit-environment': 'CLASSKIT',
+  'com.apple.developer.default-data-protection': 'DATA_PROTECTION',
+  'com.apple.developer.maps':           'MAPS',
+  'com.apple.developer.weatherkit':     'WEATHERKIT',
+  'com.apple.developer.game-center':    'GAME_CENTER',
+  'com.apple.developer.pushkit.access': 'PUSH_TO_TALK',
+};
+
+function findEntitlementsFile(iosDir) {
+  if (!fs.existsSync(iosDir)) return null;
+  // Search top-level and one level deep inside ios/
+  const entries = fs.readdirSync(iosDir, { withFileTypes: true });
+  for (const e of entries) {
+    if (e.isFile() && e.name.endsWith('.entitlements')) return path.join(iosDir, e.name);
+    if (e.isDirectory()) {
+      try {
+        const sub = fs.readdirSync(path.join(iosDir, e.name), { withFileTypes: true });
+        for (const s of sub) {
+          if (s.isFile() && s.name.endsWith('.entitlements')) return path.join(iosDir, e.name, s.name);
+        }
+      } catch {}
+    }
+  }
+  return null;
+}
+
+function parseEntitlementKeys(content) {
+  const keys = [];
+  const regex = /<key>([^<]+)<\/key>/g;
+  let match;
+  while ((match = regex.exec(content)) !== null) keys.push(match[1].trim());
+  return keys;
+}
+
+async function syncCapabilities(authCtx, bundleIdObj, entitlementKeys) {
+  const { CapabilityTypeOption } = require('@expo/apple-utils');
+
+  const required = [...new Set(entitlementKeys.map(k => ENTITLEMENT_TO_CAPABILITY[k]).filter(Boolean))];
+
+  let current = [];
+  try {
+    const caps = await bundleIdObj.getBundleIdCapabilitiesAsync();
+    current = (caps ?? []).map(c => c.attributes?.capabilityType).filter(Boolean);
+  } catch {}
+
+  const toEnable = required.filter(c => !current.includes(c));
+  const failed = [];
+  for (const capType of toEnable) {
+    try {
+      await bundleIdObj.updateBundleIdCapabilityAsync({ capabilityType: capType, option: CapabilityTypeOption.ON });
+    } catch (err) {
+      failed.push({ capType, reason: err.message });
+    }
+  }
+
+  if (failed.length > 0) {
+    console.log(chalk.yellow(`   ⚠  Could not enable: ${failed.map(f => f.capType).join(', ')}`));
+  }
+
+  return [...new Set([...current, ...toEnable.filter(c => !failed.find(f => f.capType === c))])];
+}
+
+async function getCurrentCapabilities(bundleIdObj) {
+  try {
+    const caps = await bundleIdObj.getBundleIdCapabilitiesAsync();
+    return (caps ?? []).map(c => c.attributes?.capabilityType).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
 function getCacheFile(profileName) {
   return path.join(CACHE_DIR, `creds-${profileName}.json`);
 }
@@ -267,6 +354,7 @@ async function ensureAppleCreds(projectInfo, {
   profileName        = 'production',
   userDevices        = [],
   apiClient          = null,
+  projectRoot        = null,   // used for entitlements-based capability sync
   _preselectedUdids  = null,   // internal use: skip selectDevices when already chosen
 } = {}) {
 
@@ -537,12 +625,34 @@ async function ensureAppleCreds(projectInfo, {
       await Profile.deleteAsync(authCtx, { id: existingProfile.id });
     }
 
+    let capabilities = [];
     if (!profile) {
+      // Sync capabilities from .entitlements before creating profile (store only)
+      if (distribution === 'store' && projectRoot) {
+        const entFile = findEntitlementsFile(path.join(projectRoot, 'ios'));
+        if (entFile) {
+          profileSpinner.text = 'Syncing capabilities from entitlements…';
+          try {
+            const entKeys = parseEntitlementKeys(fs.readFileSync(entFile, 'utf8'));
+            capabilities = await syncCapabilities(authCtx, bundleIdObj, entKeys);
+            if (capabilities.length > 0) {
+              profileSpinner.text = `Capabilities enabled: ${capabilities.join(', ')}`;
+            }
+          } catch (err) {
+            console.log(chalk.yellow(`\n   ⚠  Capability sync skipped: ${err.message}`));
+          }
+        }
+      }
+
       const profileName_ = `${profileLabel} ${new Date().toISOString().slice(0, 10)}`;
+      profileSpinner.text = t('profileLoading', profileLabel);
       profile = await Profile.createAsync(authCtx, {
         bundleId: bundleIdObj.id, certificates: [certId],
         devices: deviceIds, name: profileName_, profileType,
       });
+    } else {
+      // Reusing existing — still fetch current capabilities for dashboard display
+      capabilities = await getCurrentCapabilities(bundleIdObj);
     }
 
     const fresh = await Profile.infoAsync(authCtx, { id: profile.id });
@@ -550,17 +660,17 @@ async function ensureAppleCreds(projectInfo, {
     if (!data) throw new Error(t('profileNoContent'));
     mobileprovisionBase64 = typeof data === 'string' ? data : Buffer.from(data).toString('base64');
     profileSpinner.succeed(t('profileOK', profileLabel));
+
+    const creds = { appleId: appleId.trim(), p12Base64, p12Password, mobileprovisionBase64, teamId, udids: selectedUdids, ascKey, capabilities };
+    saveCache(creds, profileName);
+    console.log(chalk.green(t('credsCached', getCacheFile(profileName))));
+    console.log('');
+
+    return { ...creds, ...projectInfo };
   } catch (err) {
     profileSpinner.fail(t('profileFailed', profileLabel, err.message));
     throw err;
   }
-
-  const creds = { appleId: appleId.trim(), p12Base64, p12Password, mobileprovisionBase64, teamId, udids: selectedUdids, ascKey };
-  saveCache(creds, profileName);
-  console.log(chalk.green(t('credsCached', getCacheFile(profileName))));
-  console.log('');
-
-  return { ...creds, ...projectInfo };
 }
 
 module.exports = { ensureAppleCreds, ensureAscKey, loadCache, clearCache, getCacheFile };

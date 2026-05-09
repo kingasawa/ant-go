@@ -291,20 +291,20 @@ export default function BuildsPage() {
       ) : (
         <div className="overflow-x-auto rounded-2xl" style={GLASS}>
           <table className="w-full text-sm">
-            <thead className="text-white/50 uppercase text-xs tracking-wider" style={{ background: "rgba(255,255,255,0.08)", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+            <thead className="text-[11px] font-semibold text-white/40 uppercase tracking-widest" style={{ background: "var(--dash-border)" }}>
               <tr>
-                <th className="px-4 py-3 text-left">Job ID</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-left">Step</th>
-                <th className="px-4 py-3 text-left">App</th>
-                <th className="px-4 py-3 text-left">Created</th>
-                <th className="px-4 py-3 text-left">Artifact</th>
+                <th className="px-4 py-2.5 text-left">Job ID</th>
+                <th className="px-4 py-2.5 text-left">Status</th>
+                <th className="px-4 py-2.5 text-left">Step</th>
+                <th className="px-4 py-2.5 text-left">App</th>
+                <th className="px-4 py-2.5 text-left">Created</th>
+                <th className="px-4 py-2.5 text-left">Artifact</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/10">
+            <tbody className="divide-y divide-white/[0.06]">
               {filteredBuilds.map((build) => (
                 <tr key={build.id} onClick={() => setSelectedBuild(build)}
-                  className="hover:bg-white/10 transition cursor-pointer"
+                  className="hover:bg-white/[0.03] transition cursor-pointer"
                 >
                   <td className="px-4 py-3 font-mono text-xs text-white/60 max-w-[120px] truncate">{build.id}</td>
                   <td className="px-4 py-3">

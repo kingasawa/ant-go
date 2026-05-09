@@ -133,6 +133,12 @@ const navGroups = [
       { id: "auth-whoami", label: "Whoami" },
     ],
   },
+  {
+    label: "Settings",
+    items: [
+      { id: "set-lang", label: "Language" },
+    ],
+  },
 ];
 const allNavItems = navGroups.flatMap((g) => g.items);
 
@@ -258,14 +264,10 @@ export default function DocPage() {
   }, []);
 
   return (
-    <div className="min-h-screen relative text-white">
-
-      {/* Background */}
-      <div
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/assets/images/bgimg1.jpg')" }}
-      />
-      <div className="fixed inset-0 bg-black/65" />
+    <div
+      className="min-h-screen relative text-white"
+      style={{ backgroundColor: "var(--dash-bg)" }}
+    >
 
       {/* C — Reading progress bar */}
       <div
@@ -740,6 +742,43 @@ export default function DocPage() {
             <p className="text-white/25 text-xs mt-4">
               Nếu chưa đăng nhập, lệnh sẽ hiện thông báo và hướng dẫn chạy <Code>ant auth login</Code>.
             </p>
+          </Section>
+
+          {/* ── set lang ── */}
+          <Section id="set-lang" title="Language">
+            <p className="text-white/55 text-sm mb-4">
+              Đổi ngôn ngữ hiển thị của CLI. Hỗ trợ tiếng Việt (<Code>vi</Code>) và tiếng Anh (<Code>en</Code>).
+            </p>
+            <Terminal title="Terminal — ant set lang">
+              <div>
+                <span className="text-white/30 select-none">$ </span>
+                <span className="text-yellow-300">ant</span>
+                <span className="text-white"> set lang</span>
+                <span className="text-orange-300"> vi</span>
+              </div>
+              <div className="mt-3 space-y-1">
+                <div className="text-green-400">✔ Ngôn ngữ đã được đặt thành: <span className="text-white">vi</span></div>
+                <div className="text-white/40">{"  "}Khởi động lại terminal để áp dụng.</div>
+              </div>
+            </Terminal>
+
+            <Terminal title="Terminal — switch to English" >
+              <div>
+                <span className="text-white/30 select-none">$ </span>
+                <span className="text-yellow-300">ant</span>
+                <span className="text-white"> set lang</span>
+                <span className="text-orange-300"> en</span>
+              </div>
+              <div className="mt-3 space-y-1">
+                <div className="text-green-400">✔ Language set to: <span className="text-white">en</span></div>
+              </div>
+            </Terminal>
+
+            <div className="mt-5 rounded-xl p-4" style={GLASS}>
+              <p className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-3">Giá trị hợp lệ</p>
+              <Option flag="vi" desc="Tiếng Việt (mặc định)" />
+              <Option flag="en" desc="English" />
+            </div>
           </Section>
 
           {/* Footer */}

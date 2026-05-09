@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { collection, query, orderBy, limit, onSnapshot, where, doc } from "firebase/firestore";
+import { collection, query, onSnapshot, where, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { GLASS } from "@/lib/glass";
@@ -63,17 +63,17 @@ export default function UsagePage() {
     });
   }, [user]);
 
-  // Listen credit history
+  // Fetch credit history via API (creditHistory subcollection is server-only)
   useEffect(() => {
     if (!user) return;
-    const q = query(
-      collection(db, "users", user.uid, "creditHistory"),
-      orderBy("createdAt", "desc"),
-      limit(50)
+    user.getIdToken().then((token) =>
+      fetch("/api/usage/credit-history", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((r) => r.json())
+        .then((data) => setHistory(data.history ?? []))
+        .catch(() => {})
     );
-    return onSnapshot(q, (snap) => {
-      setHistory(snap.docs.map((d) => ({ id: d.id, ...d.data() } as CreditHistory)));
-    });
   }, [user]);
 
   // Count apps
@@ -204,35 +204,34 @@ export default function UsagePage() {
       </div>
 
       {/* Credit History */}
-      <div className="rounded-2xl p-6" style={GLASS}>
-        <h2 className="text-base font-semibold text-white mb-4">Lịch sử trừ credit</h2>
+      <div className="rounded-2xl overflow-hidden" style={GLASS}>
+        <div className="px-6 pt-6 pb-4">
+          <h2 className="text-base font-semibold text-white">Lịch sử trừ credit</h2>
+        </div>
 
         {history.length === 0 ? (
           <p className="text-white/40 text-sm py-8 text-center">Chưa có lịch sử trừ credit</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
-                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-                  <th className="text-left text-white/40 font-medium pb-3 pr-4">Thời gian</th>
-                  <th className="text-left text-white/40 font-medium pb-3 pr-4">Build ID</th>
-                  <th className="text-left text-white/40 font-medium pb-3 pr-4">Kết quả</th>
-                  <th className="text-right text-white/40 font-medium pb-3 pr-4">Credit trừ</th>
-                  <th className="text-right text-white/40 font-medium pb-3">Số dư sau</th>
+              <thead className="text-[11px] font-semibold text-white/40 uppercase tracking-widest" style={{ background: "var(--dash-border)" }}>
+                <tr>
+                  <th className="px-6 py-2.5 text-left">Thời gian</th>
+                  <th className="px-6 py-2.5 text-left">Build ID</th>
+                  <th className="px-6 py-2.5 text-left">Kết quả</th>
+                  <th className="px-6 py-2.5 text-right">Credit trừ</th>
+                  <th className="px-6 py-2.5 text-right">Số dư sau</th>
                 </tr>
               </thead>
-              <tbody>
-                {history.map((h, i) => {
+              <tbody className="divide-y divide-white/[0.06]">
+                {history.map((h) => {
                   const info = REASON_LABELS[h.reason] ?? { label: h.reason, color: "text-white/60" };
                   return (
-                    <tr
-                      key={h.id}
-                      style={{ borderBottom: i < history.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" }}
-                    >
-                      <td className="py-3 pr-4 text-white/50 whitespace-nowrap">
+                    <tr key={h.id} className="hover:bg-white/[0.03] transition">
+                      <td className="px-6 py-3 text-white/50 whitespace-nowrap">
                         {h.createdAt?.seconds ? formatDate(h.createdAt.seconds) : "—"}
                       </td>
-                      <td className="py-3 pr-4">
+                      <td className="px-6 py-3">
                         <Link
                           href={`/account/app/unknown/builds/${h.buildId}`}
                           className="text-accent-light hover:underline font-mono text-xs"
@@ -240,11 +239,11 @@ export default function UsagePage() {
                           {h.buildId.slice(0, 12)}…
                         </Link>
                       </td>
-                      <td className={`py-3 pr-4 ${info.color}`}>{info.label}</td>
-                      <td className="py-3 pr-4 text-right font-mono text-red-400">
+                      <td className={`px-6 py-3 ${info.color}`}>{info.label}</td>
+                      <td className="px-6 py-3 text-right font-mono text-red-400">
                         {h.amount.toFixed(1)}
                       </td>
-                      <td className="py-3 text-right font-mono text-white/70">
+                      <td className="px-6 py-3 text-right font-mono text-white/70">
                         {h.balanceAfter.toFixed(1)}
                       </td>
                     </tr>

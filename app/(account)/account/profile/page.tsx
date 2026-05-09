@@ -95,7 +95,7 @@ export default function ProfilePage() {
           <p className="text-white/30 text-xs font-mono mt-1 truncate">uid: {profile.uid}</p>
         </div>
         <span className={`text-xs font-semibold px-3 py-1 rounded-full ${PLAN_BADGE[profile.plan] ?? PLAN_BADGE.free}`}>
-          {PLAN_ICON[profile.plan]} {profile.plan.charAt(0).toUpperCase() + profile.plan.slice(1)}
+          {profile.plan.toUpperCase()}
         </span>
       </div>
 
@@ -103,7 +103,7 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard label="Total Builds" value={profile.builds} sub="All time" />
         <StatCard label="Credits Left" value={isUnlimited ? "∞" : credits.toFixed(1)} sub={isUnlimited ? "Unlimited plan" : `${creditsUsed.toFixed(1)} of ${planCredits} used`} />
-        <StatCard label="Current Plan" value={profile.plan.charAt(0).toUpperCase() + profile.plan.slice(1)} sub={profile.plan === "free" ? "Upgrade to unlock more" : "Active"} />
+        <StatCard label="Current Plan" value={profile.plan.toUpperCase()} sub={profile.plan === "free" ? "Upgrade to unlock more" : "Active"} />
       </div>
 
       {/* Credit usage bar */}
@@ -132,11 +132,11 @@ export default function ProfilePage() {
           { label: "Display Name", value: profile.displayName ?? "—" },
           { label: "Email", value: profile.email ?? "—" },
           { label: "User ID", value: profile.uid, mono: true },
-          { label: "Plan", value: `${PLAN_ICON[profile.plan]} ${profile.plan}` },
+          { label: "Plan", value: profile.plan.toUpperCase() },
           { label: "Member Since", value: formatTimestamp(profile.createdAt) },
           { label: "Last Updated", value: formatTimestamp(profile.updatedAt) },
         ].map((row) => (
-          <div key={row.label} className="flex items-center justify-between py-2 last:border-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+          <div key={row.label} className="flex items-center justify-between py-2 last:border-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
             <span className="text-sm text-white/50">{row.label}</span>
             <span className={`text-sm text-white/90 max-w-[60%] truncate text-right ${row.mono ? "font-mono text-xs" : ""}`}>
               {row.value}

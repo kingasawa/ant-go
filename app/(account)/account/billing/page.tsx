@@ -143,7 +143,7 @@ export default function BillingPage() {
             <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Gói hiện tại</p>
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-bold text-white capitalize">
-                {currentPlan === "free" ? "Free" : currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
+                {currentPlan.toUpperCase()}
               </h2>
               {statusInfo && (
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${statusInfo.cls}`}>

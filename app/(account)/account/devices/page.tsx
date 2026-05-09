@@ -11,6 +11,8 @@ interface Device {
   deviceSerial: string | null;
   source: "dashboard" | "cli";
   addedAt: string | null;
+  teamId: string | null;
+  teamName: string | null;
 }
 
 type EnrollStep = "idle" | "creating" | "scanning" | "naming" | "saving" | "done" | "error" | "timeout";
@@ -311,6 +313,8 @@ export default function DevicesPage() {
   const [fadingUdids, setFadingUdids] = useState<Set<string>>(new Set());
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [confirmDeleteUdid, setConfirmDeleteUdid] = useState<string | null>(null);
+  const [openMenuUdid, setOpenMenuUdid] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   function showToast(message: string, type: "success" | "error") {
     const id = ++toastCounter;
@@ -367,11 +371,11 @@ export default function DevicesPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Devices</h1>
+          <h1 className="text-2xl font-bold text-white">Apple devices</h1>
           <p className="text-white/50 text-sm mt-1">
             Quản lý các thiết bị iOS đã đăng ký vào tài khoản của bạn.
           </p>
@@ -383,11 +387,11 @@ export default function DevicesPage() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Thêm device
+          Register Apple device
         </button>
       </div>
 
-      {/* List */}
+      {/* Table */}
       <div className="rounded-2xl overflow-hidden" style={GLASS}>
         {loading ? (
           <div className="text-center py-12 text-white/40">
@@ -407,64 +411,104 @@ export default function DevicesPage() {
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-white/8">
+          <div className="overflow-x-auto">
+            {/* Column headers */}
+            <div
+              className="grid grid-cols-[1fr_220px_120px_180px_44px] px-5 py-2.5"
+              style={{ background: "var(--dash-border)" }}
+            >
+              <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">Device</span>
+              <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">Team</span>
+              <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">Type</span>
+              <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">Created at</span>
+              <span />
+            </div>
+
+            {/* Rows */}
             {devices.map((device) => (
-              <li
+              <div
                 key={device.udid}
-                className="flex items-center gap-4 px-5 py-4 transition-all duration-400"
+                className="grid grid-cols-[1fr_220px_120px_180px_44px] items-center px-5 py-4 border-b last:border-0 hover:bg-white/[0.03] transition-all"
                 style={{
+                  borderColor: "var(--dash-border)",
                   opacity: fadingUdids.has(device.udid) ? 0 : 1,
                   transform: fadingUdids.has(device.udid) ? "translateX(16px)" : "translateX(0)",
+                  transitionDuration: "400ms",
                 }}
               >
-                <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {/* Device */}
+                <div className="min-w-0 pr-4">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm text-white truncate">
+                      {device.udid}
+                    </span>
+                    <div className="group relative flex-shrink-0">
+                      <svg className="w-4 h-4 text-white/30 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="absolute left-1/2 -translate-x-1/2 bottom-6 hidden group-hover:block z-10 bg-gray-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-white/70 whitespace-nowrap shadow-xl">
+                        UDID — Unique Device Identifier
+                      </div>
+                    </div>
+                  </div>
+                  {device.name && (
+                    <p className="text-xs text-white/40 truncate mt-0.5">{device.name}</p>
+                  )}
+                </div>
+
+                {/* Team */}
+                <div className="min-w-0">
+                  {device.teamId ? (
+                    <>
+                      <p className="text-sm text-white/80 truncate">{device.teamName ?? "—"}</p>
+                      <p className="text-xs text-white/40 mt-0.5 font-mono">ID: {device.teamId}</p>
+                    </>
+                  ) : (
+                    <span className="text-sm text-white/30">—</span>
+                  )}
+                </div>
+
+                {/* Type */}
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-white/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3" />
                   </svg>
+                  <span className="text-sm text-white">{getDeviceClass(device.deviceProduct)}</span>
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">
-                    {device.name ?? device.deviceProduct ?? "Unknown Device"}
-                  </p>
-                  <p className="text-xs text-white/40 font-mono truncate mt-0.5">{device.udid}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    {device.deviceProduct && (
-                      <span className="text-xs text-white/40">{device.deviceProduct}</span>
-                    )}
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${
-                      device.source === "cli"
-                        ? "bg-blue-500/10 text-blue-300 border-blue-400/20"
-                        : "bg-purple-500/10 text-purple-300 border-purple-400/20"
-                    }`}>
-                      {device.source === "cli" ? "CLI" : "Dashboard"}
+                {/* Created at */}
+                <div>
+                  {device.addedAt ? (
+                    <span className="text-sm text-white/60">
+                      {formatDateTime(device.addedAt)}
                     </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  {device.addedAt && (
-                    <span className="text-xs text-white/30 hidden sm:block">
-                      {new Date(device.addedAt).toLocaleDateString("vi-VN")}
-                    </span>
+                  ) : (
+                    <span className="text-sm text-white/30">—</span>
                   )}
+                </div>
+
+                {/* Actions ⋮ */}
+                <div className="flex items-center justify-center">
                   <button
-                    onClick={() => setConfirmDeleteUdid(device.udid)}
-                    disabled={deletingUdid === device.udid}
-                    className="text-white/30 hover:text-red-400 transition disabled:opacity-40"
+                    onClick={(e) => {
+                      if (openMenuUdid === device.udid) {
+                        setOpenMenuUdid(null);
+                      } else {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setMenuPos({ x: rect.right, y: rect.bottom + 4 });
+                        setOpenMenuUdid(device.udid);
+                      }
+                    }}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition"
                   >
-                    {deletingUdid === device.udid ? (
-                      <div className="w-4 h-4 border border-white/20 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    )}
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <circle cx="12" cy="5" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="12" cy="19" r="1.5" />
+                    </svg>
                   </button>
                 </div>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
 
@@ -475,6 +519,27 @@ export default function DevicesPage() {
           <code className="text-white/60 bg-white/10 px-1 py-0.5 rounded">ant-go build --profile development</code>.
         </p>
       </div>
+
+      {/* Row dropdown menu — fixed positioning to escape overflow-hidden */}
+      {openMenuUdid && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpenMenuUdid(null)} />
+          <div
+            className="fixed z-50 w-36 rounded-xl py-1 shadow-xl border border-white/10 bg-gray-900"
+            style={{ top: menuPos.y, right: `calc(100vw - ${menuPos.x}px)` }}
+          >
+            <button
+              onClick={() => { setOpenMenuUdid(null); setConfirmDeleteUdid(openMenuUdid); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-400 hover:bg-white/5 transition"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Delete
+            </button>
+          </div>
+        </>
+      )}
 
       {/* Modal */}
       {showModal && (
@@ -548,6 +613,26 @@ export default function DevicesPage() {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
+
+function getDeviceClass(deviceProduct: string | null): string {
+  if (!deviceProduct) return "iOS Device";
+  if (deviceProduct.startsWith("iPad")) return "iPad";
+  if (deviceProduct.startsWith("iPhone")) return "iPhone";
+  if (deviceProduct.startsWith("Mac")) return "Mac";
+  return "iOS Device";
+}
+
+function formatDateTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
 
 function formatProduct(raw: string): string {
   // "iPhone16,2" → "iPhone 16 Pro Max" (fallback: giữ nguyên)

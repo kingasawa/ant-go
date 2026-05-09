@@ -55,4 +55,10 @@ async function uploadAscKey(client, { teamId, keyId, issuerId, privateKeyP8 }) {
   return data;
 }
 
-module.exports = { createClient, createBuild, getBuildStatus, fetchUserInfo, saveDevice, uploadAscKey };
+// Lưu danh sách capabilities đang enabled vào dashboard (per-app)
+async function uploadCapabilities(client, { projectId, capabilities }) {
+  const { data } = await client.post(`/api/apps/${projectId}/capabilities`, { capabilities });
+  return data;
+}
+
+module.exports = { createClient, createBuild, getBuildStatus, fetchUserInfo, saveDevice, uploadAscKey, uploadCapabilities };

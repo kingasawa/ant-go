@@ -1,23 +1,22 @@
 ﻿"use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import Link from "next/link";
 import {
   HiOutlineSquares2X2, HiOutlineDevicePhoneMobile,
   HiOutlineUser, HiOutlineCog6Tooth, HiOutlineCreditCard,
-  HiOutlineBars3, HiOutlineChartBar, HiOutlineXMark,
+  HiOutlineBars3, HiOutlineChartBar, HiOutlineXMark, HiOutlineKey,
 } from "react-icons/hi2";
 import { AiOutlineAppstoreAdd } from "react-icons/ai";
 
 const navItems = [
-  { href: "/account/overview", label: "Overview", Icon: HiOutlineSquares2X2,  gradient: "icon-badge-purple" },
-  { href: "/account/apps",     label: "Apps",     Icon: AiOutlineAppstoreAdd,  gradient: "icon-badge-orange" },
-  { href: "/account/devices",  label: "Devices",  Icon: HiOutlineDevicePhoneMobile, gradient: "icon-badge-teal" },
-  { href: "/account/usage",    label: "Usage",    Icon: HiOutlineChartBar,     gradient: "icon-badge-pink" },
-  { href: "/account/profile",  label: "Profile",  Icon: HiOutlineUser,         gradient: "icon-badge-purple" },
-  { href: "/account/settings", label: "Settings", Icon: HiOutlineCog6Tooth,    gradient: "icon-badge-orange" },
-  { href: "/account/billing",  label: "Billing",  Icon: HiOutlineCreditCard,   gradient: "icon-badge-teal" },
+  { href: "/account/overview",     label: "Overview",     Icon: HiOutlineSquares2X2,       gradient: "icon-badge-purple", dot: "#9E3EBF" },
+  { href: "/account/apps",         label: "Apps",         Icon: AiOutlineAppstoreAdd,       gradient: "icon-badge-orange", dot: "#FD951A" },
+  { href: "/account/devices",      label: "Devices",      Icon: HiOutlineDevicePhoneMobile, gradient: "icon-badge-teal",   dot: "#2DD4BF" },
+  { href: "/account/credentials",  label: "Credentials",  Icon: HiOutlineKey,               gradient: "icon-badge-blue",   dot: "#3B82F6" },
 ];
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
@@ -25,6 +24,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/login");
@@ -47,7 +48,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
       {/* ── Sidebar ──────────────────────────────────────────────── */}
       <aside
         className={`fixed inset-y-0 left-0 z-40 w-64 flex flex-col transform transition-transform duration-200
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:static lg:flex`}
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:static lg:flex lg:sticky lg:top-0 lg:h-screen`}
         style={{
           background: "var(--dash-sidebar)",
           borderRight: "1px solid var(--dash-border)",
@@ -76,7 +77,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
           <p className="text-xs font-semibold text-white/25 uppercase tracking-widest px-3 mb-3 mt-2">
             Main Menu
           </p>
-          {navItems.map(({ href, label, Icon, gradient }) => {
+          {navItems.map(({ href, label, Icon, gradient, dot }) => {
             const isActive = pathname === href || pathname.startsWith(href + "/");
             return (
               <Link
@@ -89,13 +90,12 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                     : "text-white/45 hover:text-white hover:bg-white/[0.06]"
                   }`}
               >
-                {/* Icon badge */}
                 <span className={`icon-badge ${isActive ? gradient : "bg-white/10"} transition-all duration-150`}>
                   <Icon className="w-4 h-4 text-white" />
                 </span>
                 {label}
                 {isActive && (
-                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-purple" />
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: dot }} />
                 )}
               </Link>
             );
@@ -104,13 +104,14 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
         {/* User card */}
         <div
-          className="px-4 py-4 flex-shrink-0 flex items-center gap-3"
+          ref={userMenuRef}
+          className="relative px-4 py-4 flex-shrink-0 flex items-center gap-3"
           style={{ borderTop: "1px solid var(--dash-border)" }}
         >
           <img
             src={user.photoURL ?? "/avatar.png"}
             alt=""
-            className="w-9 h-9 rounded-full object-cover border-2 border-purple/40"
+            className="w-9 h-9 rounded-full object-cover border-2 border-purple/40 flex-shrink-0"
           />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-white truncate">
@@ -118,8 +119,64 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
             </p>
             <p className="text-xs text-white/40 truncate">{user.email}</p>
           </div>
+          <button
+            onClick={() => setUserMenuOpen((v) => !v)}
+            className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-white/40 hover:text-white border border-white/15 hover:border-white/30 hover:bg-white/10 transition"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="5" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="12" cy="19" r="1.5" />
+            </svg>
+          </button>
+
         </div>
       </aside>
+
+      {/* User popup */}
+      {userMenuOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-start pb-4 pl-4 lg:pb-6 lg:pl-6">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setUserMenuOpen(false)} />
+          <div
+            className="relative w-56 rounded-2xl shadow-2xl border border-white/10 overflow-hidden"
+            style={{ background: "var(--dash-modal)" }}
+          >
+            {/* User info */}
+            <div className="flex items-center gap-3 px-4 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              <img
+                src={user.photoURL ?? "/avatar.png"}
+                alt=""
+                className="w-10 h-10 rounded-full object-cover border-2 border-purple/40 flex-shrink-0"
+              />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{user.displayName ?? user.email}</p>
+                <p className="text-xs text-white/40 truncate">{user.email}</p>
+              </div>
+            </div>
+            {/* Actions */}
+            <div className="py-1">
+              <button onClick={() => { setUserMenuOpen(false); router.push("/account/profile"); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/5 transition">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                Profile
+              </button>
+              <button onClick={() => { setUserMenuOpen(false); router.push("/account/usage"); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/5 transition">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                Usage
+              </button>
+              <button onClick={() => { setUserMenuOpen(false); router.push("/account/settings"); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/5 transition">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                Settings
+              </button>
+              <button onClick={() => { setUserMenuOpen(false); router.push("/account/billing"); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/5 transition">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                Billing
+              </button>
+              <button onClick={() => { setUserMenuOpen(false); signOut(auth).then(() => router.replace("/login")); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-white/5 transition">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                Log out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile overlay */}
       {sidebarOpen && (
@@ -156,29 +213,6 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
             alt=""
             className="w-8 h-8 rounded-full border-2 border-purple/40 object-cover"
           />
-        </header>
-
-        {/* Desktop topbar */}
-        <header
-          className="hidden lg:flex items-center justify-between px-8 py-4 flex-shrink-0"
-          style={{ borderBottom: "1px solid var(--dash-border)" }}
-        >
-          <div>
-            <p className="text-xs text-white/30 uppercase tracking-widest font-tomorrow">
-              {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-sm font-semibold text-white leading-none">{user.displayName ?? user.email}</p>
-              <p className="text-xs text-white/35 mt-0.5">{user.email}</p>
-            </div>
-            <img
-              src={user.photoURL ?? "/avatar.png"}
-              alt=""
-              className="w-9 h-9 rounded-full object-cover border-2 border-white/10"
-            />
-          </div>
         </header>
 
         {/* Page slot */}

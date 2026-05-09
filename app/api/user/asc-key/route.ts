@@ -1,16 +1,18 @@
 /**
  * POST /api/user/asc-key
  * Auth: CLI token (Bearer)
- * Body: { teamId, keyId, issuerId, privateKeyP8 }
+ * Body: { teamId, keyId, issuerId, privateKeyP8, teamName? }
  *
  * Lưu ASC API Key vào users/{uid}/asc_keys/{teamId}
  * Key gắn với Apple Developer Team — dùng được cho tất cả app trong team đó.
+ * teamName: nếu CLI không gửi lên thì server tự fetch từ App Store Connect API.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { validateCliToken } from "@/lib/cli-auth.service";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { encryptAscKey } from "@/lib/asc-crypto";
+import { fetchAscTeamName } from "@/lib/asc-api";
 import { FieldValue } from "firebase-admin/firestore";
 
 export async function POST(request: NextRequest) {
@@ -24,7 +26,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const { teamId, keyId, issuerId, privateKeyP8 } = body;
+  const { teamId, keyId, issuerId, privateKeyP8, teamName: teamNameFromCli } = body;
 
   if (!teamId?.trim() || !keyId?.trim() || !issuerId?.trim() || !privateKeyP8?.trim()) {
     return NextResponse.json(
@@ -42,6 +44,12 @@ export async function POST(request: NextRequest) {
 
   const encryptedKey = encryptAscKey(privateKeyP8.trim());
 
+  // Fetch team name: CLI có thể gửi sẵn, nếu không thì tự lấy từ ASC API
+  const teamName =
+    teamNameFromCli?.trim() ||
+    (await fetchAscTeamName(keyId.trim(), issuerId.trim(), privateKeyP8.trim())) ||
+    null;
+
   await getAdminDb()
     .collection("users").doc(session.uid)
     .collection("asc_keys").doc(teamId.trim())
@@ -49,8 +57,9 @@ export async function POST(request: NextRequest) {
       keyId:        keyId.trim(),
       issuerId:     issuerId.trim(),
       encryptedKey,
+      teamName,
       updatedAt:    FieldValue.serverTimestamp(),
     });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, teamName });
 }

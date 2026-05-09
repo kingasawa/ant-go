@@ -24,7 +24,7 @@ const CLI_VERSION = '1.0';
 
 const { API_URL, loadConfig }          = require('../config');
 const { ensureToken }                  = require('./auth');
-const { createClient, createBuild, getBuildStatus, fetchUserInfo, uploadAscKey } = require('../api');
+const { createClient, createBuild, getBuildStatus, fetchUserInfo, uploadAscKey, uploadCapabilities } = require('../api');
 const { ensureAppleCreds }             = require('../apple-creds');
 const logger = require('../logger');
 const { t, tError } = require('../i18n');
@@ -351,6 +351,7 @@ async function runBuild(options) {
         profileName,
         userDevices: userInfo.devices,
         apiClient:   client,
+        projectRoot,
       });
     } catch (err) {
       logger.error(t('buildAppleCredsError') + err.message);
@@ -384,6 +385,13 @@ async function runBuild(options) {
       } catch (err) {
         console.log(chalk.yellow(t('buildAscKeyFailed')) + chalk.gray(err.response?.data?.error ?? err.message));
       }
+    }
+
+    // Upload capabilities lên dashboard (best-effort)
+    if (platform === 'ios' && creds?.capabilities?.length > 0) {
+      try {
+        await uploadCapabilities(client, { projectId: projectInfo.projectId, capabilities: creds.capabilities });
+      } catch {}
     }
   } catch (err) {
     spinner.fail(t('buildJobFailed'));

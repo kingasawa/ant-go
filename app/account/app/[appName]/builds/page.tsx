@@ -177,7 +177,7 @@ const BuildRow = React.memo(function BuildRow({ build, onClick, checked, onCheck
           ? "opacity-0 scale-y-0 h-0 overflow-hidden"
           : checked
           ? "bg-accent-dark/20/30"
-          : "hover:bg-white/10"
+          : "hover:bg-white/[0.03]"
       }`}
     >
       <td className="pl-4 pr-2 py-3 text-center w-10" onClick={(e) => e.stopPropagation()}>
@@ -507,9 +507,9 @@ export default function AppBuildsPage() {
       ) : (
         <div className="overflow-x-auto rounded-2xl" style={GLASS}>
           <table className="w-full text-[11px]">
-            <thead className="text-white/50 uppercase text-xs tracking-wider" style={{ background: "rgba(255,255,255,0.08)", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+            <thead className="text-[11px] font-semibold text-white/40 uppercase tracking-widest" style={{ background: "var(--dash-border)" }}>
               <tr>
-                <th className="pl-4 pr-2 py-3 text-center w-10">
+                <th className="pl-4 pr-2 py-2.5 text-center w-10">
                   <input
                     type="checkbox"
                     checked={allPageSelected}
@@ -518,16 +518,16 @@ export default function AppBuildsPage() {
                     className="w-3.5 h-3.5 rounded border-gray-600 bg-gray-800 accent-[rgb(var(--tw-accent))] cursor-pointer"
                   />
                 </th>
-                <th className="px-4 py-3 text-left">Job ID</th>
-                <th className="px-4 py-3 text-center">Status</th>
-                <th className="px-4 py-3 text-center">Step</th>
-                <th className="px-4 py-3 text-left">Created</th>
-                <th className="px-4 py-3 text-left">Duration</th>
-                <th className="px-4 py-3 text-left">Artifact</th>
-                <th className="px-4 py-3 text-left">IPA</th>
+                <th className="px-4 py-2.5 text-left">Job ID</th>
+                <th className="px-4 py-2.5 text-center">Status</th>
+                <th className="px-4 py-2.5 text-center">Step</th>
+                <th className="px-4 py-2.5 text-left">Created</th>
+                <th className="px-4 py-2.5 text-left">Duration</th>
+                <th className="px-4 py-2.5 text-left">Artifact</th>
+                <th className="px-4 py-2.5 text-left">IPA</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/10">
+            <tbody className="divide-y divide-white/[0.06]">
               {pagedBuilds.map((build) => (
                 <BuildRow
                   key={build.id}

@@ -30,15 +30,21 @@ export async function GET(request: NextRequest) {
   }
 
   const db = getAdminDb();
-  const snap = await db
-    .collection("users")
-    .doc(uid)
-    .collection("devices")
-    .orderBy("addedAt", "desc")
-    .get();
+
+  // Fetch devices + asc_keys in parallel
+  const [snap, ascSnap] = await Promise.all([
+    db.collection("users").doc(uid).collection("devices").orderBy("addedAt", "desc").get(),
+    db.collection("users").doc(uid).collection("asc_keys").get(),
+  ]);
+
+  const teamNames: Record<string, string> = {};
+  for (const d of ascSnap.docs) {
+    if (d.data().teamName) teamNames[d.id] = d.data().teamName;
+  }
 
   const devices = snap.docs.map((d) => {
     const data = d.data();
+    const teamId = data.teamId ?? null;
     return {
       udid: d.id,
       name: data.name ?? null,
@@ -46,6 +52,8 @@ export async function GET(request: NextRequest) {
       deviceSerial: data.deviceSerial ?? null,
       source: data.source ?? "dashboard",
       addedAt: data.addedAt?.toDate?.()?.toISOString() ?? null,
+      teamId,
+      teamName: teamId ? (teamNames[teamId] ?? null) : null,
     };
   });
 
@@ -66,6 +74,11 @@ export async function POST(request: NextRequest) {
   }
 
   const db = getAdminDb();
+
+  // Lấy teamId từ asc_keys (chỉ làm 1 lần khi register, lưu vào device luôn)
+  const teamsSnap = await db.collection("users").doc(uid).collection("asc_keys").limit(1).get();
+  const teamId = teamsSnap.docs[0]?.id ?? null;
+
   const docRef = db.collection("users").doc(uid).collection("devices").doc(udid.trim());
 
   await docRef.set({
@@ -74,6 +87,7 @@ export async function POST(request: NextRequest) {
     deviceProduct: deviceProduct ?? null,
     deviceSerial: deviceSerial ?? null,
     source: source ?? "dashboard",
+    teamId,
     addedAt: admin.firestore.FieldValue.serverTimestamp(),
   }, { merge: true });
 

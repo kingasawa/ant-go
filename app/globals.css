@@ -114,6 +114,9 @@ html.light .bg-white\/10.border { border-color: rgba(0,0,0,0.15) !important; }
 .icon-badge-orange { background: linear-gradient(135deg, #FD951A 0%, #F9896B 100%); }
 .icon-badge-teal   { background: linear-gradient(135deg, #2DD4BF 0%, #38BDF8 100%); }
 .icon-badge-pink   { background: linear-gradient(135deg, #EC4899 0%, #9E3EBF 100%); }
+.icon-badge-blue   { background: linear-gradient(135deg, #3B82F6 0%, #6366F1 100%); }
+.icon-badge-green  { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
+.icon-badge-gold   { background: linear-gradient(135deg, #F59E0B 0%, #F97316 100%); }
 
 /* ── Shimmer ─────────────────────────────────────────────────────── */
 @keyframes shimmer {
