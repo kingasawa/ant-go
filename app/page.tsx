@@ -231,8 +231,8 @@ function FeatureGrid({ features }: { features: { title: string; desc: string }[]
 
   return (
     <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {features.map((f) => (
-        <div key={f.title} className="reveal card-glow rounded-2xl p-6" style={GLASS}>
+      {features.map((f, i) => (
+        <div key={i} className="reveal card-glow rounded-2xl p-6" style={GLASS}>
           <h3 className="text-lg font-semibold mb-2 text-white">{f.title}</h3>
           <p className="text-white/55 text-sm leading-relaxed">{f.desc}</p>
         </div>
