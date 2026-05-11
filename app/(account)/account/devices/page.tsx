@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { GLASS, MODAL_BG } from "@/lib/glass";
 
 interface Device {
@@ -17,10 +18,9 @@ interface Device {
 
 type EnrollStep = "idle" | "creating" | "scanning" | "naming" | "saving" | "done" | "error" | "timeout";
 
-// ── Modal ──────────────────────────────────────────────────────────────────────
-
 function AddDeviceModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [step, setStep] = useState<EnrollStep>("idle");
   const [enrollUrl, setEnrollUrl] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState("");
@@ -31,7 +31,6 @@ function AddDeviceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Dọn dẹp poll/timeout khi unmount
   useEffect(() => () => {
     if (pollRef.current) clearInterval(pollRef.current);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -48,28 +47,25 @@ function AddDeviceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
         body: JSON.stringify({ source: "dashboard", origin: window.location.origin }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Không tạo được enrollment");
+      if (!res.ok) throw new Error(data.error ?? t("devicesErrorTitle"));
 
       const landingUrl = `${window.location.origin}/enroll/${data.token}`;
       setEnrollUrl(landingUrl);
       setEnrollToken(data.token);
 
-      // Tạo QR code
       const QRCode = (await import("qrcode")).default;
       const dataUrl = await QRCode.toDataURL(landingUrl, { width: 220, margin: 2 });
       setQrDataUrl(dataUrl);
       setStep("scanning");
 
-      // Bắt đầu poll status
       pollRef.current = setInterval(() => pollStatus(data.token), 3000);
 
-      // Timeout sau 10 phút
       timeoutRef.current = setTimeout(() => {
         if (pollRef.current) clearInterval(pollRef.current);
         setStep("timeout");
       }, 10 * 60 * 1000);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Lỗi không xác định");
+      setError(e instanceof Error ? e.message : t("devicesErrorTitle"));
       setStep("error");
     }
   }
@@ -110,11 +106,11 @@ function AddDeviceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
           source: "dashboard",
         }),
       });
-      if (!res.ok) throw new Error("Lưu device thất bại");
+      if (!res.ok) throw new Error(t("devicesSaving"));
       setStep("done");
       onAdded();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Lỗi không xác định");
+      setError(e instanceof Error ? e.message : t("devicesErrorTitle"));
       setStep("error");
     }
   }
@@ -127,13 +123,9 @@ function AddDeviceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div
-        className="relative w-full max-w-sm rounded-2xl p-6 text-white z-10"
-        style={MODAL_BG}
-      >
-        {/* Header */}
+      <div className="relative w-full max-w-sm rounded-2xl p-6 text-white z-10" style={MODAL_BG}>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold">Thêm iPhone</h2>
+          <h2 className="text-lg font-bold">{t("devicesModalTitle")}</h2>
           <button onClick={onClose} className="text-white/40 hover:text-white transition">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -141,7 +133,6 @@ function AddDeviceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
           </button>
         </div>
 
-        {/* idle */}
         {step === "idle" && (
           <div className="text-center">
             <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mx-auto mb-4">
@@ -149,31 +140,27 @@ function AddDeviceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3" />
               </svg>
             </div>
-            <p className="text-sm text-white/60 mb-6 leading-relaxed">
-              Quét QR code bằng camera iPhone của bạn để đăng ký UDID vào tài khoản.
-            </p>
+            <p className="text-sm text-white/60 mb-6 leading-relaxed">{t("devicesScanDesc")}</p>
             <button
               onClick={startEnrollment}
               className="w-full py-3 rounded-xl font-semibold text-sm bg-white text-gray-900 hover:bg-white/90 transition"
             >
-              Bắt đầu
+              {t("devicesStart")}
             </button>
           </div>
         )}
 
-        {/* creating */}
         {step === "creating" && (
           <div className="text-center py-6">
             <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-sm text-white/60">Đang tạo mã đăng ký...</p>
+            <p className="text-sm text-white/60">{t("devicesCreating")}</p>
           </div>
         )}
 
-        {/* scanning */}
         {step === "scanning" && (
           <div className="text-center">
             <p className="text-sm text-white/60 mb-4">
-              Mở <strong className="text-white">Camera</strong> trên iPhone và quét mã bên dưới
+              {t("devicesScanInstruction")}
             </p>
 
             {qrDataUrl && (
@@ -195,12 +182,11 @@ function AddDeviceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
 
             <div className="flex items-center gap-2 text-xs text-white/40">
               <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin flex-shrink-0" />
-              Đang chờ iPhone xác nhận...
+              {t("devicesWaiting")}
             </div>
           </div>
         )}
 
-        {/* naming */}
         {step === "naming" && pendingDevice && (
           <div>
             <div className="flex items-center gap-3 bg-green-500/10 border border-green-400/20 rounded-xl px-4 py-3 mb-5">
@@ -208,13 +194,13 @@ function AddDeviceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div>
-                <p className="text-sm font-semibold text-green-300">Device đã được thêm!</p>
+                <p className="text-sm font-semibold text-green-300">{t("devicesDeviceReady")}</p>
                 <p className="text-xs text-white/50 font-mono mt-0.5">{pendingDevice.udid}</p>
               </div>
             </div>
 
             <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">
-              Đặt tên thiết bị
+              {t("devicesNameLabel")}
             </label>
             <input
               type="text"
@@ -230,20 +216,18 @@ function AddDeviceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
               disabled={!deviceName.trim()}
               className="w-full py-3 rounded-xl font-semibold text-sm bg-white text-gray-900 hover:bg-white/90 disabled:opacity-40 disabled:cursor-not-allowed transition"
             >
-              Lưu device
+              {t("devicesSaveBtn")}
             </button>
           </div>
         )}
 
-        {/* saving */}
         {step === "saving" && (
           <div className="text-center py-6">
             <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-sm text-white/60">Đang lưu...</p>
+            <p className="text-sm text-white/60">{t("devicesSaving")}</p>
           </div>
         )}
 
-        {/* done */}
         {step === "done" && (
           <div className="text-center py-4">
             <div className="w-14 h-14 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-3">
@@ -251,41 +235,39 @@ function AddDeviceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <p className="font-semibold text-white mb-1">Device đã được thêm!</p>
-            <p className="text-sm text-white/50 mb-5">Thiết bị của bạn đã được đăng ký thành công.</p>
+            <p className="font-semibold text-white mb-1">{t("devicesDoneTitle")}</p>
+            <p className="text-sm text-white/50 mb-5">{t("devicesDoneDesc")}</p>
             <button
               onClick={onClose}
               className="w-full py-3 rounded-xl font-semibold text-sm bg-white text-gray-900 hover:bg-white/90 transition"
             >
-              Đóng
+              {t("close")}
             </button>
           </div>
         )}
 
-        {/* timeout */}
         {step === "timeout" && (
           <div className="text-center py-4">
-            <p className="text-white/70 mb-2 font-semibold">Hết thời gian chờ</p>
-            <p className="text-sm text-white/50 mb-5">QR code đã hết hạn (10 phút). Vui lòng thử lại.</p>
+            <p className="text-white/70 mb-2 font-semibold">{t("devicesTimeoutTitle")}</p>
+            <p className="text-sm text-white/50 mb-5">{t("devicesTimeoutDesc")}</p>
             <button
               onClick={() => { setStep("idle"); setQrDataUrl(""); setEnrollUrl(""); }}
               className="w-full py-3 rounded-xl font-semibold text-sm bg-white text-gray-900 hover:bg-white/90 transition"
             >
-              Thử lại
+              {t("retry")}
             </button>
           </div>
         )}
 
-        {/* error */}
         {step === "error" && (
           <div className="text-center py-4">
-            <p className="text-red-400 mb-2 font-semibold">Có lỗi xảy ra</p>
+            <p className="text-red-400 mb-2 font-semibold">{t("devicesErrorTitle")}</p>
             <p className="text-sm text-white/50 mb-5">{error}</p>
             <button
               onClick={() => setStep("idle")}
               className="w-full py-3 rounded-xl font-semibold text-sm bg-white text-gray-900 hover:bg-white/90 transition"
             >
-              Thử lại
+              {t("retry")}
             </button>
           </div>
         )}
@@ -293,8 +275,6 @@ function AddDeviceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
     </div>
   );
 }
-
-// ── Page ───────────────────────────────────────────────────────────────────────
 
 interface Toast {
   id: number;
@@ -306,6 +286,7 @@ let toastCounter = 0;
 
 export default function DevicesPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -319,7 +300,7 @@ export default function DevicesPage() {
   function showToast(message: string, type: "success" | "error") {
     const id = ++toastCounter;
     setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000);
+    setTimeout(() => setToasts((prev) => prev.filter((toast) => toast.id !== id)), 3000);
   }
 
   const fetchDevices = useCallback(async () => {
@@ -340,9 +321,7 @@ export default function DevicesPage() {
     }
   }, [user]);
 
-  useEffect(() => {
-    fetchDevices();
-  }, [fetchDevices]);
+  useEffect(() => { fetchDevices(); }, [fetchDevices]);
 
   async function deleteDevice(udid: string) {
     if (!user) return;
@@ -353,18 +332,17 @@ export default function DevicesPage() {
         method: "DELETE",
         headers: { Authorization: `Bearer ${idToken}` },
       });
-      if (!res.ok) throw new Error("Xoá thất bại");
+      if (!res.ok) throw new Error(t("devicesDeleteFailed"));
 
-      // Bắt đầu fadeout
       setFadingUdids((prev) => new Set(prev).add(udid));
       setTimeout(() => {
         setDevices((prev) => prev.filter((d) => d.udid !== udid));
         setFadingUdids((prev) => { const s = new Set(prev); s.delete(udid); return s; });
       }, 400);
 
-      showToast("Đã xoá device thành công", "success");
+      showToast(t("devicesDeleteSuccess"), "success");
     } catch {
-      showToast("Xoá device thất bại. Vui lòng thử lại.", "error");
+      showToast(t("devicesDeleteFailed"), "error");
     } finally {
       setDeletingUdid(null);
     }
@@ -372,13 +350,10 @@ export default function DevicesPage() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Apple devices</h1>
-          <p className="text-white/50 text-sm mt-1">
-            Quản lý các thiết bị iOS đã đăng ký vào tài khoản của bạn.
-          </p>
+          <h1 className="text-2xl font-bold text-white">{t("devicesTitle")}</h1>
+          <p className="text-white/50 text-sm mt-1">{t("devicesSubtitle")}</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -387,16 +362,15 @@ export default function DevicesPage() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Register Apple device
+          {t("devicesRegisterBtn")}
         </button>
       </div>
 
-      {/* Table */}
       <div className="rounded-2xl overflow-hidden" style={GLASS}>
         {loading ? (
           <div className="text-center py-12 text-white/40">
             <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-sm">Đang tải...</p>
+            <p className="text-sm">{t("devicesLoading")}</p>
           </div>
         ) : devices.length === 0 ? (
           <div className="text-center py-14 px-6">
@@ -405,26 +379,22 @@ export default function DevicesPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3" />
               </svg>
             </div>
-            <p className="text-white/50 text-sm font-medium">Chưa có device nào</p>
-            <p className="text-white/30 text-xs mt-1">
-              Thêm iPhone để build app với profile Development.
-            </p>
+            <p className="text-white/50 text-sm font-medium">{t("devicesNoDevices")}</p>
+            <p className="text-white/30 text-xs mt-1">{t("devicesNoDevicesHint")}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            {/* Column headers */}
             <div
               className="grid grid-cols-[1fr_220px_120px_180px_44px] px-5 py-2.5"
               style={{ background: "var(--dash-border)" }}
             >
-              <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">Device</span>
-              <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">Team</span>
-              <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">Type</span>
-              <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">Created at</span>
+              <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">{t("devicesColDevice")}</span>
+              <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">{t("devicesColTeam")}</span>
+              <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">{t("devicesColType")}</span>
+              <span className="text-[11px] font-semibold text-white/40 uppercase tracking-widest">{t("devicesColCreatedAt")}</span>
               <span />
             </div>
 
-            {/* Rows */}
             {devices.map((device) => (
               <div
                 key={device.udid}
@@ -436,12 +406,9 @@ export default function DevicesPage() {
                   transitionDuration: "400ms",
                 }}
               >
-                {/* Device */}
                 <div className="min-w-0 pr-4">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm text-white truncate">
-                      {device.udid}
-                    </span>
+                    <span className="font-mono text-sm text-white truncate">{device.udid}</span>
                     <div className="group relative flex-shrink-0">
                       <svg className="w-4 h-4 text-white/30 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -451,12 +418,9 @@ export default function DevicesPage() {
                       </div>
                     </div>
                   </div>
-                  {device.name && (
-                    <p className="text-xs text-white/40 truncate mt-0.5">{device.name}</p>
-                  )}
+                  {device.name && <p className="text-xs text-white/40 truncate mt-0.5">{device.name}</p>}
                 </div>
 
-                {/* Team */}
                 <div className="min-w-0">
                   {device.teamId ? (
                     <>
@@ -468,7 +432,6 @@ export default function DevicesPage() {
                   )}
                 </div>
 
-                {/* Type */}
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4 text-white/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3" />
@@ -476,18 +439,14 @@ export default function DevicesPage() {
                   <span className="text-sm text-white">{getDeviceClass(device.deviceProduct)}</span>
                 </div>
 
-                {/* Created at */}
                 <div>
                   {device.addedAt ? (
-                    <span className="text-sm text-white/60">
-                      {formatDateTime(device.addedAt)}
-                    </span>
+                    <span className="text-sm text-white/60">{formatDateTime(device.addedAt)}</span>
                   ) : (
                     <span className="text-sm text-white/30">—</span>
                   )}
                 </div>
 
-                {/* Actions ⋮ */}
                 <div className="flex items-center justify-center">
                   <button
                     onClick={(e) => {
@@ -512,15 +471,13 @@ export default function DevicesPage() {
         )}
       </div>
 
-      {/* Info box */}
       <div className="mt-4 rounded-xl px-4 py-3 bg-white/5 border border-white/10">
         <p className="text-xs text-white/40 leading-relaxed">
-          Các thiết bị này sẽ được đăng ký trên Apple Developer Connect khi bạn chạy{" "}
+          {t("devicesInfo")}{" "}
           <code className="text-white/60 bg-white/10 px-1 py-0.5 rounded">ant-go build --profile development</code>.
         </p>
       </div>
 
-      {/* Row dropdown menu — fixed positioning to escape overflow-hidden */}
       {openMenuUdid && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpenMenuUdid(null)} />
@@ -535,13 +492,12 @@ export default function DevicesPage() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
-              Delete
+              {t("delete")}
             </button>
           </div>
         </>
       )}
 
-      {/* Modal */}
       {showModal && (
         <AddDeviceModal
           onClose={() => setShowModal(false)}
@@ -549,7 +505,6 @@ export default function DevicesPage() {
         />
       )}
 
-      {/* Confirm Delete Dialog */}
       {confirmDeleteUdid && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setConfirmDeleteUdid(null)} />
@@ -559,32 +514,29 @@ export default function DevicesPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </div>
-            <h3 className="text-base font-bold text-white text-center mb-1">Xoá device?</h3>
+            <h3 className="text-base font-bold text-white text-center mb-1">{t("devicesConfirmDelete")}</h3>
             <p className="text-sm text-white/50 text-center mb-1">
-              {devices.find((d) => d.udid === confirmDeleteUdid)?.name ?? "Device này"}
+              {devices.find((d) => d.udid === confirmDeleteUdid)?.name ?? "Device"}
             </p>
-            <p className="text-xs text-white/30 font-mono text-center truncate mb-5">
-              {confirmDeleteUdid}
-            </p>
+            <p className="text-xs text-white/30 font-mono text-center truncate mb-5">{confirmDeleteUdid}</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmDeleteUdid(null)}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white/70 bg-white/10 hover:bg-white/15 transition"
               >
-                Huỷ
+                {t("cancel")}
               </button>
               <button
                 onClick={() => { const u = confirmDeleteUdid; setConfirmDeleteUdid(null); deleteDevice(u); }}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-500/80 hover:bg-red-500 transition"
               >
-                Xoá
+                {t("delete")}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Toasts */}
       <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-50 pointer-events-none">
         {toasts.map((toast) => (
           <div
@@ -612,8 +564,6 @@ export default function DevicesPage() {
   );
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
 function getDeviceClass(deviceProduct: string | null): string {
   if (!deviceProduct) return "iOS Device";
   if (deviceProduct.startsWith("iPad")) return "iPad";
@@ -625,17 +575,12 @@ function getDeviceClass(deviceProduct: string | null): string {
 function formatDateTime(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
+    month: "short", day: "numeric", year: "numeric",
+    hour: "numeric", minute: "2-digit", hour12: true,
   });
 }
 
 function formatProduct(raw: string): string {
-  // "iPhone16,2" → "iPhone 16 Pro Max" (fallback: giữ nguyên)
   const map: Record<string, string> = {
     "iPhone17,4": "iPhone 16e",
     "iPhone17,1": "iPhone 16 Pro Max",

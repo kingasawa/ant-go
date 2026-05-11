@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import PageLoader from "@/app/components/PageLoader";
 import {
   HiOutlineArrowUpTray,
@@ -23,7 +24,6 @@ function formatDate(iso: string | null): string {
   });
 }
 
-// ── Table shell ────────────────────────────────────────────────────────────────
 function TableShell({ cols, children }: { cols: string[]; children: React.ReactNode }) {
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: "var(--dash-card, rgba(255,255,255,0.04))", border: "1px solid var(--dash-border)" }}>
@@ -46,19 +46,17 @@ function TableShell({ cols, children }: { cols: string[]; children: React.ReactN
   );
 }
 
-// ── Empty state row ────────────────────────────────────────────────────────────
-function EmptyRow({ colSpan }: { colSpan: number }) {
+function EmptyRow({ colSpan, label }: { colSpan: number; label: string }) {
   return (
     <tr>
       <td colSpan={colSpan + 1} className="px-5 py-12 text-center text-sm text-white/25">
-        No credentials yet
+        {label}
       </td>
     </tr>
   );
 }
 
-// ── Section header ─────────────────────────────────────────────────────────────
-function SectionHeader({ title, onUpload }: { title: string; onUpload?: () => void }) {
+function SectionHeader({ title, onUpload, uploadLabel }: { title: string; onUpload?: () => void; uploadLabel?: string }) {
   return (
     <div className="flex items-center justify-between mb-4">
       <h2 className="text-lg font-semibold text-white">{title}</h2>
@@ -68,23 +66,20 @@ function SectionHeader({ title, onUpload }: { title: string; onUpload?: () => vo
           className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white/60 border border-white/15 hover:bg-white/8 hover:text-white transition"
         >
           <HiOutlineArrowUpTray className="w-4 h-4" />
-          Upload
+          {uploadLabel}
         </button>
       )}
     </div>
   );
 }
 
-// ── Three-dot menu ─────────────────────────────────────────────────────────────
-function RowMenu({ onDelete }: { onDelete: () => void }) {
+function RowMenu({ onDelete, deleteLabel }: { onDelete: () => void; deleteLabel: string }) {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   return (
     <div>
       <button
         onClick={(e) => {
-          if (pos) {
-            setPos(null);
-          } else {
+          if (pos) { setPos(null); } else {
             const rect = e.currentTarget.getBoundingClientRect();
             setPos({ x: rect.right, y: rect.bottom + 4 });
           }
@@ -100,19 +95,14 @@ function RowMenu({ onDelete }: { onDelete: () => void }) {
           <div className="fixed inset-0 z-40" onClick={() => setPos(null)} />
           <div
             className="fixed z-50 w-36 rounded-xl overflow-hidden shadow-2xl"
-            style={{
-              top: pos.y,
-              right: `calc(100vw - ${pos.x}px)`,
-              background: "var(--dash-modal)",
-              border: "1px solid var(--dash-border)",
-            }}
+            style={{ top: pos.y, right: `calc(100vw - ${pos.x}px)`, background: "var(--dash-modal)", border: "1px solid var(--dash-border)" }}
           >
             <button
               onClick={() => { setPos(null); onDelete(); }}
               className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-white/5 transition"
             >
               <HiOutlineTrash className="w-4 h-4" />
-              Delete
+              {deleteLabel}
             </button>
           </div>
         </>
@@ -121,9 +111,9 @@ function RowMenu({ onDelete }: { onDelete: () => void }) {
   );
 }
 
-// ── Main page ──────────────────────────────────────────────────────────────────
 export default function CredentialsPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [ascKeys, setAscKeys]   = useState<AscKey[]>([]);
   const [loading, setLoading]   = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -158,22 +148,20 @@ export default function CredentialsPage() {
     }
   }
 
-  if (loading) return <PageLoader label="Loading credentials…" />;
+  if (loading) return <PageLoader label={t("credentialsLoading")} />;
 
   return (
     <div className="max-w-5xl space-y-14">
-      {/* Page title */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Credentials</h1>
-        <p className="text-white/40 text-sm mt-1">Ant Go sẽ giúp bạn quản lý App Store Connect API Keys và Apple Team — toàn bộ được tự động thiết lập khi build.</p>
+        <h1 className="text-2xl font-bold text-white">{t("credentialsTitle")}</h1>
+        <p className="text-white/40 text-sm mt-1">{t("credentialsSubtitle")}</p>
       </div>
 
-      {/* ── App Store Connect API Keys ─────────────────────────────────────── */}
       <section>
-        <SectionHeader title="App Store Connect API Keys" />
+        <SectionHeader title="App Store Connect API Keys" uploadLabel={t("upload")} />
         <TableShell cols={["Issuer ID", "Key ID", "Team", "Uploaded at"]}>
           {ascKeys.length === 0 ? (
-            <EmptyRow colSpan={4} />
+            <EmptyRow colSpan={4} label={t("credentialsNone")} />
           ) : (
             ascKeys.map((key) => (
               <tr
@@ -192,7 +180,7 @@ export default function CredentialsPage() {
                 </td>
                 <td className="px-5 py-4 text-white/45 text-sm">{formatDate(key.updatedAt)}</td>
                 <td className="px-3 py-4">
-                  <RowMenu onDelete={() => deleteAscKey(key.teamId)} />
+                  <RowMenu deleteLabel={t("delete")} onDelete={() => deleteAscKey(key.teamId)} />
                 </td>
               </tr>
             ))
@@ -200,12 +188,11 @@ export default function CredentialsPage() {
         </TableShell>
       </section>
 
-      {/* ── Apple Teams ────────────────────────────────────────────────────── */}
       <section>
         <SectionHeader title="Apple Teams" />
         <TableShell cols={["ID", "Name"]}>
           {ascKeys.length === 0 ? (
-            <EmptyRow colSpan={2} />
+            <EmptyRow colSpan={2} label={t("credentialsNone")} />
           ) : (
             ascKeys.map((key) => (
               <tr key={key.teamId} className="transition hover:bg-white/[0.03]">
@@ -224,7 +211,6 @@ export default function CredentialsPage() {
           )}
         </TableShell>
       </section>
-
     </div>
   );
 }

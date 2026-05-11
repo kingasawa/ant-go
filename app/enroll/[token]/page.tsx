@@ -1,17 +1,27 @@
 "use client";
 import { useState } from "react";
 import { useParams } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext";
 
 type Step = "ready" | "downloaded";
 
 export default function EnrollPage() {
   const { token } = useParams<{ token: string }>();
+  const { t } = useLanguage();
   const [step, setStep] = useState<Step>("ready");
 
   function downloadProfile() {
     window.location.href = `/api/device-enroll/${token}/profile`;
     setTimeout(() => setStep("downloaded"), 1500);
   }
+
+  const enrollSteps = [
+    t("enrollStep1"),
+    t("enrollStep2"),
+    t("enrollStep3"),
+    t("enrollStep4"),
+    t("enrollStep5"),
+  ];
 
   return (
     <div
@@ -29,13 +39,9 @@ export default function EnrollPage() {
         {/* Logo */}
         <div
           style={{
-            width: 64,
-            height: 64,
-            borderRadius: 18,
+            width: 64, height: 64, borderRadius: 18,
             background: "rgba(255,255,255,0.1)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            display: "flex", alignItems: "center", justifyContent: "center",
             margin: "0 auto 24px",
           }}
         >
@@ -47,48 +53,35 @@ export default function EnrollPage() {
         {step === "ready" ? (
           <>
             <h1 style={{ color: "#fff", fontSize: 22, fontWeight: 700, margin: "0 0 10px" }}>
-              Đăng ký thiết bị
+              {t("enrollTitle")}
             </h1>
             <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, lineHeight: 1.6, margin: "0 0 32px" }}>
-              Nhấn nút bên dưới để tải hồ sơ đăng ký từ Ant Go.
-              iOS sẽ yêu cầu bạn xác nhận tải về.
+              {t("enrollDesc")}
             </p>
 
             <button
               onClick={downloadProfile}
               style={{
-                width: "100%",
-                padding: "16px",
-                borderRadius: 14,
-                border: "none",
-                background: "#fff",
-                color: "#111",
-                fontSize: 16,
-                fontWeight: 700,
-                cursor: "pointer",
+                width: "100%", padding: "16px", borderRadius: 14,
+                border: "none", background: "#fff", color: "#111",
+                fontSize: 16, fontWeight: 700, cursor: "pointer",
               }}
             >
-              Tải hồ sơ
+              {t("enrollDownload")}
             </button>
 
             <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 12, marginTop: 16, lineHeight: 1.5 }}>
-              Hồ sơ này chỉ dùng để lấy UDID thiết bị.
-              Nó sẽ không kiểm soát hoặc theo dõi điện thoại của bạn.
+              {t("enrollDisclaimer")}
             </p>
           </>
         ) : (
           <>
-            {/* Downloaded state */}
             <div
               style={{
-                width: 56,
-                height: 56,
-                borderRadius: "50%",
+                width: 56, height: 56, borderRadius: "50%",
                 background: "rgba(34,197,94,0.15)",
                 border: "1px solid rgba(34,197,94,0.3)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                display: "flex", alignItems: "center", justifyContent: "center",
                 margin: "0 auto 20px",
               }}
             >
@@ -98,54 +91,40 @@ export default function EnrollPage() {
             </div>
 
             <h1 style={{ color: "#fff", fontSize: 22, fontWeight: 700, margin: "0 0 10px" }}>
-              Hồ sơ đã tải xong
+              {t("enrollDoneTitle")}
             </h1>
             <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, lineHeight: 1.6, margin: "0 0 28px" }}>
-              Mở <strong style={{ color: "rgba(255,255,255,0.8)" }}>Settings</strong> để hoàn tất cài đặt hồ sơ.
+              {t("enrollDoneDesc").split("Settings").map((part, i, arr) => (
+                i < arr.length - 1
+                  ? <span key={i}>{part}<strong style={{ color: "rgba(255,255,255,0.8)" }}>Settings</strong></span>
+                  : <span key={i}>{part}</span>
+              ))}
             </p>
 
-            {/* Steps */}
             <div
               style={{
                 background: "rgba(255,255,255,0.06)",
                 border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: 14,
-                padding: "16px 20px",
-                marginBottom: 24,
-                textAlign: "left",
+                borderRadius: 14, padding: "16px 20px",
+                marginBottom: 24, textAlign: "left",
               }}
             >
-              {[
-                "Mở Settings",
-                "Chọn General (Cài đặt chung)",
-                "Chọn VPN & Device Management",
-                'Nhấn "Ant Go Device Registration"',
-                "Nhấn Install (Cài đặt)",
-              ].map((text, i) => (
+              {enrollSteps.map((text, i) => (
                 <div
                   key={i}
                   style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: 12,
+                    display: "flex", alignItems: "flex-start", gap: 12,
                     padding: "8px 0",
-                    borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                    borderBottom: i < enrollSteps.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
                   }}
                 >
                   <span
                     style={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: "50%",
+                      width: 22, height: 22, borderRadius: "50%",
                       background: "rgba(255,255,255,0.1)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: "rgba(255,255,255,0.6)",
-                      flexShrink: 0,
-                      marginTop: 1,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.6)",
+                      flexShrink: 0, marginTop: 1,
                     }}
                   >
                     {i + 1}
@@ -156,7 +135,7 @@ export default function EnrollPage() {
             </div>
 
             <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, marginTop: 4, lineHeight: 1.6 }}>
-              Sau khi cài đặt xong, trang đăng ký trên máy tính sẽ tự động cập nhật.
+              {t("enrollAfterInstall")}
             </p>
           </>
         )}

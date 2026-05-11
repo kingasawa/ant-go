@@ -1,78 +1,13 @@
-﻿"use client";
+"use client";
 import Link from "next/link";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { GLASS } from "@/lib/glass";
-
-const features = [
-  {
-    title: "Giá thành rẻ",
-    desc: "Chỉ tính phí khi build thành công. Khi build failed - trừ credit rất thấp. Có gói cố định, build bao nhiêu tuỳ thích",
-  },
-  {
-    title: "Không phải chờ queue lâu",
-    desc: "Cấu hình server mạnh. Không có hàng chờ chung với hàng nghìn user khác.",
-  },
-  {
-    title: "Real-time build log",
-    desc: "Log stream trực tiếp lên dashboard trong khi build đang chạy. Xem từng bước Fastlane, Xcode, pod install theo thời gian thực.",
-  },
-  {
-    title: "Tự động quản lý certificate",
-    desc: "Tích hợp Apple Developer API — tự động tạo Distribution Certificate và Provisioning Profile, renew khi hết hạn.",
-  },
-  {
-    title: "Dễ debug hơn",
-    desc: "Full build log được lưu lại sau mỗi lần build. Xem lại log của bất kỳ build nào, bất kỳ lúc nào.",
-  },
-  {
-    title: "IPA sẵn sàng tải về",
-    desc: "File .ipa và .dSYM được lưu trữ sau mỗi build thành công, kèm link tải về và nút submit thẳng lên App Store Connect.",
-  },
-];
-
-const steps = [
-  { n: "1", label: "Đăng ký tài khoản và tạo project trên dashboard" },
-  { n: "2", label: "Cài CLI: npm install -g ant-go, thêm projectId vào app.json" },
-  { n: "3", label: "Chạy ant build — CLI tự pack project và upload lên server" },
-  { n: "4", label: "Build xong: IPA sẵn sàng tải về hoặc submit lên App Store Connect" },
-];
-
-const plans = [
-  {
-    name: "Starter",
-    planKey: "starter",
-    price: "$9",
-    period: "/tháng",
-    desc: "Phù hợp cho cá nhân và side project",
-    features: ["50 build / tháng", "1 build song song", "Log lưu 7 ngày", "Email support"],
-    highlight: false,
-    cta: "Bắt đầu dùng",
-  },
-  {
-    name: "Pro",
-    planKey: "pro",
-    price: "$29",
-    period: "/tháng",
-    desc: "Cho team đang phát triển sản phẩm",
-    features: ["Unlimited build", "3 build song song", "Log lưu 30 ngày", "Priority support"],
-    highlight: true,
-    cta: "Dùng thử 14 ngày miễn phí",
-  },
-  {
-    name: "Team",
-    planKey: "team",
-    price: "$79",
-    period: "/tháng",
-    desc: "Cho team lớn, nhiều app",
-    features: ["Unlimited build", "10 build song song", "Log lưu 90 ngày", "Slack support", "SLA 99.9%"],
-    highlight: false,
-    cta: "Liên hệ",
-  },
-];
+import LanguageToggle from "@/app/components/LanguageToggle";
 
 const NAV_GLASS: React.CSSProperties = {
   backdropFilter: "blur(20px) saturate(160%)",
@@ -98,44 +33,49 @@ type TLine = {
   outputCls?: string;
 };
 
-const TERMINAL_LINES: TLine[] = [
-  {
-    type: "cmd", raw: "npm install -g ant-go",
-    segments: [
-      { text: "npm",      cls: "text-yellow-300" },
-      { text: " install", cls: "text-white/80" },
-      { text: " -g",      cls: "text-blue-400" },
-      { text: " ant-go",  cls: "text-accent font-semibold" },
-    ],
-  },
-  { type: "output", raw: "added 42 packages in 3s",      outputCls: "text-white/35" },
-  {
-    type: "cmd", raw: "ant build",
-    segments: [
-      { text: "ant",   cls: "text-accent font-semibold" },
-      { text: " build", cls: "text-green-300" },
-    ],
-  },
-  { type: "output", raw: "✔ Project packed: 12.4 MB",    outputCls: "text-green-400" },
-  { type: "output", raw: "✔ Upload hoàn tất",             outputCls: "text-green-400" },
-  { type: "output", raw: "✔ Build đã gửi lên server!",   outputCls: "text-emerald-300" },
-  {
-    type: "cmd", raw: "ant status abc123xyz",
-    segments: [
-      { text: "ant",        cls: "text-accent font-semibold" },
-      { text: " status",    cls: "text-white/80" },
-      { text: " abc123xyz", cls: "text-yellow-300" },
-    ],
-  },
-  { type: "output", raw: "Status: SUCCESS · IPA ready",  outputCls: "text-white/50" },
-];
-
 type TActiveLine = { type: string; raw: string; segments?: TSegment[]; outputCls?: string; partial?: string; done?: boolean };
 
-function AnimatedTerminal() {
+function AnimatedTerminal({ uploadDone, buildSent }: { uploadDone: string; buildSent: string }) {
   const [lines, setLines] = useState<TActiveLine[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const startedRef = useRef(false);
+
+  const TERMINAL_LINES: TLine[] = [
+    {
+      type: "cmd", raw: "npm install -g ant-go",
+      segments: [
+        { text: "npm",      cls: "text-yellow-300" },
+        { text: " install", cls: "text-white/80" },
+        { text: " -g",      cls: "text-blue-400" },
+        { text: " ant-go",  cls: "text-accent font-semibold" },
+      ],
+    },
+    { type: "output", raw: "added 42 packages in 3s",  outputCls: "text-white/35" },
+    {
+      type: "cmd", raw: "ant build",
+      segments: [
+        { text: "ant",   cls: "text-accent font-semibold" },
+        { text: " build", cls: "text-green-300" },
+      ],
+    },
+    { type: "output", raw: "✔ Project packed: 12.4 MB", outputCls: "text-green-400" },
+    { type: "output", raw: uploadDone,                  outputCls: "text-green-400" },
+    { type: "output", raw: buildSent,                   outputCls: "text-emerald-300" },
+    {
+      type: "cmd", raw: "ant status abc123xyz",
+      segments: [
+        { text: "ant",        cls: "text-accent font-semibold" },
+        { text: " status",    cls: "text-white/80" },
+        { text: " abc123xyz", cls: "text-yellow-300" },
+      ],
+    },
+    { type: "output", raw: "Status: SUCCESS · IPA ready", outputCls: "text-white/50" },
+  ];
+
+  useEffect(() => {
+    startedRef.current = false;
+    setLines([]);
+  }, [uploadDone, buildSent]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -152,7 +92,8 @@ function AnimatedTerminal() {
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uploadDone, buildSent]);
 
   function runAnimation() {
     let lineIndex = 0;
@@ -226,7 +167,7 @@ function AnimatedTerminal() {
   );
 }
 
-function StepsList() {
+function StepsList({ steps }: { steps: string[] }) {
   const listRef = useRef<HTMLOListElement>(null);
 
   useEffect(() => {
@@ -252,12 +193,12 @@ function StepsList() {
   return (
     <div className="rounded-2xl p-8" style={GLASS}>
       <ol ref={listRef} className="space-y-5">
-        {steps.map((s) => (
-          <li key={s.n} className="step-item reveal flex items-start gap-4">
+        {steps.map((label, idx) => (
+          <li key={idx} className="step-item reveal flex items-start gap-4">
             <span className="flex-shrink-0 w-9 h-9 rounded-full bg-accent flex items-center justify-center font-bold text-sm shadow-lg shadow-accent/40">
-              {s.n}
+              {idx + 1}
             </span>
-            <p className="text-white/75 leading-relaxed pt-1">{s.label}</p>
+            <p className="text-white/75 leading-relaxed pt-1">{label}</p>
           </li>
         ))}
       </ol>
@@ -265,7 +206,7 @@ function StepsList() {
   );
 }
 
-function FeatureGrid() {
+function FeatureGrid({ features }: { features: { title: string; desc: string }[] }) {
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -291,11 +232,7 @@ function FeatureGrid() {
   return (
     <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {features.map((f) => (
-        <div
-          key={f.title}
-          className="reveal card-glow rounded-2xl p-6"
-          style={GLASS}
-        >
+        <div key={f.title} className="reveal card-glow rounded-2xl p-6" style={GLASS}>
           <h3 className="text-lg font-semibold mb-2 text-white">{f.title}</h3>
           <p className="text-white/55 text-sm leading-relaxed">{f.desc}</p>
         </div>
@@ -343,9 +280,54 @@ function useTypewriter(text: string, speed = 45, startDelay = 900) {
 
 export default function HomePage() {
   const { user } = useAuth();
+  const { t, lang } = useLanguage();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+
+  const features = [
+    { title: t("feature1Title"), desc: t("feature1Desc") },
+    { title: t("feature2Title"), desc: t("feature2Desc") },
+    { title: t("feature3Title"), desc: t("feature3Desc") },
+    { title: t("feature4Title"), desc: t("feature4Desc") },
+    { title: t("feature5Title"), desc: t("feature5Desc") },
+    { title: t("feature6Title"), desc: t("feature6Desc") },
+  ];
+
+  const steps = [t("step1"), t("step2"), t("step3"), t("step4")];
+
+  const plans = [
+    {
+      name: "Starter",
+      planKey: "starter",
+      price: "$9",
+      period: t("planPeriod"),
+      desc: t("planStarterDesc"),
+      features: [t("planStarterF1"), t("planStarterF2"), t("planStarterF3"), t("planStarterF4")],
+      highlight: false,
+      cta: t("planStarterCta"),
+    },
+    {
+      name: "Pro",
+      planKey: "pro",
+      price: "$29",
+      period: t("planPeriod"),
+      desc: t("planProDesc"),
+      features: [t("planProF1"), t("planProF2"), t("planProF3"), t("planProF4")],
+      highlight: true,
+      cta: t("planProCta"),
+    },
+    {
+      name: "Team",
+      planKey: "team",
+      price: "$79",
+      period: t("planPeriod"),
+      desc: t("planTeamDesc"),
+      features: [t("planTeamF1"), t("planTeamF2"), t("planTeamF3"), t("planTeamF4"), t("planTeamF5")],
+      highlight: false,
+      cta: t("planTeamCta"),
+    },
+  ];
 
   async function handleSubscribe(planKey: string) {
     if (planKey === "team") {
@@ -370,6 +352,7 @@ export default function HomePage() {
       setCheckoutLoading(null);
     }
   }
+
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { displayed: cliText, done: cliDone } = useTypewriter(CLI_TEXT);
   const [navVisible, setNavVisible] = useState(true);
@@ -400,8 +383,6 @@ export default function HomePage() {
       className="relative min-h-screen text-white overflow-x-hidden"
       style={{ backgroundColor: "var(--dash-bg)" }}
     >
-
-
       {/* Floating logo (hiện khi nav ẩn) */}
       <div
         className="fixed top-4 left-8 z-40 pointer-events-none"
@@ -419,7 +400,6 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Content — all relative z-10 */}
       <div className="relative z-10 pt-20">
         {/* Nav */}
         <nav
@@ -434,11 +414,12 @@ export default function HomePage() {
             <img src="/assets/images/logo-full.png" alt="Logo" className="h-12 w-auto" style={{ filter: "brightness(0) invert(1)" }} />
           </Link>
           <div className="flex items-center gap-3">
+            <LanguageToggle />
             <Link
               href="/docs"
               className="border border-white/20 hover:border-accent text-white/70 hover:text-white text-sm font-medium px-5 py-2 rounded-lg transition"
             >
-              Docs
+              {t("homeNavDocs")}
             </Link>
             {user ? (
               <div className="relative" ref={dropdownRef}>
@@ -467,13 +448,13 @@ export default function HomePage() {
                     onClick={() => { setDropdownOpen(false); router.push("/account/overview"); }}
                     className="w-full text-left px-4 py-2.5 text-sm text-white/80 hover:bg-white/5 transition"
                   >
-                    Console
+                    {t("homeNavConsole")}
                   </button>
                   <button
                     onClick={async () => { setDropdownOpen(false); await signOut(auth); router.push("/login"); }}
                     className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-white/5 transition"
                   >
-                    Logout
+                    {t("homeNavLogout")}
                   </button>
                 </div>
               </div>
@@ -482,7 +463,7 @@ export default function HomePage() {
                 href="/login"
                 className="bg-accent hover:bg-accent text-accent-contrast text-sm font-medium px-5 py-2 rounded-lg transition"
               >
-                Sign In
+                {t("homeNavSignIn")}
               </Link>
             )}
           </div>
@@ -491,15 +472,15 @@ export default function HomePage() {
         {/* Hero */}
         <section className="max-w-4xl mx-auto text-center py-28 px-6">
           <span className="fade-up inline-block text-accent-light text-xs font-semibold px-3 py-1 rounded-full mb-6 uppercase tracking-widest" style={{ background: "rgb(var(--tw-accent) / 0.15)", border: "1px solid rgb(var(--tw-accent) / 0.35)", animationDelay: "0ms" }}>
-            MULTIPLE PLATFORM · IOS/ANDROID
+            {t("homeHeroBadge")}
           </span>
           <h1 className="fade-up text-5xl md:text-6xl font-extrabold leading-tight mb-6" style={{ animationDelay: "100ms" }}>
-            Build app{" "}
-            <span className="shimmer-text">nhanh hơn</span>,
-            <br />rẻ hơn bao giờ hết
+            {t("homeHeroTitle1")}{" "}
+            <span className="shimmer-text">{t("homeHeroShimmer")}</span>
+            {t("homeHeroTitle2")}
           </h1>
           <p className="fade-up text-white/60 text-lg md:text-xl max-w-2xl mx-auto mb-4" style={{ animationDelay: "200ms" }}>
-            Dịch vụ build iOS và Android cho React Native / Expo — Không subscription theo phút, không chờ lâu, log stream realtime, dễ dàng debug.
+            {t("homeHeroDesc")}
           </p>
           <p className="fade-up text-white/30 text-sm mb-10 font-mono" style={{ animationDelay: "300ms" }}>
             {cliText}
@@ -510,41 +491,40 @@ export default function HomePage() {
               href="/login"
               className="btn-pulse bg-accent hover:bg-accent text-accent-contrast font-semibold px-8 py-3 rounded-xl transition text-lg shadow-lg shadow-accent/40"
             >
-              Vào Dashboard →
+              {t("homeHeroCta")}
             </Link>
           </div>
         </section>
 
         {/* Features */}
         <section className="max-w-6xl mx-auto px-6 py-16">
-          <h2 className="text-3xl font-bold text-center mb-12">Tại sao dùng Ant Go?</h2>
-          <FeatureGrid />
+          <h2 className="text-3xl font-bold text-center mb-12">{t("homeFeaturesTitle")}</h2>
+          <FeatureGrid features={features} />
         </section>
 
         {/* How it works */}
         <section className="py-16">
           <div className="max-w-3xl mx-auto px-6">
-            <h2 className="text-3xl font-bold text-center mb-12">Hoạt động như thế nào?</h2>
-            <StepsList />
+            <h2 className="text-3xl font-bold text-center mb-12">{t("homeHowTitle")}</h2>
+            <StepsList steps={steps} />
           </div>
         </section>
 
         {/* CLI Install */}
         <section className="max-w-3xl mx-auto px-6 py-16">
-          <h2 className="text-3xl font-bold text-center mb-4">Cài đặt CLI</h2>
-          <p className="text-white/50 text-center text-sm mb-8">
-            CLI chạy trên máy developer — không cần cài gì thêm trên server.
-          </p>
-          <AnimatedTerminal />
+          <h2 className="text-3xl font-bold text-center mb-4">{t("homeCLITitle")}</h2>
+          <p className="text-white/50 text-center text-sm mb-8">{t("homeCLIDesc")}</p>
+          <AnimatedTerminal
+            uploadDone={t("terminalUploadDone")}
+            buildSent={t("terminalBuildSent")}
+          />
         </section>
 
         {/* Pricing */}
         <section className="py-16 px-6">
           <div className="max-w-5xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-3">Pricing</h2>
-            <p className="text-white/50 text-center text-sm mb-12">
-              Build app nhanh hơn, rẻ hơn bao giờ hết.
-            </p>
+            <h2 className="text-3xl font-bold text-center mb-3">{t("homePricingTitle")}</h2>
+            <p className="text-white/50 text-center text-sm mb-12">{t("homePricingDesc")}</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {plans.map((plan) => (
                 <div
@@ -554,7 +534,7 @@ export default function HomePage() {
                 >
                   {plan.highlight && (
                     <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-contrast text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
-                      Phổ biến nhất
+                      {t("planMostPopular")}
                     </span>
                   )}
                   <p className="text-sm font-semibold text-white/60 mb-1">{plan.name}</p>
@@ -583,7 +563,7 @@ export default function HomePage() {
                     }`}
                     style={plan.highlight ? {} : { border: "1px solid rgba(255,255,255,0.2)" }}
                   >
-                    {checkoutLoading === plan.planKey ? "Đang xử lý..." : plan.cta}
+                    {checkoutLoading === plan.planKey ? t("processing") : plan.cta}
                   </button>
                 </div>
               ))}
@@ -594,13 +574,13 @@ export default function HomePage() {
         {/* CTA */}
         <section className="py-20 text-center px-6">
           <div className="max-w-2xl mx-auto rounded-3xl p-12" style={HIGHLIGHT_GLASS}>
-            <h2 className="text-3xl font-bold mb-4">Sẵn sàng build?</h2>
-            <p className="text-white/60 mb-8">Đăng nhập để vào dashboard, tạo project và lấy Project ID cho CLI.</p>
+            <h2 className="text-3xl font-bold mb-4">{t("homeCtaTitle")}</h2>
+            <p className="text-white/60 mb-8">{t("homeCtaDesc")}</p>
             <Link
               href="/login"
               className="bg-accent hover:bg-accent text-accent-contrast font-semibold px-10 py-3 rounded-xl transition text-lg shadow-lg shadow-accent/40"
             >
-              Đăng nhập →
+              {t("homeCtaButton")}
             </Link>
           </div>
         </section>
