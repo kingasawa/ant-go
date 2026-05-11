@@ -1,15 +1,15 @@
-﻿"use client";
+"use client";
 import Link from "next/link";
 import React, { useState, useRef, useEffect } from "react";
 import { GLASS } from "@/lib/glass";
+import { useLanguage } from "@/context/LanguageContext";
+import LanguageToggle from "@/app/components/LanguageToggle";
 
-/* ─── Nav header style ───────────────────────────────────────────────────────── */
 const HEADER_STYLE: React.CSSProperties = {
   background: "rgba(18,18,24,0.97)",
   borderBottom: "1px solid rgba(255,255,255,0.1)",
 };
 
-/* ─── Apple-style Terminal Window ───────────────────────────────────────────── */
 function Terminal({ title, children }: { title?: string; children: React.ReactNode }) {
   return (
     <div className="rounded-xl overflow-hidden" style={{ background: "rgba(20,20,20,0.85)", border: "1px solid rgba(255,255,255,0.1)" }}>
@@ -26,7 +26,6 @@ function Terminal({ title, children }: { title?: string; children: React.ReactNo
   );
 }
 
-/* ─── Inline code ────────────────────────────────────────────────────────────── */
 function Code({ children }: { children: React.ReactNode }) {
   return (
     <code className="px-1.5 py-0.5 rounded-md text-accent-light font-mono text-[13px]"
@@ -38,7 +37,6 @@ function Code({ children }: { children: React.ReactNode }) {
 
 const GLASS_SECTION = { ...GLASS, boxShadow: "0 4px 24px rgba(0,0,0,0.35)" };
 
-/* ─── Section ────────────────────────────────────────────────────────────────── */
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
     <section id={id} className="scroll-mt-24 mb-12">
@@ -53,7 +51,6 @@ function Section({ id, title, children }: { id: string; title: string; children:
   );
 }
 
-/* ─── Option row ─────────────────────────────────────────────────────────────── */
 function Option({ flag, desc }: { flag: string; desc: string }) {
   return (
     <div className="flex gap-4 py-2.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
@@ -63,37 +60,7 @@ function Option({ flag, desc }: { flag: string; desc: string }) {
   );
 }
 
-/* ─── Sidebar nav groups ─────────────────────────────────────────────────────── */
-const navGroups = [
-  {
-    label: "Generals",
-    items: [
-      { id: "install",    label: "Installation" },
-      { id: "build",      label: "Build" },
-      { id: "status",     label: "Status" },
-      { id: "add-device", label: "Add device" },
-      { id: "ant-json",   label: "Profiles" },
-    ],
-  },
-  {
-    label: "Authentication",
-    items: [
-      { id: "auth-login",  label: "Login" },
-      { id: "auth-logout", label: "Logout" },
-      { id: "auth-whoami", label: "Whoami" },
-    ],
-  },
-  {
-    label: "Settings",
-    items: [
-      { id: "set-lang", label: "Language" },
-    ],
-  },
-];
-const allNavItems = navGroups.flatMap((g) => g.items);
-
-/* ─── Sidebar Nav ────────────────────────────────────────────────────────────── */
-function SidebarNav({ activeId }: { activeId: string | null }) {
+function SidebarNav({ activeId, navGroups }: { activeId: string | null; navGroups: { label: string; items: { id: string; label: string }[] }[] }) {
   return (
     <div>
       {navGroups.map((group, gi) => (
@@ -128,9 +95,38 @@ function SidebarNav({ activeId }: { activeId: string | null }) {
   );
 }
 
-/* ─── Page ───────────────────────────────────────────────────────────────────── */
 export default function DocPage() {
-  const [activeId, setActiveId] = useState<string | null>(allNavItems[0].id);
+  const { t } = useLanguage();
+  const [activeId, setActiveId] = useState<string | null>("install");
+
+  const navGroups = [
+    {
+      label: t("docsNavGenerals"),
+      items: [
+        { id: "install",    label: t("docsNavInstall") },
+        { id: "build",      label: t("docsNavBuild") },
+        { id: "status",     label: t("docsNavStatus") },
+        { id: "add-device", label: t("docsNavAddDevice") },
+        { id: "ant-json",   label: t("docsNavProfiles") },
+      ],
+    },
+    {
+      label: t("docsNavAuth"),
+      items: [
+        { id: "auth-login",  label: t("docsNavLogin") },
+        { id: "auth-logout", label: t("docsNavLogout") },
+        { id: "auth-whoami", label: t("docsNavWhoami") },
+      ],
+    },
+    {
+      label: t("docsNavSettings"),
+      items: [
+        { id: "set-lang", label: t("docsNavLanguage") },
+      ],
+    },
+  ];
+
+  const allNavItems = navGroups.flatMap((g) => g.items);
 
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -146,53 +142,86 @@ export default function DocPage() {
       if (el) obs.observe(el);
     });
     return () => obs.disconnect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return (
-    <div
-      className="min-h-screen relative text-white"
-      style={{ backgroundColor: "var(--dash-bg)" }}
-    >
+  const profiles = [
+    {
+      name: "production", color: "text-green-300", badge: "store",
+      badgeStyle: { background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)" },
+      badgeText: "text-green-400",
+      desc: t("docsProfileProdDesc"),
+      items: ["🔑 Distribution Certificate", "📋 App Store Provisioning Profile", t("docsProfileItemNoDevice")],
+      note: t("docsProfileProdNote"),
+    },
+    {
+      name: "development", color: "text-blue-300", badge: "internal",
+      badgeStyle: { background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.3)" },
+      badgeText: "text-blue-400",
+      desc: t("docsProfileDevDesc"),
+      items: ["🔑 Development Certificate", "📋 Development Provisioning Profile", t("docsProfileItemNeedDevice")],
+      note: t("docsProfileDevNote"),
+    },
+    {
+      name: "preview", color: "text-orange-300", badge: "internal",
+      badgeStyle: { background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.3)" },
+      badgeText: "text-orange-400",
+      desc: t("docsProfilePreviewDesc"),
+      items: ["🔑 Distribution Certificate (Ad Hoc)", "📋 Ad Hoc Provisioning Profile", t("docsProfileItemNeedDevice")],
+      note: t("docsProfilePreviewNote"),
+    },
+  ];
 
-      {/* ── Top nav ── */}
-      <header
-        className="fixed top-0 left-0 right-0 z-30"
-        style={HEADER_STYLE}
-      >
+  const deviceSteps = [
+    { step: "1", desc: t("docsDeviceStep1") },
+    { step: "2", desc: t("docsDeviceStep2") },
+    { step: "3", desc: t("docsDeviceStep3") },
+    { step: "4", desc: t("docsDeviceStep4") },
+    { step: "5", desc: t("docsDeviceStep5") },
+  ];
+
+  const statusItems = [
+    { status: "PENDING", color: "text-yellow-400", desc: t("docsStatusPending") },
+    { status: "RUNNING", color: "text-blue-400",   desc: t("docsStatusRunning") },
+    { status: "SUCCESS", color: "text-green-400",  desc: t("docsStatusSuccess") },
+    { status: "FAILED",  color: "text-red-400",    desc: t("docsStatusFailed") },
+  ];
+
+  return (
+    <div className="min-h-screen relative text-white" style={{ backgroundColor: "var(--dash-bg)" }}>
+
+      {/* Top nav */}
+      <header className="fixed top-0 left-0 right-0 z-30" style={HEADER_STYLE}>
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <img
-              src="/assets/images/logo-full.png"
-              alt="Logo"
-              className="h-10 w-auto"
-              style={{ filter: "brightness(0) invert(1)" }}
-            />
+            <img src="/assets/images/logo-full.png" alt="Logo" className="h-10 w-auto" style={{ filter: "brightness(0) invert(1)" }} />
             <span className="text-xs font-semibold text-white/35 tracking-widest uppercase">docs</span>
           </Link>
-          <Link
-            href="/login"
-            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-accent/80 hover:bg-accent text-accent-contrast transition"
-            style={{ border: "1px solid rgba(255,255,255,0.15)" }}
-          >
-            Console →
-          </Link>
+          <div className="flex items-center gap-3">
+            <LanguageToggle />
+            <Link
+              href="/login"
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-accent/80 hover:bg-accent text-accent-contrast transition"
+              style={{ border: "1px solid rgba(255,255,255,0.15)" }}
+            >
+              {t("docsConsoleBtn")}
+            </Link>
+          </div>
         </div>
       </header>
 
-      {/* ── Body ── */}
+      {/* Body */}
       <div className="relative max-w-6xl mx-auto px-6 pt-24 pb-10 flex gap-8">
 
-        {/* Sidebar — hover glass per item, no wrapper */}
         <aside className="hidden lg:block w-48 flex-shrink-0">
           <div className="sticky top-24">
-            <SidebarNav activeId={activeId} />
+            <SidebarNav activeId={activeId} navGroups={navGroups} />
           </div>
         </aside>
 
-        {/* Main content — each section in its own glass box */}
         <div className="flex-1 min-w-0">
 
-          {/* Hero — free, no glass box */}
+          {/* Hero */}
           <div className="mb-10">
             <div
               className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-accent-light text-xs font-semibold mb-4"
@@ -201,15 +230,17 @@ export default function DocPage() {
               CLI v1.0
             </div>
             <h1 className="text-4xl font-extrabold text-white mb-4 leading-tight">ant-go CLI</h1>
-            <p className="text-lg text-white/55 max-w-xl">
-              Build app iOS và Android nhanh chóng chỉ với một lệnh — không cần cấu hình CI/CD phức tạp.
-            </p>
+            <p className="text-lg text-white/55 max-w-xl">{t("docsHeroDesc")}</p>
           </div>
 
-          {/* ── Cài đặt ── */}
-          <Section id="install" title="Cài đặt">
+          {/* Install */}
+          <Section id="install" title={t("docsInstallTitle")}>
             <p className="text-white/55 text-sm mb-4">
-              Cài đặt <Code>ant-go</Code> globally qua npm để dùng như một lệnh hệ thống:
+              {t("docsInstallDesc").split("ant-go").map((part, i, arr) =>
+                i < arr.length - 1
+                  ? <span key={i}>{part}<Code>ant-go</Code></span>
+                  : <span key={i}>{part}</span>
+              )}
             </p>
             <Terminal title="Terminal">
               <div>
@@ -218,7 +249,7 @@ export default function DocPage() {
                 <span className="text-gray-200"> install -g ant-go</span>
               </div>
             </Terminal>
-            <p className="text-white/55 text-sm mt-6 mb-4">Kiểm tra cài đặt thành công:</p>
+            <p className="text-white/55 text-sm mt-6 mb-4">{t("docsInstallVerify")}</p>
             <Terminal title="Terminal">
               <div>
                 <span className="text-white/30 select-none">$ </span>
@@ -228,11 +259,9 @@ export default function DocPage() {
             </Terminal>
           </Section>
 
-          {/* ── build ── */}
-          <Section id="build" title="Build Command">
-            <p className="text-white/55 text-sm mb-4">
-              Lệnh chính — nén project, upload lên build server và gửi yêu cầu build theo platform đã chọn. Sau khi submit, theo dõi tiến trình tại web console.
-            </p>
+          {/* Build */}
+          <Section id="build" title={t("docsBuildTitle")}>
+            <p className="text-white/55 text-sm mb-4">{t("docsBuildDesc")}</p>
             <Terminal title="Terminal — build iOS production">
               <div>
                 <span className="text-white/30 select-none">$ </span>
@@ -250,31 +279,26 @@ export default function DocPage() {
                 <div>{"========================================"}</div>
               </div>
               <div className="mt-3 space-y-1">
-                <div className="text-white/40">{"? "}Đăng nhập tài khoản Apple Developer</div>
-                <div className="text-green-400">{"  ❯ "}Đăng nhập tài khoản <span className="text-white">dev@example.com</span> (TEAMID123)</div>
-                <div className="mt-1 text-green-400">✔ Đăng nhập thành công</div>
+                <div className="text-green-400">✔ Job: <span className="text-accent-light">abc123xyz</span></div>
                 <div className="text-green-400">✔ ASC API Key (cached): <span className="text-accent-light">XXXXXXXXXX</span></div>
                 <div className="text-green-400">✔ Distribution Certificate (reused): CERTID</div>
                 <div className="text-green-400">✔ App Store Provisioning Profile OK</div>
-                <div className="text-green-400">✔ Credentials đã cache tại: <span className="text-white/40">~/.ant-go/creds-production.json</span></div>
               </div>
               <div className="mt-3 space-y-1">
-                <div className="text-green-400">✔ Job tạo thành công: <span className="text-accent-light">abc123xyz</span></div>
-                <div className="text-white/40">{"  "}Plan: <span className="text-accent-light">free</span>{"  ·  "}Credits còn lại: <span className="text-white">12/15</span></div>
-                <div className="text-green-400">✔ ASC API Key đã lưu vào dashboard</div>
-                <div className="text-green-400">✔ Project đã nén: <span className="text-white">12.4 MB</span></div>
-                <div className="text-green-400">✔ Upload ios.tar.gz hoàn tất</div>
-                <div className="text-green-400">✔ Upload credentials.json hoàn tất</div>
-                <div className="text-green-400">✔ Đã kiểm tra đầy đủ files</div>
+                <div className="text-green-400">✔ Project packed: <span className="text-white">12.4 MB</span></div>
+                <div className="text-green-400">✔ Upload ios.tar.gz done</div>
+                <div className="text-green-400">✔ Upload credentials.json done</div>
               </div>
               <div className="mt-3 space-y-1">
-                <div className="text-white font-semibold">Build đã được gửi lên server!</div>
-                <div className="mt-1 text-white/40">{"   "}Theo dõi tiến trình tại:</div>
+                <div className="text-white font-semibold">Build sent to server!</div>
+                <div className="mt-1 text-white/40">{"   "}Track progress:</div>
                 <div className="text-blue-400 underline">{"   "}https://antgo.work/account/app/MyApp/builds/abc123xyz</div>
               </div>
             </Terminal>
 
-            <p className="text-white/55 text-sm mt-8 mb-3">Dùng build profile từ <Code>ant.json</Code>:</p>
+            <p className="text-white/55 text-sm mt-8 mb-3">{t("docsBuildProfileDesc").split("ant.json").map((part, i, arr) =>
+              i < arr.length - 1 ? <span key={i}>{part}<Code>ant.json</Code></span> : <span key={i}>{part}</span>
+            )}</p>
             <Terminal title="Terminal">
               <div>
                 <span className="text-white/30 select-none">$ </span>
@@ -287,7 +311,7 @@ export default function DocPage() {
               </div>
             </Terminal>
 
-            <p className="text-white/55 text-sm mt-6 mb-3">Tự động submit lên TestFlight sau khi build xong:</p>
+            <p className="text-white/55 text-sm mt-6 mb-3">{t("docsBuildSubmitDesc")}</p>
             <Terminal title="Terminal">
               <div>
                 <span className="text-white/30 select-none">$ </span>
@@ -299,15 +323,13 @@ export default function DocPage() {
               </div>
               <div className="mt-2 space-y-1 text-sm">
                 <div className="text-white/30">...</div>
-                <div className="text-white font-semibold">Build đã được gửi lên server!</div>
-                <div className="text-white/40">{"   "}✈{"  "}Auto Submit: bật — IPA sẽ tự động được gửi lên TestFlight sau khi build xong.</div>
+                <div className="text-white font-semibold">Build sent to server!</div>
+                <div className="text-white/40">{"   "}✈{"  "}Auto Submit: on</div>
               </div>
             </Terminal>
-            <p className="text-white/30 text-xs mt-2">
-              Chỉ dùng được với profile có <Code>distribution: store</Code>. Dùng với <Code>distribution: internal</Code> sẽ báo lỗi.
-            </p>
+            <p className="text-white/30 text-xs mt-2">{t("docsBuildAutoSubmitNote")}</p>
 
-            <p className="text-white/55 text-sm mt-6 mb-3">Force đăng nhập lại Apple Developer (bỏ cache):</p>
+            <p className="text-white/55 text-sm mt-6 mb-3">{t("docsBuildReauthDesc")}</p>
             <Terminal title="Terminal">
               <div>
                 <span className="text-white/30 select-none">$ </span>
@@ -320,19 +342,19 @@ export default function DocPage() {
             </Terminal>
 
             <div className="mt-6 rounded-xl p-4" style={GLASS}>
-              <p className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-3">Options</p>
-              <Option flag="--platform &lt;platform&gt;" desc="Nền tảng build: ios hoặc android" />
-              <Option flag="--profile &lt;profile&gt;"   desc="Build profile trong ant.json (mặc định: production)" />
-              <Option flag="--project &lt;path&gt;"      desc="Override đường dẫn project" />
-              <Option flag="--reauth"              desc="Đăng nhập lại Apple Developer, bỏ qua session cache" />
-              <Option flag="--refresh-profile"     desc="Tạo lại Provisioning Profile (khi thay đổi Capabilities)" />
-              <Option flag="--auto-submit"         desc="Tự động submit IPA lên TestFlight sau khi build xong" />
+              <p className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-3">{t("docsOptions")}</p>
+              <Option flag="--platform &lt;platform&gt;" desc={t("docsBuildOptPlatform")} />
+              <Option flag="--profile &lt;profile&gt;"   desc={t("docsBuildOptProfile")} />
+              <Option flag="--project &lt;path&gt;"      desc={t("docsBuildOptProject")} />
+              <Option flag="--reauth"                    desc={t("docsBuildOptReauth")} />
+              <Option flag="--refresh-profile"           desc={t("docsBuildOptRefreshProfile")} />
+              <Option flag="--auto-submit"               desc={t("docsBuildOptAutoSubmit")} />
             </div>
           </Section>
 
-          {/* ── status ── */}
-          <Section id="status" title="Build Status">
-            <p className="text-white/55 text-sm mb-4">Xem trạng thái của một build job theo Job ID.</p>
+          {/* Status */}
+          <Section id="status" title={t("docsStatusTitle")}>
+            <p className="text-white/55 text-sm mb-4">{t("docsStatusDesc")}</p>
             <Terminal title="Terminal — ant status">
               <div>
                 <span className="text-white/30 select-none">$ </span>
@@ -350,14 +372,9 @@ export default function DocPage() {
             </Terminal>
 
             <div className="mt-5 rounded-xl p-4" style={GLASS}>
-              <p className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-3">Trạng thái</p>
+              <p className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-3">{t("docsStatusHeader")}</p>
               <div className="space-y-2">
-                {[
-                  { status: "PENDING", color: "text-yellow-400", desc: "Đang chờ build server nhận job" },
-                  { status: "RUNNING", color: "text-blue-400",   desc: "Build server đang xử lý" },
-                  { status: "SUCCESS", color: "text-green-400",  desc: "Build thành công, IPA đã sẵn sàng" },
-                  { status: "FAILED",  color: "text-red-400",    desc: "Build thất bại, xem logs để biết chi tiết" },
-                ].map((s) => (
+                {statusItems.map((s) => (
                   <div key={s.status} className="flex items-center gap-3 py-1.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
                     <span className={`text-xs font-bold font-mono w-24 ${s.color}`}>{s.status}</span>
                     <span className="text-white/50 text-sm">{s.desc}</span>
@@ -367,18 +384,14 @@ export default function DocPage() {
             </div>
           </Section>
 
-          {/* ── add device ── */}
-          <Section id="add-device" title="Add device">
+          {/* Add device */}
+          <Section id="add-device" title={t("docsDeviceTitle")}>
             <div className="mb-5 p-4 rounded-xl" style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.25)" }}>
-              <p className="text-sm text-white font-semibold mb-1">Chỉ áp dụng cho iOS</p>
-              <p className="text-sm text-white/55">
-                Android không cần đăng ký device — file <Code>.apk</Code> có thể cài trực tiếp trên bất kỳ thiết bị nào. iOS thì khác: Apple bắt buộc mọi thiết bị chạy app ngoài App Store phải được đăng ký UDID trước trong Apple Developer Portal.
-              </p>
+              <p className="text-sm text-white font-semibold mb-1">{t("docsDeviceIOSOnly")}</p>
+              <p className="text-sm text-white/55">{t("docsDeviceIOSOnlyDesc")}</p>
             </div>
 
-            <p className="text-white/55 text-sm mb-5">
-              Khi build với <Code>distribution: internal</Code>, iOS app được ký bằng <strong className="text-white/80">Development / Ad Hoc Provisioning Profile</strong>. Profile này chứa danh sách UDID các thiết bị được phép cài. Nếu UDID của thiết bị không có trong profile, iOS sẽ từ chối cài app.
-            </p>
+            <p className="text-white/55 text-sm mb-5">{t("docsDeviceInternalDesc")}</p>
 
             <Terminal title="Terminal — device enrollment">
               <div>
@@ -392,39 +405,32 @@ export default function DocPage() {
               </div>
               <div className="mt-3 space-y-1">
                 <div className="text-white/30">...</div>
-                <div className="text-accent-light">📱{"  "}Đăng ký device để cài app development</div>
-                <div className="text-white/30">{"   "}iPhone sẽ tự động gửi UDID khi quét mã QR bên dưới</div>
+                <div className="text-accent-light">📱{"  "}Device enrollment</div>
+                <div className="text-white/30">{"   "}iPhone will send UDID after scanning QR below</div>
               </div>
               <div className="mt-3 space-y-1">
-                <div className="text-white font-semibold">Quét QR code bằng Camera app trên iPhone:</div>
+                <div className="text-white font-semibold">Scan QR with iPhone Camera:</div>
                 <div className="mt-1 text-white/30 font-mono text-xs leading-4">
                   {"  ▄▄▄▄▄▄▄ ▄  ▄▄  ▄▄▄▄▄▄▄"}<br />
                   {"  █ ▄▄▄ █ ▀▄▄▀▄ █ ▄▄▄ █"}<br />
                   {"  █ ███ █ ██▀▀█ █ ███ █"}<br />
                   {"  ▀▀▀▀▀▀▀ ▀ ▀ ▀ ▀▀▀▀▀▀▀"}
                 </div>
-                <div className="mt-1 text-white/30">Hoặc mở URL: <span className="text-accent-light underline">https://antgo.work/enroll/xxxxxxxx</span></div>
+                <div className="mt-1 text-white/30">Or open: <span className="text-accent-light underline">https://antgo.work/enroll/xxxxxxxx</span></div>
               </div>
               <div className="mt-3 space-y-1">
-                <div className="text-yellow-400">Đang chờ iPhone xác nhận...</div>
-                <div className="text-white/30">⠿ Chờ iPhone quét QR... (còn 9 phút)</div>
-                <div className="text-green-400">✔ Device đã xác nhận: iPhone 15 Pro{"  "}(00008110-001234ABCDEF)</div>
+                <div className="text-yellow-400">Waiting for iPhone...</div>
+                <div className="text-green-400">✔ Device confirmed: iPhone 15 Pro{"  "}(00008110-001234ABCDEF)</div>
               </div>
               <div className="mt-2 space-y-1">
-                <div className="text-white/40">{"? "}Tên device: <span className="text-white">My iPhone</span></div>
-                <div className="text-green-400">✔ Device đã đăng ký: My iPhone</div>
+                <div className="text-white/40">{"? "}Device name: <span className="text-white">My iPhone</span></div>
+                <div className="text-green-400">✔ Device registered: My iPhone</div>
               </div>
             </Terminal>
 
             <div className="mt-5 rounded-xl p-4 space-y-3" style={GLASS}>
-              <p className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-1">Quy trình</p>
-              {[
-                { step: "1", desc: "CLI gọi server tạo enrollment session — sinh URL + token." },
-                { step: "2", desc: "CLI hiển thị QR code. Quét bằng Camera app (không cần app riêng)." },
-                { step: "3", desc: "iPhone tải .mobileconfig → nhắc cài profile → gửi UDID về server." },
-                { step: "4", desc: "CLI nhận UDID, kiểm tra và đăng ký device trên Apple Developer Portal." },
-                { step: "5", desc: "Tiếp tục build với Provisioning Profile đã bao gồm device mới." },
-              ].map((item) => (
+              <p className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-1">{t("docsDeviceFlowHeader")}</p>
+              {deviceSteps.map((item) => (
                 <div key={item.step} className="flex gap-3">
                   <span
                     className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-accent-light text-xs font-bold"
@@ -436,16 +442,14 @@ export default function DocPage() {
                 </div>
               ))}
             </div>
-            <p className="text-white/25 text-xs mt-4">
-              Nếu UDID đã được đăng ký trước đó trên Apple Developer Portal, bước đăng ký device sẽ bị bỏ qua.
-            </p>
+            <p className="text-white/25 text-xs mt-4">{t("docsDeviceNote")}</p>
           </Section>
 
-          {/* ── ant.json ── */}
-          <Section id="ant-json" title="Build Profiles">
-            <p className="text-white/55 text-sm mb-4">
-              File cấu hình build profiles đặt ở root của project. Nếu chưa có, <Code>ant build</Code> sẽ tự tạo với các profile mặc định.
-            </p>
+          {/* Build Profiles */}
+          <Section id="ant-json" title={t("docsProfilesTitle")}>
+            <p className="text-white/55 text-sm mb-4">{t("docsProfilesDesc").split("ant build").map((part, i, arr) =>
+              i < arr.length - 1 ? <span key={i}>{part}<Code>ant build</Code></span> : <span key={i}>{part}</span>
+            )}</p>
             <Terminal title="ant.json">
               <div className="text-white/30">{"{"}</div>
               <div className="ml-4 text-blue-300">{'"build"'}<span className="text-gray-300">: {"{"}</span></div>
@@ -470,32 +474,7 @@ export default function DocPage() {
             </Terminal>
 
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                {
-                  name: "production", color: "text-green-300", badge: "store",
-                  badgeStyle: { background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)" },
-                  badgeText: "text-green-400",
-                  desc: "Submit lên App Store hoặc phân phối qua TestFlight.",
-                  items: ["🔑 Distribution Certificate", "📋 App Store Provisioning Profile", "✗ Không cần add device"],
-                  note: "Dùng khi release chính thức hoặc gửi beta qua TestFlight",
-                },
-                {
-                  name: "development", color: "text-blue-300", badge: "internal",
-                  badgeStyle: { background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.3)" },
-                  badgeText: "text-blue-400",
-                  desc: "Cài trực tiếp lên thiết bị để debug và develop. Hỗ trợ kết nối Metro bundler.",
-                  items: ["🔑 Development Certificate", "📋 Development Provisioning Profile", "⚠ Cần add device (UDID)"],
-                  note: "Dùng trong quá trình phát triển, cần debug trên thiết bị thật",
-                },
-                {
-                  name: "preview", color: "text-orange-300", badge: "internal",
-                  badgeStyle: { background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.3)" },
-                  badgeText: "text-orange-400",
-                  desc: "Chia sẻ bản test với QA / stakeholders mà không cần qua App Store.",
-                  items: ["🔑 Distribution Certificate (Ad Hoc)", "📋 Ad Hoc Provisioning Profile", "⚠ Cần add device (UDID)"],
-                  note: "Dùng khi cần share bản test nội bộ trước khi lên store",
-                },
-              ].map((p) => (
+              {profiles.map((p) => (
                 <div key={p.name} className="rounded-xl p-4 flex flex-col gap-2" style={GLASS}>
                   <div className="flex items-center justify-between mb-1">
                     <span className={`${p.color} font-bold font-mono text-sm`}>{p.name}</span>
@@ -513,19 +492,19 @@ export default function DocPage() {
             </div>
 
             <div className="mt-5 rounded-xl p-4" style={GLASS}>
-              <p className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-3">Profile fields</p>
-              <Option flag="distribution"      desc='"store" → App Store/TestFlight · "internal" → cài thẳng lên device' />
-              <Option flag="developmentClient" desc="true → build Expo development client, hỗ trợ kết nối Metro bundler" />
+              <p className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-3">{t("docsProfilesFieldsHeader")}</p>
+              <Option flag="distribution"      desc={t("docsProfilesFieldDist")} />
+              <Option flag="developmentClient" desc={t("docsProfilesFieldDevClient")} />
             </div>
           </Section>
 
-          {/* ── auth login ── */}
-          <Section id="auth-login" title="Login">
-            <p className="text-white/55 text-sm mb-4">
-              Đăng nhập vào tài khoản ant-go để dùng các lệnh như <Code>build</Code>. Token được lưu tại <Code>~/.ant-go/config.json</Code> và có hiệu lực trong 24 giờ.
-            </p>
+          {/* Auth Login */}
+          <Section id="auth-login" title={t("docsLoginTitle")}>
+            <p className="text-white/55 text-sm mb-4">{t("docsLoginDesc").split("build").map((part, i, arr) =>
+              i < arr.length - 1 ? <span key={i}>{part}<Code>build</Code></span> : <span key={i}>{part}</span>
+            )}</p>
 
-            <p className="text-white/55 text-sm mb-3">Đăng nhập bằng email và mật khẩu:</p>
+            <p className="text-white/55 text-sm mb-3">{t("docsLoginEmailDesc")}</p>
             <Terminal title="Terminal — ant auth login">
               <div>
                 <span className="text-white/30 select-none">$ </span>
@@ -537,15 +516,15 @@ export default function DocPage() {
                 <div className="text-white/40">{"? "}Password: <span className="text-white">••••••••</span></div>
               </div>
               <div className="mt-3 space-y-1">
-                <div className="text-green-400">✔ Đăng nhập thành công!</div>
-                <div className="text-white/40">{"  "}Xin chào, <span className="text-white">Nguyen Van A</span></div>
+                <div className="text-green-400">✔ Logged in!</div>
+                <div className="text-white/40">{"  "}Name:   <span className="text-white">Nguyen Van A</span></div>
                 <div className="text-white/40">{"  "}Email:  <span className="text-white">dev@example.com</span></div>
                 <div className="text-white/40">{"  "}Plan:   <span className="text-accent-light">Pro</span></div>
                 <div className="text-white/40">{"  "}Builds: <span className="text-white">47 / unlimited</span></div>
               </div>
             </Terminal>
 
-            <p className="text-white/55 text-sm mt-6 mb-3">Hoặc đăng nhập qua Google bằng trình duyệt:</p>
+            <p className="text-white/55 text-sm mt-6 mb-3">{t("docsLoginBrowserDesc")}</p>
             <Terminal title="Terminal — browser login">
               <div>
                 <span className="text-white/30 select-none">$ </span>
@@ -554,27 +533,25 @@ export default function DocPage() {
                 <span className="text-blue-400"> --browser</span>
               </div>
               <div className="mt-3 space-y-1">
-                <div className="text-white/40">Mở trình duyệt để đăng nhập...</div>
+                <div className="text-white/40">Opening browser...</div>
                 <div className="text-blue-400 underline">{"  "}https://antgo.work/auth/cli?port=9005&state=xxxxxxxx</div>
-                <div className="text-white/40 mt-2">Đang chờ xác nhận từ trình duyệt...</div>
+                <div className="text-white/40 mt-2">Waiting for browser confirmation...</div>
               </div>
               <div className="mt-3 space-y-1">
-                <div className="text-green-400">✔ Đăng nhập thành công!</div>
-                <div className="text-white/40">{"  "}Xin chào, <span className="text-white">Nguyen Van A</span></div>
+                <div className="text-green-400">✔ Logged in!</div>
+                <div className="text-white/40">{"  "}Hi, <span className="text-white">Nguyen Van A</span></div>
               </div>
             </Terminal>
 
             <div className="mt-6 rounded-xl p-4" style={GLASS}>
-              <p className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-3">Options</p>
-              <Option flag="--browser" desc="Đăng nhập qua Google OAuth bằng trình duyệt thay vì email/password" />
+              <p className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-3">{t("docsOptions")}</p>
+              <Option flag="--browser" desc={t("docsLoginOptBrowser")} />
             </div>
           </Section>
 
-          {/* ── auth logout ── */}
-          <Section id="auth-logout" title="Logout">
-            <p className="text-white/55 text-sm mb-4">
-              Đăng xuất khỏi tài khoản ant-go. Token hiện tại sẽ bị thu hồi trên server và xoá khỏi máy.
-            </p>
+          {/* Auth Logout */}
+          <Section id="auth-logout" title={t("docsLogoutTitle")}>
+            <p className="text-white/55 text-sm mb-4">{t("docsLogoutDesc")}</p>
             <Terminal title="Terminal — ant auth logout">
               <div>
                 <span className="text-white/30 select-none">$ </span>
@@ -582,16 +559,14 @@ export default function DocPage() {
                 <span className="text-white"> auth logout</span>
               </div>
               <div className="mt-3 space-y-1">
-                <div className="text-green-400">✔ Đã đăng xuất thành công.</div>
+                <div className="text-green-400">✔ Logged out.</div>
               </div>
             </Terminal>
           </Section>
 
-          {/* ── auth whoami ── */}
-          <Section id="auth-whoami" title="Whoami">
-            <p className="text-white/55 text-sm mb-4">
-              Xem thông tin tài khoản đang đăng nhập và trạng thái token hiện tại.
-            </p>
+          {/* Auth Whoami */}
+          <Section id="auth-whoami" title={t("docsWhoamiTitle")}>
+            <p className="text-white/55 text-sm mb-4">{t("docsWhoamiDesc")}</p>
             <Terminal title="Terminal — ant auth whoami">
               <div>
                 <span className="text-white/30 select-none">$ </span>
@@ -606,16 +581,14 @@ export default function DocPage() {
                 <div className="text-white/40">{"  "}Expires: <span className="text-yellow-300">2026-05-01 10:30:00</span></div>
               </div>
             </Terminal>
-            <p className="text-white/25 text-xs mt-4">
-              Nếu chưa đăng nhập, lệnh sẽ hiện thông báo và hướng dẫn chạy <Code>ant auth login</Code>.
-            </p>
+            <p className="text-white/25 text-xs mt-4">{t("docsWhoamiNote").split("ant auth login").map((part, i, arr) =>
+              i < arr.length - 1 ? <span key={i}>{part}<Code>ant auth login</Code></span> : <span key={i}>{part}</span>
+            )}</p>
           </Section>
 
-          {/* ── set lang ── */}
-          <Section id="set-lang" title="Language">
-            <p className="text-white/55 text-sm mb-4">
-              Đổi ngôn ngữ hiển thị của CLI. Hỗ trợ tiếng Việt (<Code>vi</Code>) và tiếng Anh (<Code>en</Code>).
-            </p>
+          {/* Language */}
+          <Section id="set-lang" title={t("docsLangTitle")}>
+            <p className="text-white/55 text-sm mb-4">{t("docsLangDesc")}</p>
             <Terminal title="Terminal — ant set lang">
               <div>
                 <span className="text-white/30 select-none">$ </span>
@@ -624,12 +597,11 @@ export default function DocPage() {
                 <span className="text-orange-300"> vi</span>
               </div>
               <div className="mt-3 space-y-1">
-                <div className="text-green-400">✔ Ngôn ngữ đã được đặt thành: <span className="text-white">vi</span></div>
-                <div className="text-white/40">{"  "}Khởi động lại terminal để áp dụng.</div>
+                <div className="text-green-400">✔ Language set to: <span className="text-white">vi</span></div>
               </div>
             </Terminal>
 
-            <Terminal title="Terminal — switch to English" >
+            <Terminal title="Terminal — switch to English">
               <div>
                 <span className="text-white/30 select-none">$ </span>
                 <span className="text-yellow-300">ant</span>
@@ -642,17 +614,17 @@ export default function DocPage() {
             </Terminal>
 
             <div className="mt-5 rounded-xl p-4" style={GLASS}>
-              <p className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-3">Giá trị hợp lệ</p>
-              <Option flag="vi" desc="Tiếng Việt (mặc định)" />
-              <Option flag="en" desc="English" />
+              <p className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-3">{t("docsLangValidHeader")}</p>
+              <Option flag="vi" desc={t("docsLangVi")} />
+              <Option flag="en" desc={t("docsLangEn")} />
             </div>
           </Section>
 
           {/* Footer */}
           <div className="pt-6 mt-2 flex items-center justify-between" style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-            <p className="text-xs text-white/25">ant-go CLI v0.1.0 · Build automation service</p>
+            <p className="text-xs text-white/25">{t("docsFooter")}</p>
             <Link href="/login" className="text-xs text-accent hover:text-accent-light transition">
-              Mở Console →
+              {t("docsFooterConsole")}
             </Link>
           </div>
 
