@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 import { useEffect, useState } from "react";
 import { doc, onSnapshot, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { UserProfile } from "@/lib/createUserProfile";
 import { GLASS } from "@/lib/glass";
 import PageLoader from "@/app/components/PageLoader";
@@ -12,13 +13,6 @@ const PLAN_BADGE: Record<string, string> = {
   pro: "bg-accent/15 dark:bg-accent/30 text-accent dark:text-accent-light border border-accent dark:border-accent-dark",
   enterprise: "bg-yellow-50 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-300 border border-yellow-300 dark:border-yellow-700",
 };
-
-const PLAN_ICON: Record<string, string> = {
-  free: "🆓",
-  pro: "⚡",
-  enterprise: "🏢",
-};
-
 
 function formatTimestamp(value: unknown): string {
   if (!value) return "—";
@@ -41,6 +35,7 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -53,16 +48,14 @@ export default function ProfilePage() {
     });
   }, [user]);
 
-  if (loading) {
-    return <PageLoader label="Đang tải profile…" />;
-  }
+  if (loading) return <PageLoader label={t("profileLoading")} />;
 
   if (!profile || !user) {
     return (
       <div className="flex items-center justify-center py-32 text-white/40">
         <div className="text-center">
           <div className="text-4xl mb-3">😕</div>
-          <p>Profile not found in Firestore.</p>
+          <p>{t("profileNotFound")}</p>
         </div>
       </div>
     );
@@ -76,13 +69,11 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
-      {/* Page title */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Profile</h1>
-        <p className="text-white/50 text-sm mt-1">Your account information synced from Firestore</p>
+        <h1 className="text-2xl font-bold text-white">{t("profileTitle")}</h1>
+        <p className="text-white/50 text-sm mt-1">{t("profileSubtitle")}</p>
       </div>
 
-      {/* Avatar + identity */}
       <div className="rounded-2xl p-6 flex items-center gap-6" style={GLASS}>
         <img
           src={profile.photoURL ?? "/avatar.png"}
@@ -99,18 +90,26 @@ export default function ProfilePage() {
         </span>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard label="Total Builds" value={profile.builds} sub="All time" />
-        <StatCard label="Credits Left" value={isUnlimited ? "∞" : credits.toFixed(1)} sub={isUnlimited ? "Unlimited plan" : `${creditsUsed.toFixed(1)} of ${planCredits} used`} />
-        <StatCard label="Current Plan" value={profile.plan.toUpperCase()} sub={profile.plan === "free" ? "Upgrade to unlock more" : "Active"} />
+        <StatCard label={t("profileTotalBuilds")} value={profile.builds} sub={t("profileAllTime")} />
+        <StatCard
+          label={t("profileCreditsLeft")}
+          value={isUnlimited ? "∞" : credits.toFixed(1)}
+          sub={isUnlimited ? t("profileUnlimitedPlan") : `${creditsUsed.toFixed(1)} of ${planCredits} used`}
+        />
+        <StatCard
+          label={t("profileCurrentPlan")}
+          value={profile.plan.toUpperCase()}
+          sub={profile.plan === "free" ? t("profileUpgrade") : t("profileActive")}
+        />
       </div>
 
-      {/* Credit usage bar */}
       <div className="rounded-2xl p-6" style={GLASS}>
         <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-medium text-white">Build Credits</p>
-          <p className="text-sm text-white/50">{isUnlimited ? "Unlimited" : `${credits.toFixed(1)} / ${planCredits} remaining`}</p>
+          <p className="text-sm font-medium text-white">{t("profileBuildCredits")}</p>
+          <p className="text-sm text-white/50">
+            {isUnlimited ? t("profileUnlimited") : `${credits.toFixed(1)} / ${planCredits} ${t("profileCreditsRemaining")}`}
+          </p>
         </div>
         {!isUnlimited && (
           <div className="w-full bg-white/10 rounded-full h-2.5">
@@ -121,20 +120,19 @@ export default function ProfilePage() {
           </div>
         )}
         {credits <= 0 && !isUnlimited && (
-          <p className="text-xs text-red-400 mt-2">⚠ Credits exhausted. Upgrade your plan or wait for monthly reset.</p>
+          <p className="text-xs text-red-400 mt-2">{t("profileCreditsExhausted")}</p>
         )}
       </div>
 
-      {/* Account details */}
       <div className="rounded-2xl p-6 space-y-4" style={GLASS}>
-        <h3 className="text-sm font-semibold text-white/50 uppercase tracking-wider">Account Details</h3>
+        <h3 className="text-sm font-semibold text-white/50 uppercase tracking-wider">{t("profileAccountDetails")}</h3>
         {[
-          { label: "Display Name", value: profile.displayName ?? "—" },
-          { label: "Email", value: profile.email ?? "—" },
-          { label: "User ID", value: profile.uid, mono: true },
-          { label: "Plan", value: profile.plan.toUpperCase() },
-          { label: "Member Since", value: formatTimestamp(profile.createdAt) },
-          { label: "Last Updated", value: formatTimestamp(profile.updatedAt) },
+          { label: t("profileDisplayName"), value: profile.displayName ?? "—" },
+          { label: t("profileEmail"),       value: profile.email ?? "—" },
+          { label: t("profileUserId"),      value: profile.uid, mono: true },
+          { label: t("profilePlan"),        value: profile.plan.toUpperCase() },
+          { label: t("profileMemberSince"), value: formatTimestamp(profile.createdAt) },
+          { label: t("profileLastUpdated"), value: formatTimestamp(profile.updatedAt) },
         ].map((row) => (
           <div key={row.label} className="flex items-center justify-between py-2 last:border-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
             <span className="text-sm text-white/50">{row.label}</span>

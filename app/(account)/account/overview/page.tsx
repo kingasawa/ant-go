@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 import { useEffect, useState } from "react";
 import { collection, query, where, onSnapshot, orderBy, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { UserProfile } from "@/lib/createUserProfile";
 import Link from "next/link";
 import PageLoader from "@/app/components/PageLoader";
@@ -24,7 +25,6 @@ interface AppDoc {
   scheme?: string;
 }
 
-// ── Stat card ───────────────────────────────────────────────────────────────
 function StatCard({
   label, value, sub, href, badgeClass, Icon,
 }: {
@@ -35,6 +35,7 @@ function StatCard({
   badgeClass: string;
   Icon: React.ComponentType<{ className?: string }>;
 }) {
+  const { t } = useLanguage();
   const inner = (
     <div className="dash-card p-5 flex items-start gap-4 cursor-default">
       <span className={`icon-badge ${badgeClass} mt-0.5`}>
@@ -46,7 +47,7 @@ function StatCard({
         {sub && <p className="text-xs text-white/35 mt-0.5">{sub}</p>}
         {href && (
           <div className="mt-2 flex items-center gap-1 text-xs text-purple font-medium">
-            View detail <HiOutlineChevronRight className="w-3 h-3" />
+            {t("overviewViewDetail")} <HiOutlineChevronRight className="w-3 h-3" />
           </div>
         )}
       </div>
@@ -71,6 +72,7 @@ const STATUS_BAR: Record<string, string> = {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [builds, setBuilds] = useState<Build[]>([]);
   const [apps, setApps] = useState<AppDoc[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -107,7 +109,7 @@ export default function DashboardPage() {
   const failedCount     = builds.filter((b) => b.status === "failed").length;
   const successRate     = builds.length > 0 ? Math.round((successCount / builds.length) * 100) : 0;
 
-  if (loading) return <PageLoader label="Loading overview…" />;
+  if (loading) return <PageLoader label={t("overviewLoadingLabel")} />;
 
   const p = profile as any;
   const credits: number = p?.credits ?? 0;
@@ -116,52 +118,50 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* ── Page title (mobile only — desktop shows in topbar) ── */}
       <div className="mb-7 lg:hidden">
         <h1 className="text-xl font-bold text-white">
-          Good day, {user?.displayName?.split(" ")[0] ?? "there"}! 👋
+          {user?.displayName?.split(" ")[0] ?? "there"} 👋
         </h1>
-        <p className="text-white/40 text-sm mt-1">Here's what's happening with your projects.</p>
+        <p className="text-white/40 text-sm mt-1">{t("overviewHappening")}</p>
       </div>
       <div className="mb-7 hidden lg:block">
-        <h1 className="text-xl font-bold text-white">Overview</h1>
-        <p className="text-white/40 text-sm mt-0.5">Here's what's happening with your projects.</p>
+        <h1 className="text-xl font-bold text-white">{t("overviewTitle")}</h1>
+        <p className="text-white/40 text-sm mt-0.5">{t("overviewHappening")}</p>
       </div>
 
       {/* ── Stat cards ──────────────────────────────────────────── */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-        <StatCard label="Total Builds"  value={builds.length}     sub="All time"        href="/account/builds"  badgeClass="icon-badge-purple" Icon={HiOutlineCube} />
-        <StatCard label="Apps"          value={apps.length}       sub="Created"         href="/account/apps"    badgeClass="icon-badge-orange" Icon={HiOutlineDevicePhoneMobile} />
-        <StatCard label="Success Rate"  value={`${successRate}%`} sub={`${successCount} successful`}           badgeClass="icon-badge-teal"   Icon={HiOutlineCheckCircle} />
+        <StatCard label={t("overviewTotalBuilds")} value={builds.length}     sub={t("overviewAllTime")}       href="/account/builds"  badgeClass="icon-badge-purple" Icon={HiOutlineCube} />
+        <StatCard label={t("overviewApps")}        value={apps.length}       sub={t("overviewCreated")}       href="/account/apps"    badgeClass="icon-badge-orange" Icon={HiOutlineDevicePhoneMobile} />
+        <StatCard label={t("overviewSuccessRate")} value={`${successRate}%`} sub={`${successCount} ${t("overviewSuccessful")}`}       badgeClass="icon-badge-teal"   Icon={HiOutlineCheckCircle} />
         <StatCard
-          label="Plan"
+          label={t("overviewPlan")}
           value={p?.plan ? p.plan.toUpperCase() : "—"}
-          sub={isUnlimited ? "Unlimited credits" : `${credits.toFixed ? credits.toFixed(1) : credits} credits left`}
+          sub={isUnlimited ? t("overviewUnlimitedCredits") : `${credits.toFixed ? credits.toFixed(1) : credits} ${t("overviewCreditsLeft")}`}
           href="/account/usage"
           badgeClass="icon-badge-pink"
           Icon={HiOutlineCreditCard}
         />
       </div>
 
-      {/* ── Two-column layout (wide screen) ─────────────────────── */}
+      {/* ── Two-column layout ─────────────────────────────────────── */}
       <div className="xl:grid xl:grid-cols-4 xl:gap-4 flex flex-col gap-6">
 
-        {/* Left — main content (3/4) */}
         <div className="xl:col-span-3 flex flex-col gap-6">
 
           {/* Recent builds */}
           <div className="dash-card p-5">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-sm font-semibold text-white/70">Recent Builds</h2>
+              <h2 className="text-sm font-semibold text-white/70">{t("overviewRecentBuilds")}</h2>
               <Link href="/account/builds" className="text-xs text-purple hover:text-accent-light transition">
-                View all →
+                {t("overviewViewAll")}
               </Link>
             </div>
             {recentBuilds.length === 0 ? (
               <div className="text-center py-10 text-white/30">
                 <HiOutlineCube className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">No builds yet.</p>
-                <p className="text-xs mt-1">Create an App and start your first build!</p>
+                <p className="text-sm">{t("overviewNoBuilds")}</p>
+                <p className="text-xs mt-1">{t("overviewCreateApp")}</p>
               </div>
             ) : (
               <div className="space-y-1.5">
@@ -191,17 +191,17 @@ export default function DashboardPage() {
           {/* Apps */}
           <div className="dash-card p-5">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-sm font-semibold text-white/70">Apps</h2>
+              <h2 className="text-sm font-semibold text-white/70">{t("overviewAppsTitle")}</h2>
               <Link href="/account/apps" className="text-xs text-purple hover:text-accent-light transition">
-                Manage →
+                {t("overviewManage")}
               </Link>
             </div>
             {apps.length === 0 ? (
               <div className="text-center py-8 text-white/30">
                 <HiOutlineDevicePhoneMobile className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">No apps yet.</p>
+                <p className="text-sm">{t("overviewNoApps")}</p>
                 <Link href="/account/apps" className="text-xs text-purple hover:underline mt-1 inline-block">
-                  Create your first app →
+                  {t("overviewCreateFirstApp")}
                 </Link>
               </div>
             ) : (
@@ -235,18 +235,18 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Right — sidebar panel (1/4, matches stat card width, xl only) */}
+        {/* Right sidebar */}
         <div className="hidden xl:flex xl:col-span-1 flex-col gap-4">
 
           {/* Build Status */}
           <div className="dash-card p-5">
-            <h2 className="text-sm font-semibold text-white/70 mb-4">Build Status</h2>
+            <h2 className="text-sm font-semibold text-white/70 mb-4">{t("overviewBuildStatus")}</h2>
             <div className="space-y-3.5">
               {([
-                { status: "success",     label: "Success",     count: successCount },
-                { status: "failed",      label: "Failed",      count: failedCount },
-                { status: "in_progress", label: "In Progress", count: builds.filter((b) => b.status === "in_progress").length },
-                { status: "pending",     label: "Pending",     count: builds.filter((b) => b.status === "pending").length },
+                { status: "success",     label: t("overviewSuccess"),    count: successCount },
+                { status: "failed",      label: t("overviewFailed"),     count: failedCount },
+                { status: "in_progress", label: t("overviewInProgress"), count: builds.filter((b) => b.status === "in_progress").length },
+                { status: "pending",     label: t("overviewPending"),    count: builds.filter((b) => b.status === "pending").length },
               ] as const).map(({ status, label, count }) => (
                 <div key={status}>
                   <div className="flex justify-between items-center mb-1.5">
@@ -266,7 +266,7 @@ export default function DashboardPage() {
             {!isUnlimited && (
               <div className="mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
                 <div className="flex justify-between mb-1.5">
-                  <span className="text-xs text-white/40">Credits</span>
+                  <span className="text-xs text-white/40">{t("overviewCredits")}</span>
                   <span className="text-xs text-white/40">{credits.toFixed ? credits.toFixed(1) : credits} / {planCredits}</span>
                 </div>
                 <div className="w-full rounded-full h-1" style={{ background: "rgba(255,255,255,0.06)" }}>
@@ -281,13 +281,13 @@ export default function DashboardPage() {
 
           {/* Quick links */}
           <div className="dash-card p-5">
-            <h2 className="text-sm font-semibold text-white/70 mb-4">Quick Actions</h2>
+            <h2 className="text-sm font-semibold text-white/70 mb-4">{t("overviewQuickActions")}</h2>
             <div className="space-y-2">
               {[
-                { href: "/account/apps",    label: "New App",       icon: "＋" },
-                { href: "/account/devices", label: "Add Device",    icon: "📱" },
-                { href: "/account/billing", label: "Upgrade Plan",  icon: "⚡" },
-                { href: "/account/profile", label: "Edit Profile",  icon: "✏️" },
+                { href: "/account/apps",    label: t("overviewNewApp"),       icon: "＋" },
+                { href: "/account/devices", label: t("overviewAddDevice"),    icon: "📱" },
+                { href: "/account/billing", label: t("overviewUpgradePlan"),  icon: "⚡" },
+                { href: "/account/profile", label: t("overviewEditProfile"),  icon: "✏️" },
               ].map(({ href, label, icon }) => (
                 <Link
                   key={href}

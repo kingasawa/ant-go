@@ -1,15 +1,14 @@
-﻿"use client";
+"use client";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { GLASS } from "@/lib/glass";
 import {
   HiOutlineBell, HiOutlineExclamationTriangle, HiOutlineUser, HiOutlineEnvelope, HiOutlineKey,
   HiOutlineCube, HiOutlineDocument, HiOutlineDocumentText, HiOutlineTrash,
   HiOutlineChevronRight, HiOutlineSun, HiOutlineMoon, HiOutlineComputerDesktop, HiOutlineSwatch,
 } from "react-icons/hi2";
-
-/* ─── Reusable iOS-style primitives ──────────────────────────────────────── */
 
 function Section({ label, children }: { label?: string; children: React.ReactNode }) {
   return (
@@ -27,12 +26,7 @@ function Section({ label, children }: { label?: string; children: React.ReactNod
 }
 
 function Row({
-  icon,
-  label,
-  sublabel,
-  right,
-  danger,
-  onClick,
+  icon, label, sublabel, right, danger, onClick,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -48,14 +42,10 @@ function Row({
     >
       <span className="w-6 flex items-center justify-center flex-shrink-0 text-white/60">{icon}</span>
       <div className="flex-1 min-w-0">
-        <p className={`text-sm font-medium ${danger ? "text-red-400" : "text-white"}`}>
-          {label}
-        </p>
+        <p className={`text-sm font-medium ${danger ? "text-red-400" : "text-white"}`}>{label}</p>
         {sublabel && <p className="text-xs text-white/50 mt-0.5">{sublabel}</p>}
       </div>
-      {right ?? (
-        onClick && <HiOutlineChevronRight className="w-4 h-4 text-white/40" />
-      )}
+      {right ?? (onClick && <HiOutlineChevronRight className="w-4 h-4 text-white/40" />)}
     </div>
   );
 }
@@ -73,26 +63,23 @@ function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void 
   );
 }
 
-/* ─── Theme picker ────────────────────────────────────────────────────────── */
-
-type ThemeOption = { id: string; label: string; icon: React.ReactNode; desc: string };
-
-const THEME_OPTIONS: ThemeOption[] = [
-  { id: "light",  label: "Light", icon: <HiOutlineSun              className="w-6 h-6" />, desc: "Always light" },
-  { id: "dark",   label: "Dark",  icon: <HiOutlineMoon             className="w-6 h-6" />, desc: "Always dark" },
-  { id: "system", label: "Auto",  icon: <HiOutlineComputerDesktop  className="w-6 h-6" />, desc: "Follow system setting" },
-];
-
 function ThemePicker() {
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 
+  const THEME_OPTIONS = [
+    { id: "light",  label: t("settingsLight"), icon: <HiOutlineSun             className="w-6 h-6" />, desc: t("settingsAlwaysLight") },
+    { id: "dark",   label: t("settingsDark"),  icon: <HiOutlineMoon            className="w-6 h-6" />, desc: t("settingsAlwaysDark") },
+    { id: "system", label: t("settingsAuto"),  icon: <HiOutlineComputerDesktop className="w-6 h-6" />, desc: t("settingsFollowSystem") },
+  ];
+
   return (
     <div className="px-4 py-3">
       <p className="text-sm font-medium text-white mb-3 flex items-center gap-2">
-        <HiOutlineSwatch className="w-4 h-4" /> <span>Appearance</span>
+        <HiOutlineSwatch className="w-4 h-4" /> <span>{t("settingsAppearance")}</span>
       </p>
       <div className="grid grid-cols-3 gap-2">
         {THEME_OPTIONS.map((opt) => {
@@ -102,10 +89,7 @@ function ThemePicker() {
               key={opt.id}
               onClick={() => setTheme(opt.id)}
               className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 transition-all
-                ${active
-                  ? "border-accent bg-accent/20"
-                  : "border-white/20 hover:border-white/40"
-                }`}
+                ${active ? "border-accent bg-accent/20" : "border-white/20 hover:border-white/40"}`}
             >
               <span className={active ? "text-accent-light" : "text-white/60"}>{opt.icon}</span>
               <span className={`text-xs font-semibold ${active ? "text-accent-light" : "text-white/60"}`}>
@@ -122,61 +106,53 @@ function ThemePicker() {
   );
 }
 
-/* ─── Page ────────────────────────────────────────────────────────────────── */
-
 export default function SettingsPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [notifications, setNotifications] = useState(true);
   const [buildAlerts, setBuildAlerts] = useState(true);
 
   return (
     <div className="max-w-xl mx-auto">
-      {/* Title */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Settings</h1>
-        <p className="text-white/50 text-sm mt-1">Manage your preferences</p>
+        <h1 className="text-2xl font-bold text-white">{t("settingsTitle")}</h1>
+        <p className="text-white/50 text-sm mt-1">{t("settingsSubtitle")}</p>
       </div>
 
-      {/* Appearance */}
-      <Section label="Appearance">
+      <Section label={t("settingsAppearance")}>
         <ThemePicker />
       </Section>
 
-      {/* Notifications */}
-      <Section label="Notifications">
+      <Section label={t("settingsNotifications")}>
         <Row
           icon={<HiOutlineBell className="w-5 h-5" />}
-          label="Push Notifications"
-          sublabel="Receive alerts for build events"
+          label={t("settingsPushNotif")}
+          sublabel={t("settingsPushNotifDesc")}
           right={<Toggle enabled={notifications} onToggle={() => setNotifications((v) => !v)} />}
         />
         <Row
           icon={<HiOutlineExclamationTriangle className="w-5 h-5" />}
-          label="Build Failure Alerts"
-          sublabel="Notify when a build fails"
+          label={t("settingsBuildAlerts")}
+          sublabel={t("settingsBuildAlertsDesc")}
           right={<Toggle enabled={buildAlerts} onToggle={() => setBuildAlerts((v) => !v)} />}
         />
       </Section>
 
-      {/* Account */}
-      <Section label="Account">
-        <Row icon={<HiOutlineUser className="w-5 h-5" />} label="Display Name" sublabel={user?.displayName ?? "—"} />
-        <Row icon={<HiOutlineEnvelope className="w-5 h-5" />} label="Email" sublabel={user?.email ?? "—"} />
-        <Row icon={<HiOutlineKey className="w-5 h-5" />} label="Authentication" sublabel="Google Sign-In" />
+      <Section label={t("settingsAccount")}>
+        <Row icon={<HiOutlineUser className="w-5 h-5" />} label={t("settingsDisplayName")} sublabel={user?.displayName ?? "—"} />
+        <Row icon={<HiOutlineEnvelope className="w-5 h-5" />} label={t("settingsEmail")} sublabel={user?.email ?? "—"} />
+        <Row icon={<HiOutlineKey className="w-5 h-5" />} label={t("settingsAuth")} sublabel={t("settingsGoogleSignIn")} />
       </Section>
 
-      {/* About */}
-      <Section label="About">
-        <Row icon={<HiOutlineCube className="w-5 h-5" />} label="Version" right={<span className="text-sm text-gray-400">1.0.0</span>} />
-        <Row icon={<HiOutlineDocument className="w-5 h-5" />} label="Privacy Policy" onClick={() => {}} />
-        <Row icon={<HiOutlineDocumentText className="w-5 h-5" />} label="Terms of Service" onClick={() => {}} />
+      <Section label={t("settingsAbout")}>
+        <Row icon={<HiOutlineCube className="w-5 h-5" />} label={t("settingsVersion")} right={<span className="text-sm text-gray-400">1.0.0</span>} />
+        <Row icon={<HiOutlineDocument className="w-5 h-5" />} label={t("settingsPrivacy")} onClick={() => {}} />
+        <Row icon={<HiOutlineDocumentText className="w-5 h-5" />} label={t("settingsTerms")} onClick={() => {}} />
       </Section>
 
-      {/* Danger zone */}
-      <Section label="Danger Zone">
-        <Row icon={<HiOutlineTrash className="w-5 h-5" />} label="Delete Account" danger onClick={() => {}} />
+      <Section label={t("settingsDangerZone")}>
+        <Row icon={<HiOutlineTrash className="w-5 h-5" />} label={t("settingsDeleteAccount")} danger onClick={() => {}} />
       </Section>
     </div>
   );
 }
-
