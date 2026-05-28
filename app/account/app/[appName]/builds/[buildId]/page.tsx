@@ -5,6 +5,7 @@ import { collection, doc, onSnapshot, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import { GLASS } from "@/lib/glass";
+import QRCode from "qrcode";
 
 interface Build {
   id: string;
@@ -18,6 +19,7 @@ interface Build {
   buildLogUrl?: string;
   distribution?: string;
   manifestUrl?: string;
+  developmentClient?: boolean;
   createdAt?: { seconds: number; nanoseconds: number } | null;
   startedAt?: string;
   completedAt?: string;
@@ -425,16 +427,31 @@ function BuildLogs({ buildId, isActive, buildStatus }: {
 /* ─── Install Tab (internal distribution) ───────────────────────────────── */
 function InstallTab({ build }: { build: Build }) {
   const installUrl = `itms-services://?action=download-manifest&url=${encodeURIComponent(build.manifestUrl!)}`;
-  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(installUrl)}`;
-  const isDevClient = build.step === "done"; // truthy proxy — ideally store developmentClient field
+  const [qrDataUrl, setQrDataUrl] = useState<string>("");
+
+  useEffect(() => {
+    QRCode.toDataURL(installUrl, {
+      width: 220,
+      margin: 2,
+      color: { dark: "#000000", light: "#ffffff" },
+    })
+      .then(setQrDataUrl)
+      .catch(console.error);
+  }, [installUrl]);
+
+  const isDevClient = !!build.developmentClient;
 
   return (
     <div className="space-y-6 overflow-y-auto pb-4">
       {/* QR card */}
       <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col sm:flex-row gap-8 items-center">
-        <div className="flex-shrink-0 bg-white rounded-xl p-2 shadow-lg">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={qrSrc} alt="Install QR code" width={220} height={220} className="rounded-lg" />
+        <div className="flex-shrink-0 bg-white rounded-xl p-2 shadow-lg w-[236px] h-[236px] flex items-center justify-center">
+          {qrDataUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={qrDataUrl} alt="Install QR code" width={220} height={220} className="rounded-lg" />
+          ) : (
+            <span className="w-8 h-8 rounded-full border-2 border-gray-400 border-t-transparent animate-spin" />
+          )}
         </div>
         <div className="flex flex-col gap-3">
           <p className="text-sm font-semibold text-gray-200">Cài app lên device</p>
@@ -465,19 +482,21 @@ function InstallTab({ build }: { build: Build }) {
         </div>
       </div>
 
-      {/* Metro instructions (dev client) */}
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Chạy Metro sau khi cài app</p>
-        <p className="text-xs text-gray-500 mb-3">
-          App này dùng <span className="text-gray-300 font-mono">expo-dev-client</span> — cần Metro đang chạy trên máy để load JS bundle.
-        </p>
-        <code className="block bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-sm text-accent-light font-mono select-all">
-          npx expo start --dev-client
-        </code>
-        <p className="text-xs text-gray-600 mt-2">
-          Mở app trên device → nhập địa chỉ Metro (hoặc app tự phát hiện qua LAN).
-        </p>
-      </div>
+      {/* Metro instructions — chỉ hiện cho dev client builds */}
+      {isDevClient && (
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Chạy Metro sau khi cài app</p>
+          <p className="text-xs text-gray-500 mb-3">
+            App này dùng <span className="text-gray-300 font-mono">expo-dev-client</span> — cần Metro đang chạy trên máy để load JS bundle.
+          </p>
+          <code className="block bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-sm text-accent-light font-mono select-all">
+            npx expo start --dev-client
+          </code>
+          <p className="text-xs text-gray-600 mt-2">
+            Mở app trên device → nhập địa chỉ Metro (hoặc app tự phát hiện qua LAN).
+          </p>
+        </div>
+      )}
 
       {/* Download IPA */}
       {build.ipaUrl && (
