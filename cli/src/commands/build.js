@@ -134,7 +134,7 @@ function resolveProjectInfo(projectRoot) {
   const iosDir     = path.join(projectRoot, 'ios');
   const xcworkspace = ant.xcworkspace ?? findFile(iosDir, '.xcworkspace');
   const xcodeproj   = ant.xcodeproj   ?? findFile(iosDir, '.xcodeproj');
-  const schemeName  = ant.schemeName  ?? xcworkspace?.replace('.xcworkspace', '') ?? '';
+  const schemeName  = ant.schemeName  ?? xcworkspace?.replace('.xcworkspace', '') ?? xcodeproj?.replace('.xcodeproj', '') ?? appJson.expo?.slug ?? appJson.expo?.name ?? '';
   const bundleId    = ant.bundleId    ?? appJson.expo?.ios?.bundleIdentifier ?? '';
 
   if (!bundleId) {
