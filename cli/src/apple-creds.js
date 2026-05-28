@@ -545,11 +545,14 @@ async function ensureAppleCreds(projectInfo, {
     });
 
     if (existing.length > 0) {
-      certId = existing[0].id;
       const result = await createCertificateAndP12Async(authCtx, {
         certificateType: certType, reuseExistingCertificate: true,
       }).catch(() => null);
       if (result) {
+        // Use certId from the result — createCertificateAndP12Async may pick
+        // a different cert than existing[0] (whichever has a private key locally).
+        // certId and p12 must always refer to the same certificate.
+        certId      = result.certificate?.id ?? existing[0].id;
         p12Base64   = result.certificateP12;
         p12Password = result.password ?? '';
         certSpinner.succeed(t('certReused', certLabel, certId));
