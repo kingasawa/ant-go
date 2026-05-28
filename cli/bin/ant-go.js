@@ -115,6 +115,41 @@ set
     console.log('');
   });
 
+// ── uninstall ─────────────────────────────────────────────────────────────────
+program
+  .command('uninstall')
+  .description('Uninstall ant-go CLI from this machine')
+  .action(async () => {
+    const inquirer = require('inquirer');
+    const { execSync } = require('child_process');
+    const ora = require('ora');
+
+    console.log('');
+    const { confirm } = await inquirer.prompt([{
+      type: 'confirm',
+      name: 'confirm',
+      message: t('uninstallConfirm'),
+      default: false,
+    }]);
+
+    if (!confirm) {
+      console.log(chalk.gray(`  ${t('uninstallCancelled')}`));
+      console.log('');
+      process.exit(0);
+    }
+
+    const spinner = ora(t('uninstallRunning')).start();
+    try {
+      execSync('npm uninstall -g ant-go', { stdio: 'ignore' });
+      spinner.succeed(chalk.green(t('uninstallDone')));
+      console.log('');
+    } catch (err) {
+      spinner.fail(chalk.red(t('uninstallFailed', err.message)));
+      console.log('');
+      process.exit(1);
+    }
+  });
+
 program.parse(process.argv);
 
 if (!process.argv.slice(2).length) {

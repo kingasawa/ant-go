@@ -517,6 +517,28 @@ const MESSAGES = {
     vi: '💡  Prefer English? Run: ant set lang en',
     en: '💡  Muốn dùng CLI bằng tiếng Việt? Chạy: ant set lang vi',
   },
+
+  // ── uninstall ────────────────────────────────────────────────────────────────
+  uninstallConfirm: {
+    vi: 'Bạn có chắc muốn gỡ cài đặt ant-go CLI không?',
+    en: 'Are you sure you want to uninstall ant-go CLI?',
+  },
+  uninstallCancelled: {
+    vi: 'Đã huỷ.',
+    en: 'Cancelled.',
+  },
+  uninstallRunning: {
+    vi: 'Đang gỡ cài đặt...',
+    en: 'Uninstalling...',
+  },
+  uninstallDone: {
+    vi: 'ant-go CLI đã được gỡ cài đặt.',
+    en: 'ant-go CLI has been uninstalled.',
+  },
+  uninstallFailed: {
+    vi: (msg) => `Gỡ cài đặt thất bại: ${msg}`,
+    en: (msg) => `Uninstall failed: ${msg}`,
+  },
 };
 
 function getLang() {
