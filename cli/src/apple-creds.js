@@ -534,8 +534,9 @@ async function ensureAppleCreds(projectInfo, {
   }
 
   // ── Certificate ──────────────────────────────────────────────────────────────
-  const certType   = distribution === 'internal' ? CertificateType.DEVELOPMENT : CertificateType.DISTRIBUTION;
-  const certLabel  = distribution === 'internal' ? 'Development' : 'Distribution';
+  // Ad Hoc and App Store both use Distribution certificate
+  const certType   = CertificateType.DISTRIBUTION;
+  const certLabel  = distribution === 'internal' ? 'Distribution (Ad Hoc)' : 'Distribution';
   const certSpinner = require('ora')(t('certLoading', certLabel)).start();
   let p12Base64, p12Password, certId;
   let createdNewCert = false;
@@ -594,8 +595,8 @@ async function ensureAppleCreds(projectInfo, {
   }
 
   // ── Provisioning Profile ─────────────────────────────────────────────────────
-  const profileType  = distribution === 'internal' ? ProfileType.IOS_APP_DEVELOPMENT : ProfileType.IOS_APP_STORE;
-  const profileLabel = distribution === 'internal' ? 'Development' : 'App Store';
+  const profileType  = distribution === 'internal' ? ProfileType.IOS_APP_ADHOC : ProfileType.IOS_APP_STORE;
+  const profileLabel = distribution === 'internal' ? 'Ad Hoc' : 'App Store';
   const profileSpinner = require('ora')(t('profileLoading', profileLabel)).start();
   let mobileprovisionBase64;
   try {
