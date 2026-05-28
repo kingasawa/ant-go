@@ -425,19 +425,22 @@ function BuildLogs({ buildId, isActive, buildStatus }: {
 }
 
 /* ─── Install Tab (internal distribution) ───────────────────────────────── */
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://antgo.work";
+
 function InstallTab({ build }: { build: Build }) {
-  const installUrl = `itms-services://?action=download-manifest&url=${encodeURIComponent(build.manifestUrl!)}`;
+  const installPageUrl = `${APP_URL}/install/${build.id}`;
+  const itmsUrl = `itms-services://?action=download-manifest&url=${encodeURIComponent(build.manifestUrl!)}`;
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
 
   useEffect(() => {
-    QRCode.toDataURL(installUrl, {
+    QRCode.toDataURL(installPageUrl, {
       width: 220,
       margin: 2,
       color: { dark: "#000000", light: "#ffffff" },
     })
       .then(setQrDataUrl)
       .catch(console.error);
-  }, [installUrl]);
+  }, [installPageUrl]);
 
   const isDevClient = !!build.developmentClient;
 
@@ -471,7 +474,7 @@ function InstallTab({ build }: { build: Build }) {
             ))}
           </ol>
           <a
-            href={installUrl}
+            href={itmsUrl}
             className="mt-1 inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent-light transition"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

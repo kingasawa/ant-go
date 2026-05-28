@@ -23,17 +23,20 @@ export async function GET(
     }
     const d = snap.data()!;
     return NextResponse.json({
-      jobId:        id,
-      status:       d.status        ?? null,
-      step:         d.step          ?? null,
-      appName:      d.appName       ?? null,
-      ipaUrl:       d.ipaUrl        ?? null,
-      dsymUrl:      d.dsymUrl       ?? null,
-      error:        d.errorMessage  ?? d.error ?? null,
-      schemeName:   d.schemeName    ?? null,
-      bundleId:     d.bundleId      ?? null,
-      createdAt:    d.createdAt?.toDate().toISOString() ?? null,
-      updatedAt:    d.updatedAt?.toDate().toISOString() ?? null,
+      jobId:             id,
+      status:            d.status           ?? null,
+      step:              d.step             ?? null,
+      appName:           d.appName          ?? null,
+      ipaUrl:            d.ipaUrl           ?? null,
+      dsymUrl:           d.dsymUrl          ?? null,
+      error:             d.errorMessage     ?? d.error ?? null,
+      schemeName:        d.schemeName       ?? null,
+      bundleId:          d.bundleId         ?? null,
+      distribution:      d.distribution     ?? null,
+      manifestUrl:       d.manifestUrl      ?? null,
+      developmentClient: d.developmentClient ?? false,
+      createdAt:         d.createdAt?.toDate().toISOString() ?? null,
+      updatedAt:         d.updatedAt?.toDate().toISOString() ?? null,
     });
   } catch (err: any) {
     console.error(`[GET /api/builds/${id}]`, err.message);
