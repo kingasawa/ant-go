@@ -132,9 +132,9 @@ function resolveProjectInfo(projectRoot) {
 
   // Đọc project info từ app.json hoặc ios/ folder
   const iosDir     = path.join(projectRoot, 'ios');
-  const xcworkspace = ant.xcworkspace || findFile(iosDir, '.xcworkspace');
   const xcodeproj   = ant.xcodeproj   || findFile(iosDir, '.xcodeproj');
-  const schemeName  = ant.schemeName  || (xcworkspace && xcworkspace.replace('.xcworkspace', '')) || (xcodeproj && xcodeproj.replace('.xcodeproj', '')) || appJson.expo?.slug || appJson.expo?.name || '';
+  const xcworkspace = ant.xcworkspace || findFile(iosDir, '.xcworkspace') || (xcodeproj && xcodeproj.replace('.xcodeproj', '.xcworkspace')) || '';
+  const schemeName  = ant.schemeName  || (xcodeproj && xcodeproj.replace('.xcodeproj', '')) || appJson.expo?.slug || appJson.expo?.name || '';
   const bundleId    = ant.bundleId    ?? appJson.expo?.ios?.bundleIdentifier ?? '';
 
   if (!bundleId) {
