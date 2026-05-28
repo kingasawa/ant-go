@@ -597,8 +597,15 @@ async function ensureAppleCreds(projectInfo, {
   let mobileprovisionBase64;
   try {
     const allBundleIds = await BundleId.getAsync(authCtx, {});
-    const bundleIdObj  = allBundleIds.find(b => b.attributes?.identifier === projectInfo.bundleId);
-    if (!bundleIdObj) throw new Error(t('profileNoBundleId', projectInfo.bundleId));
+    let bundleIdObj = allBundleIds.find(b => b.attributes?.identifier === projectInfo.bundleId);
+    if (!bundleIdObj) {
+      profileSpinner.text = t('profileRegisteringId', projectInfo.bundleId);
+      bundleIdObj = await BundleId.createAsync(authCtx, {
+        name: projectInfo.bundleId,
+        identifier: projectInfo.bundleId,
+        platform: 'IOS',
+      });
+    }
 
     const allProfiles = await Profile.getAsync(authCtx, {
       query: { filter: { profileType: [profileType] } },

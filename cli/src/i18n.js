@@ -386,7 +386,8 @@ const MESSAGES = {
   profileOK:         { vi: (label) => `${label} Provisioning Profile OK`, en: (label) => `${label} Provisioning Profile OK` },
   profileFailed:     { vi: (label, msg) => `Lỗi ${label} profile: ${msg}`, en: (label, msg) => `${label} profile error: ${msg}` },
   profileNoContent:  { vi: 'Profile không có nội dung', en: 'Profile has no content' },
-  profileNoBundleId: { vi: (id) => `App ID "${id}" không tồn tại trên Apple Developer`, en: (id) => `App ID "${id}" does not exist on Apple Developer` },
+  profileNoBundleId:     { vi: (id) => `App ID "${id}" không tồn tại trên Apple Developer`, en: (id) => `App ID "${id}" does not exist on Apple Developer` },
+  profileRegisteringId:  { vi: (id) => `Đang đăng ký App ID "${id}" trên Apple Developer...`, en: (id) => `Registering App ID "${id}" on Apple Developer...` },
   credsCached:       { vi: (path) => `✔  Credentials đã cache tại: ${path}`, en: (path) => `✔  Credentials cached at: ${path}` },
 
   // ── status ──────────────────────────────────────────────────────────────────
