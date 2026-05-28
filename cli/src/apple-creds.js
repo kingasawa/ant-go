@@ -303,7 +303,7 @@ async function selectDevices(existingDevices, projectId, apiClient) {
       ...devices.map(d => ({
         name:    `${(d.name || 'Unnamed').padEnd(18)} ${(d.deviceProduct || '').padEnd(12)} (${d.udid.slice(0, 12)}...)`,
         value:   d.udid,
-        checked: false,
+        checked: true,
       })),
       new inquirer.Separator('─────────────────────────────────────────'),
       { name: chalk.cyan(t('appleDevicesAddNew')), value: '__new__' },
