@@ -320,6 +320,23 @@ async function runBuild(options) {
   const profileConfig = resolveAntJson(projectRoot, profileName);
   const { distribution, developmentClient } = profileConfig;
 
+  // Nếu profile yêu cầu dev client, kiểm tra expo-dev-client đã được cài chưa
+  if (developmentClient) {
+    const pkgPath = path.join(projectRoot, 'package.json');
+    let pkgJson = {};
+    try { pkgJson = JSON.parse(fs.readFileSync(pkgPath, 'utf8')); } catch {}
+    const allDeps = { ...pkgJson.dependencies, ...pkgJson.devDependencies };
+    if (!allDeps['expo-dev-client']) {
+      console.log('');
+      console.log(chalk.red('✖  Profile này yêu cầu expo-dev-client nhưng chưa được cài trong project.'));
+      console.log(chalk.gray('   Chạy lệnh sau rồi build lại:'));
+      console.log('');
+      console.log(chalk.cyan('   npx expo install expo-dev-client'));
+      console.log('');
+      process.exit(1);
+    }
+  }
+
   const autoSubmit = !!options.autoSubmit;
 
   if (autoSubmit && distribution !== 'store') {

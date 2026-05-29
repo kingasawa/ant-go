@@ -35,12 +35,9 @@ export default function InstallPage() {
       .catch(() => setState("error"));
   }, [buildId]);
 
-  function handleInstall() {
-    if (!build?.manifestUrl) return;
-    const url = `itms-services://?action=download-manifest&url=${encodeURIComponent(build.manifestUrl)}`;
-    window.location.href = url;
-    setTimeout(() => setInstalled(true), 800);
-  }
+  const itmsUrl = build
+    ? `itms-services://?action=download-manifest&url=${encodeURIComponent(`https://antgo.work/api/builds/${buildId}/manifest`)}`
+    : "";
 
   const appName = build?.appName || build?.schemeName || "App";
 
@@ -143,20 +140,22 @@ export default function InstallPage() {
 
         {/* Install button */}
         {!installed ? (
-          <button
-            onClick={handleInstall}
+          <a
+            href={itmsUrl}
+            onClick={() => setTimeout(() => setInstalled(true), 800)}
             style={{
               width: "100%", padding: "16px", borderRadius: 14,
               border: "none", background: "#fff", color: "#111",
               fontSize: 17, fontWeight: 700, cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+              textDecoration: "none", boxSizing: "border-box",
             }}
           >
             <svg width="20" height="20" fill="none" stroke="#111" strokeWidth="2.5" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
             Cài app lên iPhone
-          </button>
+          </a>
         ) : (
           <div style={{
             width: "100%", padding: "16px", borderRadius: 14,
