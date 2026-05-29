@@ -179,6 +179,7 @@ function runPrebuild(projectRoot, platform) {
       stdio: 'pipe',
     });
     let stderr = '';
+    child.stdout.resume();                                    // drain stdout — prevents pipe buffer deadlock
     child.stderr.on('data', d => { stderr += d.toString(); });
     child.on('close', code => {
       if (code === 0) resolve();
