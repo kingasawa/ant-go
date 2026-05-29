@@ -170,6 +170,24 @@ function printHeader(lines) {
   console.log('');
 }
 
+// ── expo prebuild ─────────────────────────────────────────────────────────────
+function runPrebuild(projectRoot, platform) {
+  return new Promise((resolve, reject) => {
+    const cmd = `npx expo prebuild --platform ${platform} --no-install`;
+    const child = spawn('bash', ['-c', cmd], {
+      cwd: projectRoot,
+      stdio: 'pipe',
+    });
+    let stderr = '';
+    child.stderr.on('data', d => { stderr += d.toString(); });
+    child.on('close', code => {
+      if (code === 0) resolve();
+      else reject(new Error(stderr.slice(-500) || `exit code ${code}`));
+    });
+    child.on('error', reject);
+  });
+}
+
 // ── Pack project (async để spinner có thể quay) ───────────────────────────────
 function packProject(projectRoot, tarFile, platform) {
   const isAndroid = platform === 'android';
@@ -417,7 +435,23 @@ async function runBuild(options) {
   const tmpDir = path.join(os.tmpdir(), `ant-go-${jobId}`);
   fs.mkdirSync(tmpDir, { recursive: true });
 
-  // 4. Pack + upload tar.gz
+  // 4a. expo prebuild — regenerate native project so Podfile is up to date
+  if (options.noPrebuild) {
+    console.log(chalk.gray(`   ${t('buildPrebuildSkipped')}`));
+  } else {
+    const prebuildSpinner = ora(t('buildPrebuild', platform)).start();
+    try {
+      await runPrebuild(projectRoot, platform);
+      prebuildSpinner.succeed(t('buildPrebuildDone'));
+    } catch (err) {
+      prebuildSpinner.fail(t('buildPrebuildFailed'));
+      logger.error(err.message);
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+      process.exit(1);
+    }
+  }
+
+  // 4c. Pack + upload tar.gz
   const tarName = platform === 'android' ? 'android.tar.gz' : 'ios.tar.gz';
   const tarFile = path.join(tmpDir, tarName);
   const packSpinner = ora(t('buildPacking')).start();
