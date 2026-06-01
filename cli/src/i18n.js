@@ -285,22 +285,6 @@ const MESSAGES = {
     vi: 'Không lấy được Apple credentials: ',
     en: 'Failed to get Apple credentials: ',
   },
-  buildPrebuild: {
-    vi: (platform) => `Đang chạy expo prebuild (${platform})...`,
-    en: (platform) => `Running expo prebuild (${platform})...`,
-  },
-  buildPrebuildDone: {
-    vi: 'expo prebuild hoàn tất',
-    en: 'expo prebuild complete',
-  },
-  buildPrebuildFailed: {
-    vi: 'expo prebuild thất bại',
-    en: 'expo prebuild failed',
-  },
-  buildPrebuildSkipped: {
-    vi: 'Bỏ qua expo prebuild (--no-prebuild)',
-    en: 'Skipping expo prebuild (--no-prebuild)',
-  },
   // ant.json
   antJsonCreated: {
     vi: '📄  Đã tạo ant.json với các profile mặc định:',

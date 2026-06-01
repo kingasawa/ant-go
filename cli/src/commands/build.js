@@ -170,52 +170,41 @@ function printHeader(lines) {
   console.log('');
 }
 
-// ── expo prebuild ─────────────────────────────────────────────────────────────
-function runPrebuild(projectRoot, platform) {
-  return new Promise((resolve, reject) => {
-    const cmd = `npx expo prebuild --platform ${platform} --no-install`;
-    const child = spawn('bash', ['-c', cmd], {
-      cwd: projectRoot,
-      stdio: 'pipe',
-    });
-    let stderr = '';
-    child.stdout.resume();                                    // drain stdout — prevents pipe buffer deadlock
-    child.stderr.on('data', d => { stderr += d.toString(); });
-    child.on('close', code => {
-      if (code === 0) resolve();
-      else reject(new Error(stderr.slice(-500) || `exit code ${code}`));
-    });
-    child.on('error', reject);
-  });
-}
 
 // ── Pack project (async để spinner có thể quay) ───────────────────────────────
-function packProject(projectRoot, tarFile, platform) {
-  const isAndroid = platform === 'android';
-  const excludes = isAndroid ? [
-    '--exclude=node_modules/.cache',
-    '--exclude=android/build',
-    '--exclude=android/.gradle',
-    '--exclude=.git',
-    '--exclude=.expo',
-  ] : [
-    '--exclude=node_modules/.cache',
-    '--exclude=ios/Pods',
-    '--exclude=ios/build',
-    '--exclude=ios/fastlane',
-    '--exclude=.git',
-    '--exclude=.expo',
+function packProject(projectRoot, tarFile) {
+  // Các thư mục luôn bị loại khỏi archive
+  const excludes = [
+    '--exclude=./ios',
+    '--exclude=./android',
+    '--exclude=./.expo',
+    '--exclude=./node_modules',
+    '--exclude=./.git',
   ];
-  const dirs = isAndroid
-    ? 'android node_modules package.json package-lock.json'
-    : 'ios node_modules package.json package-lock.json';
+
+  // Đọc .antignore nếu có, mỗi dòng là một pattern thêm vào exclude
+  // - Pattern bắt đầu bằng "/" → anchored at root → --exclude=./pattern
+  // - Pattern không có "/" đứng đầu → match ở mọi depth → --exclude=pattern
+  const antignorePath = path.join(projectRoot, '.antignore');
+  if (fs.existsSync(antignorePath)) {
+    const lines = fs.readFileSync(antignorePath, 'utf8').split('\n');
+    for (const line of lines) {
+      const pattern = line.trim();
+      if (!pattern || pattern.startsWith('#')) continue;
+      if (pattern.startsWith('/')) {
+        excludes.push(`--exclude=.${pattern}`);   // /foo → ./foo
+      } else {
+        excludes.push(`--exclude=${pattern}`);    // foo or *.ext → match any depth
+      }
+    }
+  }
 
   // Convert Windows path (C:\foo) → POSIX path (/c/foo) cho bash trên Windows (Git Bash / MINGW)
   const toPosix = p => p.replace(/^([A-Za-z]):[\\/]/, (_, d) => `/${d.toLowerCase()}/`).replace(/\\/g, '/');
   const tarFilePosix  = toPosix(tarFile);
   const projectPosix  = toPosix(projectRoot);
 
-  const cmd = `tar -czf "${tarFilePosix}" ${excludes.join(' ')} -C "${projectPosix}" ${dirs}`;
+  const cmd = `tar -czf "${tarFilePosix}" ${excludes.join(' ')} -C "${projectPosix}" .`;
   return new Promise((resolve, reject) => {
     const child = spawn('bash', ['-c', cmd], { stdio: 'pipe' });
     let stderr = '';
@@ -436,28 +425,12 @@ async function runBuild(options) {
   const tmpDir = path.join(os.tmpdir(), `ant-go-${jobId}`);
   fs.mkdirSync(tmpDir, { recursive: true });
 
-  // 4a. expo prebuild — regenerate native project so Podfile is up to date
-  if (options.noPrebuild) {
-    console.log(chalk.gray(`   ${t('buildPrebuildSkipped')}`));
-  } else {
-    const prebuildSpinner = ora(t('buildPrebuild', platform)).start();
-    try {
-      await runPrebuild(projectRoot, platform);
-      prebuildSpinner.succeed(t('buildPrebuildDone'));
-    } catch (err) {
-      prebuildSpinner.fail(t('buildPrebuildFailed'));
-      logger.error(err.message);
-      fs.rmSync(tmpDir, { recursive: true, force: true });
-      process.exit(1);
-    }
-  }
-
-  // 4c. Pack + upload tar.gz
+  // 4. Pack + upload tar.gz
   const tarName = platform === 'android' ? 'android.tar.gz' : 'ios.tar.gz';
   const tarFile = path.join(tmpDir, tarName);
   const packSpinner = ora(t('buildPacking')).start();
   try {
-    await packProject(projectRoot, tarFile, platform);
+    await packProject(projectRoot, tarFile);
     const sizeMB = (fs.statSync(tarFile).size / 1024 / 1024).toFixed(1);
     packSpinner.succeed(t('buildPackDone', sizeMB));
   } catch (err) {
@@ -491,6 +464,12 @@ async function runBuild(options) {
       xcodeproj:             creds.xcodeproj,
       distribution,
       developmentClient,
+      ...(autoSubmit && { autoSubmit: true }),
+      ...(autoSubmit && creds?.ascKey && {
+        ascKeyId:     creds.ascKey.keyId,
+        ascIssuerId:  creds.ascKey.issuerId,
+        ascKeyContent: Buffer.from(creds.ascKey.privateKeyP8).toString('base64'),
+      }),
     }));
 
     const credsSpinner = ora(t('buildUploading', 'credentials.json')).start();

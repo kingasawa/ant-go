@@ -15,11 +15,14 @@ interface Build {
   bundleId?: string;
   projectId?: string;
   errorMessage?: string;
+  error?: string;
   ipaUrl?: string;
+  ipaPath?: string;
   buildLogUrl?: string;
   distribution?: string;
   manifestUrl?: string;
   developmentClient?: boolean;
+  submitCreds?: object;
   createdAt?: { seconds: number; nanoseconds: number } | null;
   startedAt?: string;
   completedAt?: string;
@@ -28,24 +31,31 @@ interface Build {
 interface LogEntry { seq: number; step?: string; lines: string[] }
 
 const STATUS_COLOR: Record<string, string> = {
-  pending:     "bg-yellow-500/20 text-yellow-300 border-yellow-700",
-  in_progress: "bg-blue-500/20 text-blue-300 border-blue-700",
-  success:     "bg-green-500/20 text-green-300 border-green-700",
-  failed:      "bg-red-500/20 text-red-300 border-red-700",
+  pending:        "bg-yellow-500/20 text-yellow-300 border-yellow-700",
+  in_progress:    "bg-blue-500/20 text-blue-300 border-blue-700",
+  success:        "bg-green-500/20 text-green-300 border-green-700",
+  failed:         "bg-red-500/20 text-red-300 border-red-700",
+  submit_failed:  "bg-orange-500/20 text-orange-300 border-orange-700",
+  submit_pending: "bg-purple-500/20 text-purple-300 border-purple-700",
 };
 
 const STEP_LABEL: Record<string, string> = {
-  initialising:   "Initialising",
-  downloading:    "Downloading files",
-  extracting:     "Extracting archive",
-  npm_install:    "npm install",
-  setup_certs:    "Setting up certificates",
-  setup_fastlane: "Configuring Fastlane",
-  bundle_install: "bundle install (Ruby gems)",
-  fastlane_build: "Building with Fastlane / Xcode",
-  uploading_ipa:  "Uploading IPA",
-  done:           "Done",
-  error:          "Build failed",
+  initialising:         "Initialising",
+  downloading:          "Downloading files",
+  extracting:           "Extracting archive",
+  npm_install:          "npm install",
+  expo_prebuild:        "expo prebuild",
+  pod_install:          "pod install (CocoaPods)",
+  setup_certs:          "Setting up certificates",
+  setup_fastlane:       "Configuring Fastlane",
+  bundle_install:       "bundle install (Ruby gems)",
+  fastlane_build:       "Building with Fastlane / Xcode",
+  uploading_ipa:        "Uploading IPA",
+  ensure_app_asc:       "Checking App Store Connect",
+  submitting_testflight:"Submitting to TestFlight",
+  downloading_ipa:      "Downloading IPA",
+  done:                 "Done",
+  error:                "Failed",
 };
 
 function formatDate(ts?: { seconds: number } | null) {
@@ -549,12 +559,13 @@ export default function BuildDetailPage() {
     );
   }, [buildId]);
 
-  const isActive       = build?.status === "in_progress" || build?.status === "pending";
-  const isDone         = build?.status === "success" || build?.status === "failed";
-  const canRebuild     = build?.status === "success" || (build?.status === "failed" && build?.step === "error");
-  const isInternal     = build?.distribution === "internal";
-  const showInstallTab = isInternal && build?.status === "success" && !!build?.manifestUrl;
-  const elapsed        = useElapsed(build?.createdAt?.seconds, isDone);
+  const isActive        = ["in_progress", "pending", "submit_pending"].includes(build?.status ?? "");
+  const isDone          = ["success", "failed", "submit_failed"].includes(build?.status ?? "");
+  const canRebuild      = build?.status === "success" || (build?.status === "failed" && build?.step === "error");
+  const canRetrySubmit  = build?.status === "submit_failed" && !!build?.ipaPath && !!build?.submitCreds;
+  const isInternal      = build?.distribution === "internal";
+  const showInstallTab  = isInternal && build?.status === "success" && !!build?.manifestUrl;
+  const elapsed         = useElapsed(build?.createdAt?.seconds, isDone);
 
   // ── Server & build heartbeat ────────────────────────────────────────────
   const SERVER_DEAD_MS  = 90_000;
@@ -601,11 +612,13 @@ export default function BuildDetailPage() {
 
   const isStuck = buildHanging || (build?.status === "in_progress" && serverStatus === "offline");
 
-  const [showConfirm, setShowConfirm]         = useState(false);
-  const [rebuilding, setRebuilding]           = useState(false);
-  const [warnDismissed, setWarnDismissed]     = useState(false);
+  const [showConfirm, setShowConfirm]             = useState(false);
+  const [rebuilding, setRebuilding]               = useState(false);
+  const [warnDismissed, setWarnDismissed]         = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleting, setDeleting]               = useState(false);
+  const [deleting, setDeleting]                   = useState(false);
+  const [retryingSubmit, setRetryingSubmit]       = useState(false);
+  const [retrySubmitError, setRetrySubmitError]   = useState<string | null>(null);
 
   // Reset cảnh báo khi isStuck chuyển sang false rồi lại true
   useEffect(() => {
@@ -627,6 +640,21 @@ export default function BuildDetailPage() {
     } finally {
       setRebuilding(false);
       setShowConfirm(false);
+    }
+  }
+
+  async function handleRetrySubmit() {
+    if (!buildId) return;
+    setRetryingSubmit(true);
+    setRetrySubmitError(null);
+    try {
+      const r = await fetch(`/api/builds/${buildId}/retry-submit`, { method: "POST" });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body.error ?? `HTTP ${r.status}`);
+    } catch (err: unknown) {
+      setRetrySubmitError(err instanceof Error ? err.message : "Retry failed");
+    } finally {
+      setRetryingSubmit(false);
     }
   }
 
@@ -701,6 +729,22 @@ export default function BuildDetailPage() {
         )}
 
         <div className="ml-auto flex items-center gap-3">
+          {canRetrySubmit && (
+            <button
+              onClick={handleRetrySubmit}
+              disabled={retryingSubmit}
+              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white transition"
+            >
+              {retryingSubmit ? (
+                <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+              ) : (
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              )}
+              Retry Submit
+            </button>
+          )}
           {canRebuild && (
             <button
               onClick={() => setShowConfirm(true)}
@@ -750,6 +794,77 @@ export default function BuildDetailPage() {
           <p className="text-sm text-yellow-300">
             Đang chờ Mac build server nhận job...
           </p>
+        </div>
+      )}
+
+      {/* Submit pending notice */}
+      {build?.status === "submit_pending" && (
+        <div className="mb-4 flex items-center gap-3 rounded-xl px-4 py-3" style={{ background: "rgba(168,85,247,0.12)", border: "1px solid rgba(168,85,247,0.3)" }}>
+          <span className="w-4 h-4 rounded-full border-2 border-purple-400 border-t-transparent animate-spin flex-shrink-0" />
+          <p className="text-sm text-purple-300">
+            Đang gửi lại IPA lên TestFlight...
+          </p>
+        </div>
+      )}
+
+      {/* Submit failed notice */}
+      {build?.status === "submit_failed" && (
+        <div className="mb-4 rounded-xl px-4 py-4" style={{ background: "rgba(249,115,22,0.10)", border: "1px solid rgba(249,115,22,0.35)" }}>
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-orange-300 mb-1">IPA đã build thành công — submit lên TestFlight thất bại</p>
+              {(build.error ?? build.errorMessage) && (
+                <p className="text-xs text-orange-300/70 font-mono break-all mb-3">{build.error ?? build.errorMessage}</p>
+              )}
+              <p className="text-xs text-orange-200/70 mb-1 font-semibold">Bước tiếp theo:</p>
+              <ol className="text-xs text-orange-200/60 space-y-1 list-none mb-3">
+                <li className="flex items-start gap-2">
+                  <span className="flex-shrink-0 w-4 h-4 rounded-full bg-orange-700/50 flex items-center justify-center text-[9px] font-bold mt-0.5">1</span>
+                  Kiểm tra lỗi bên trên — thường là app chưa tồn tại trên App Store Connect.
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="flex-shrink-0 w-4 h-4 rounded-full bg-orange-700/50 flex items-center justify-center text-[9px] font-bold mt-0.5">2</span>
+                  Nếu app chưa có:{" "}
+                  <a
+                    href="https://appstoreconnect.apple.com/apps"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-orange-300 underline underline-offset-2 hover:text-orange-200"
+                  >
+                    Vào App Store Connect
+                  </a>
+                  {" "}→ New App → tạo app với Bundle ID{" "}
+                  <span className="font-mono text-orange-300">{build.bundleId}</span>.
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="flex-shrink-0 w-4 h-4 rounded-full bg-orange-700/50 flex items-center justify-center text-[9px] font-bold mt-0.5">3</span>
+                  Nhấn <strong className="text-orange-300">Retry Submit</strong> — IPA đã build sẵn, không cần build lại.
+                </li>
+              </ol>
+              {retrySubmitError && (
+                <p className="text-xs text-red-400 mb-2">Lỗi: {retrySubmitError}</p>
+              )}
+              {canRetrySubmit && (
+                <button
+                  onClick={handleRetrySubmit}
+                  disabled={retryingSubmit}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white transition"
+                >
+                  {retryingSubmit ? (
+                    <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                  ) : (
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  )}
+                  {retryingSubmit ? "Đang gửi..." : "Retry Submit"}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

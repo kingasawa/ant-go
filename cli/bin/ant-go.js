@@ -76,7 +76,6 @@ program
   .option('--reauth', 'Clear Apple Developer session cache and re-login')
   .option('--refresh-profile', 'Recreate Provisioning Profile')
   .option('--auto-submit', 'Auto submit IPA to TestFlight after successful build')
-  .option('--no-prebuild', 'Skip expo prebuild step (use existing native project as-is)')
   .action(async (options) => {
     const { runBuild } = require('../src/commands/build');
     await runBuild(options);

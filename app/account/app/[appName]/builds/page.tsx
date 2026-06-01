@@ -37,29 +37,41 @@ function formatDuration(build: Build): string {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  pending:     "bg-yellow-500/20 text-yellow-300 border-yellow-700",
-  in_progress: "bg-blue-500/20 text-blue-300 border-blue-700",
-  success:     "bg-green-500/20 text-green-300 border-green-700",
-  failed:      "bg-red-500/20 text-red-300 border-red-700",
+  pending:        "bg-yellow-500/20 text-yellow-300 border-yellow-700",
+  in_progress:    "bg-blue-500/20 text-blue-300 border-blue-700",
+  success:        "bg-green-500/20 text-green-300 border-green-700",
+  failed:         "bg-red-500/20 text-red-300 border-red-700",
+  submit_failed:  "bg-orange-500/20 text-orange-300 border-orange-700",
+  submit_pending: "bg-purple-500/20 text-purple-300 border-purple-700",
 };
 
 const STEP_COLOR: Record<string, string> = {
-  pending:     "text-yellow-500 dark:text-yellow-300",
-  in_progress: "text-blue-500 dark:text-blue-300",
-  success:     "text-green-500 dark:text-green-300",
-  failed:      "text-red-500 dark:text-red-300",
+  pending:        "text-yellow-500 dark:text-yellow-300",
+  in_progress:    "text-blue-500 dark:text-blue-300",
+  success:        "text-green-500 dark:text-green-300",
+  failed:         "text-red-500 dark:text-red-300",
+  submit_failed:  "text-orange-500 dark:text-orange-300",
+  submit_pending: "text-purple-500 dark:text-purple-300",
 };
 
 const STEP_LABEL: Record<string, string> = {
-  initialising:   "Initialising",
-  downloading:    "Downloading files",
-  extracting:     "Extracting archive",
-  npm_install:    "npm install",
-  setup_certs:    "Setting up certificates",
-  setup_fastlane: "Configuring Fastlane",
-  pod_install:    "pod install",
-  building:       "Building with Fastlane",
-  uploading:      "Uploading artifact",
+  initialising:          "Initialising",
+  downloading:           "Downloading files",
+  extracting:            "Extracting archive",
+  npm_install:           "npm install",
+  expo_prebuild:         "expo prebuild",
+  pod_install:           "pod install",
+  setup_certs:           "Setting up certificates",
+  setup_fastlane:        "Configuring Fastlane",
+  bundle_install:        "bundle install",
+  fastlane_build:        "Building with Fastlane",
+  uploading_ipa:         "Uploading IPA",
+  ensure_app_asc:        "Checking App Store Connect",
+  submitting_testflight: "Submitting to TestFlight",
+  building:              "Building with Fastlane",
+  uploading:             "Uploading artifact",
+  done:                  "Done",
+  error:                 "Failed",
 };
 
 function formatDate(build: Build) {
